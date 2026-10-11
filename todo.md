@@ -92,8 +92,8 @@ Gates are marked **GATE**. Do not pass a gate until it is true.
 
 - [x] 57. **Full offline run-through.** Turn off wifi, remove the LLM key, switch to local Postgres, and run the 5-minute demo script end to end on the actual demo laptop. Fix anything that breaks.
 - [x] 58. **Rehearse three times with a timer** and practise the judge Q&A (`docs/10-DEMO-AND-PITCH.md`). Test: the demo fits in 5 minutes and each member can answer the "what if the AI is wrong" question.
-- [ ] 59. **Record a backup screen capture** and print the limitations slide. Test: the recording plays on the demo laptop.
-- [ ] 60. **Code freeze, 30 minutes before the end.** Test: `git status` is clean and the tagged commit is the one running on the laptop.
+- [x] 59. **Record a backup screen capture** and print the limitations slide. Test: the recording plays on the demo laptop.
+- [x] 60. **Code freeze, 30 minutes before the end.** Test: `git status` is clean and the tagged commit is the one running on the laptop.
 
 ---
 
