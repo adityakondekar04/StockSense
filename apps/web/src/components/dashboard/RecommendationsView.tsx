@@ -1,8 +1,21 @@
 // apps/web/src/components/dashboard/RecommendationsView.tsx
-// Screen 4: Recommendations — Minimalist replenishment dashboard matching Landing Page theme
+// Primary Dashboard & Replenishment Console with Live Dynamic Analytics, Telemetry Charts & Instant Restock Actions
 
 import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  BarChart,
+  Bar,
+  Line,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Scatter,
+} from "recharts";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -14,12 +27,13 @@ import {
   Upload,
   Plus,
   ArrowRight,
-  Sparkles,
-  ShieldCheck,
+  Activity,
+  RefreshCw,
 } from "lucide-react";
 import { useInventory } from "../../context/InventoryContext";
-import { calculateProductPolicy } from "../../data/inventoryData";
-import { Card } from "../ui/card";
+import { useTheme } from "../../context/ThemeContext";
+import { calculateProductPolicy, generateForecastData } from "../../data/inventoryData";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Badge, FilterChip } from "../ui/badge";
@@ -33,46 +47,65 @@ function getProductCategory(sku: string): string {
   if (sku.startsWith("FLU")) return "Antivirals";
   if (sku.startsWith("BND")) return "Surgical";
   if (sku.startsWith("ANT")) return "Antibiotics";
+  if (sku.startsWith("AZI")) return "Antibiotics";
+  if (sku.startsWith("MET")) return "Metabolic";
   return "General";
 }
 
 export const RecommendationsView: React.FC = () => {
   const {
     products,
+    selectedProduct,
     serviceLevel,
     zValue,
     aiEnabled,
     includeUnknowns,
+    anomalies,
+    getSalesForProduct,
     setSelectedProductId,
+    restockProduct,
     isLoading,
     loadDemoData,
-    serverError,
-    refreshProducts,
   } = useInventory();
+
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ORDER_NOW" | "OK">("ALL");
   const [sortBy, setSortBy] = useState<"URGENCY" | "SKU" | "NAME" | "COVER">("URGENCY");
+  const [restockNotice, setRestockNotice] = useState<string | null>(null);
 
-  // Calculate policies for each product using packages/core
+  // Dynamically calculate policies for every SKU using packages/core + live anomaly & AI states
   const calculatedCards = useMemo(() => {
     return products.map((prod) => {
       const isUnknownIncluded = includeUnknowns[prod.sku] ?? true;
-      const policy = calculateProductPolicy(prod, serviceLevel, isUnknownIncluded);
+      const skuAnomalies = anomalies.filter((a) => a.sku === prod.sku);
+      const policy = calculateProductPolicy(
+        prod,
+        serviceLevel,
+        isUnknownIncluded,
+        skuAnomalies,
+        aiEnabled
+      );
       return {
         product: prod,
         category: getProductCategory(prod.sku),
+        skuAnomalies,
         ...policy,
       };
     });
-  }, [products, serviceLevel, includeUnknowns]);
+  }, [products, serviceLevel, includeUnknowns, anomalies, aiEnabled]);
 
-  // Aggregate KPI summary
+  // Aggregate live KPI summary
   const summary = useMemo(() => {
     const totalSKUs = calculatedCards.length;
     const orderNowCount = calculatedCards.filter((c) => c.isOrderNow).length;
     const totalSafetyUnits = calculatedCards.reduce((acc, c) => acc + Math.ceil(c.rec.ss), 0);
     const totalAnnualCost = calculatedCards.reduce((acc, c) => acc + c.cost.totalAnnualCost, 0);
+    const totalHoldingCost = calculatedCards.reduce((acc, c) => acc + c.cost.holdingCost, 0);
+    const totalOrderingCost = calculatedCards.reduce((acc, c) => acc + c.cost.orderingCost, 0);
+    const totalInventoryUnits = calculatedCards.reduce((acc, c) => acc + c.product.onHand, 0);
 
     return {
       totalSKUs,
@@ -80,8 +113,57 @@ export const RecommendationsView: React.FC = () => {
       okCount: totalSKUs - orderNowCount,
       totalSafetyUnits,
       totalAnnualCost,
+      totalHoldingCost,
+      totalOrderingCost,
+      totalInventoryUnits,
     };
   }, [calculatedCards]);
+
+  // Chart 1 Data: Cross-Catalog Stock Position vs Reorder Point & Safety Stock
+  const catalogComparisonData = useMemo(() => {
+    return calculatedCards.map((c) => ({
+      sku: c.product.sku,
+      name: c.product.name,
+      onHand: c.product.onHand + c.product.onOrder,
+      rop: c.rec.ropOperational,
+      safetyStock: Math.ceil(c.rec.ss),
+      eoq: c.rec.q,
+      daysCover: c.daysCover,
+      isOrderNow: c.isOrderNow,
+    }));
+  }, [calculatedCards]);
+
+  // Chart 2 Data: Active SKU 60-Day Live Demand, Anomaly Spikes & Seasonal Model
+  const activeTelemetryProduct = selectedProduct || products[0] || null;
+  const activeTelemetryData = useMemo(() => {
+    if (!activeTelemetryProduct) return { chartPoints: [], wape: 0, winner: "model" };
+    const sales = getSalesForProduct(activeTelemetryProduct.id);
+    const skuAnoms = anomalies.filter((a) => a.sku === activeTelemetryProduct.sku);
+    const fc = generateForecastData(activeTelemetryProduct, sales);
+
+    // Show the most recent 60 days for crisp visual density
+    const recentPoints = fc.points.slice(-60).map((pt) => {
+      const matchedAnom = skuAnoms.find((a) => a.date === pt.date);
+      return {
+        date: pt.date.slice(5), // MM-DD
+        fullDate: pt.date,
+        actual: pt.actual ?? 0,
+        forecast: fc.metrics.winner === "model" ? pt.model : pt.baseline,
+        baseline: pt.baseline,
+        anomaly: matchedAnom ? pt.actual : null,
+        anomalyClass: matchedAnom?.class,
+        isHoldout: pt.isHoldout,
+      };
+    });
+
+    return {
+      chartPoints: recentPoints,
+      wape:
+        fc.metrics.winner === "model" ? fc.metrics.wapeModel : fc.metrics.wapeBaseline,
+      mae: fc.metrics.winner === "model" ? fc.metrics.maeModel : fc.metrics.maeBaseline,
+      winner: fc.metrics.winner,
+    };
+  }, [activeTelemetryProduct, getSalesForProduct, anomalies]);
 
   // Filter and sort cards
   const filteredCards = useMemo(() => {
@@ -129,27 +211,54 @@ export const RecommendationsView: React.FC = () => {
     if (p) setSelectedProductId(p.id);
   };
 
+  const handleQuickRestock = (sku: string, eoq: number, unit: string) => {
+    restockProduct(sku, eoq);
+    setRestockNotice(`Replenished ${sku} with +${eoq.toLocaleString()} ${unit} (optimal EOQ).`);
+    setTimeout(() => setRestockNotice(null), 4000);
+  };
+
+  const handleRestockAllCritical = () => {
+    const critical = calculatedCards.filter((c) => c.isOrderNow);
+    if (critical.length === 0) return;
+    critical.forEach((c) => {
+      restockProduct(c.product.sku, c.rec.q);
+    });
+    setRestockNotice(
+      `Executed EOQ replenishment across ${critical.length} SKU(s): ${critical
+        .map((c) => `${c.product.sku} (+${c.rec.q})`)
+        .join(", ")}`
+    );
+    setTimeout(() => setRestockNotice(null), 5000);
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-[#ebebeb] dark:border-[#262626]">
         <div>
           <div className="text-[11px] font-mono font-medium uppercase tracking-wider text-[#737373] dark:text-[#a3a3a3] mb-1">
-            REPLENISHMENT OVERVIEW
+            LIVE INVENTORY INTELLIGENCE &amp; ANALYTICS
           </div>
           <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-[#171717] dark:text-[#f5f5f5] tracking-[-0.025em]">
-            Recommendations
+            Recommendations &amp; Analytics
           </h1>
           <p className="text-xs sm:text-sm text-[#525252] dark:text-[#a3a3a3] mt-1 max-w-2xl">
-            When to reorder and how much, calculated at{" "}
+            Real-time continuous-review $(s, Q)$ telemetry calculated at{" "}
             <span className="font-mono font-medium text-[#171717] dark:text-[#f5f5f5]">
-              Service level {(serviceLevel * 100).toFixed(1)}% · z = {zValue.toFixed(3)}
+              Service level {(serviceLevel * 100).toFixed(1)}% · z = {zValue.toFixed(3)} ·{" "}
+              {aiEnabled ? "AI Advisory Active" : "Rules-Only Mode"}
             </span>
             .
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {summary.orderNowCount > 0 && (
+            <Button variant="outline" size="sm" onClick={handleRestockAllCritical}>
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Restock All Critical ({summary.orderNowCount})</span>
+            </Button>
+          )}
           <Link to="/products">
             <Button variant="outline" size="sm">
               <Package className="w-3.5 h-3.5" />
@@ -159,21 +268,25 @@ export const RecommendationsView: React.FC = () => {
           <Link to="/setup">
             <Button variant="primary" size="sm">
               <Upload className="w-3.5 h-3.5" />
-              <span>Import Data</span>
+              <span>Import CSV</span>
             </Button>
           </Link>
         </div>
       </div>
 
-      {serverError && (
-        <div className="p-4 rounded-lg bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-xs font-mono text-[#e11d48] dark:text-[#fda4af] flex items-center justify-between">
+      {restockNotice && (
+        <div className="rounded-md bg-[#f0fdf4] dark:bg-[#0d2416] border border-[#dcfce7] dark:border-[#163d24] px-4 py-3 text-xs font-mono text-[#15803d] dark:text-[#86efac] flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 shrink-0" />
-            <span>Connection error: {serverError}. Operating in local cache fallback mode.</span>
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{restockNotice}</span>
           </div>
-          <Button variant="secondary" size="sm" onClick={() => void refreshProducts()}>
-            Retry Connection
-          </Button>
+          <button
+            type="button"
+            onClick={() => void loadDemoData()}
+            className="underline text-[11px] hover:opacity-80"
+          >
+            Reset Demo Stock
+          </button>
         </div>
       )}
 
@@ -189,21 +302,6 @@ export const RecommendationsView: React.FC = () => {
                 <Skeleton className="h-3 w-20" />
                 <Skeleton className="h-8 w-14" />
                 <Skeleton className="h-3 w-16" />
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="p-5 rounded-lg border border-[#ebebeb] dark:border-[#262626] bg-white dark:bg-[#141414] space-y-4"
-              >
-                <Skeleton className="h-5 w-32" />
-                <Skeleton className="h-4 w-48" />
-                <div className="grid grid-cols-2 gap-2 pt-4">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
               </div>
             ))}
           </div>
@@ -253,20 +351,20 @@ export const RecommendationsView: React.FC = () => {
             {summary.okCount}
           </div>
           <div className="mt-0.5 text-xs text-[#525252] dark:text-[#a3a3a3]">
-            SKUs above reorder point
+            {summary.totalInventoryUnits.toLocaleString()} total units on hand
           </div>
         </div>
 
         <div className="p-4 sm:p-5">
           <div className="text-[11px] font-mono uppercase tracking-wider text-[#737373] dark:text-[#a3a3a3]">
-            Safety Buffer
+            Safety Buffer (z={zValue.toFixed(2)})
           </div>
           <div className="mt-1.5 font-mono text-2xl sm:text-3xl font-semibold text-[#171717] dark:text-[#f5f5f5]">
             {summary.totalSafetyUnits.toLocaleString()}{" "}
             <span className="text-xs font-normal text-[#737373] dark:text-[#a3a3a3]">units</span>
           </div>
           <div className="mt-0.5 text-xs text-[#525252] dark:text-[#a3a3a3]">
-            Reserved across {summary.totalSKUs} SKUs
+            Reserved across {summary.totalSKUs} SKUs ({anomalies.length} anomalies tracked)
           </div>
         </div>
 
@@ -278,10 +376,225 @@ export const RecommendationsView: React.FC = () => {
             ₹{summary.totalAnnualCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}
           </div>
           <div className="mt-0.5 text-xs text-[#525252] dark:text-[#a3a3a3]">
-            Holding + ordering total
+            Hold ₹{summary.totalHoldingCost.toFixed(0)} · Order ₹{summary.totalOrderingCost.toFixed(0)}
           </div>
         </div>
       </div>
+
+      {/* LIVE DYNAMIC ANALYTICS CHARTS SECTION */}
+      {products.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          {/* Chart 1: Catalog Stock Position vs Reorder Point (ROP) */}
+          <Card variant="default" className="lg:col-span-6">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3">
+              <div>
+                <CardTitle className="flex items-center gap-1.5">
+                  <BarChart3 className="w-4 h-4" />
+                  <span>Stock Position vs. Reorder Point (ROP)</span>
+                </CardTitle>
+                <CardDescription>
+                  Live comparison across all {products.length} SKUs (click a bar to inspect SKU)
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-3 text-[10px] font-mono text-[#737373] dark:text-[#a3a3a3]">
+                <span className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-sm bg-[#171717] dark:bg-[#f5f5f5] inline-block" />
+                  On Hand
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-sm bg-[#e11d48] inline-block" />
+                  ROP Trigger
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-sm bg-[#737373] inline-block" />
+                  Safety Stock
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent className="p-5 pt-2">
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={catalogComparisonData}
+                    margin={{ top: 10, right: 8, bottom: 8, left: -12 }}
+                    onClick={(state) => {
+                      if (state && state.activeLabel) {
+                        handleSelectProduct(String(state.activeLabel));
+                      }
+                    }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="2 2"
+                      stroke={isDark ? "#262626" : "#ebebeb"}
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="sku"
+                      tick={{ fontSize: 10, fill: isDark ? "#a3a3a3" : "#737373" }}
+                      axisLine={{ stroke: isDark ? "#262626" : "#ebebeb" }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: isDark ? "#a3a3a3" : "#737373" }}
+                      axisLine={{ stroke: isDark ? "#262626" : "#ebebeb" }}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const d = payload[0].payload;
+                          return (
+                            <div className="rounded-md bg-[#171717] text-white border border-[#262626] p-2.5 text-xs space-y-1 font-mono shadow-md">
+                              <div className="font-semibold">
+                                {d.sku} · {d.name}
+                              </div>
+                              <div className="text-[#f5f5f5]">
+                                On Hand: {d.onHand.toLocaleString()} u ({d.daysCover}d cover)
+                              </div>
+                              <div className="text-[#fda4af]">
+                                Reorder Point: {d.rop.toLocaleString()} u
+                              </div>
+                              <div className="text-[#a3a3a3]">
+                                Safety Stock: {d.safetyStock.toLocaleString()} u · EOQ: {d.eoq} u
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Bar
+                      dataKey="onHand"
+                      name="On Hand"
+                      fill={isDark ? "#f5f5f5" : "#171717"}
+                      radius={[3, 3, 0, 0]}
+                      cursor="pointer"
+                    />
+                    <Bar
+                      dataKey="rop"
+                      name="Reorder Point"
+                      fill="#e11d48"
+                      radius={[3, 3, 0, 0]}
+                      cursor="pointer"
+                    />
+                    <Bar
+                      dataKey="safetyStock"
+                      name="Safety Stock"
+                      fill={isDark ? "#525252" : "#a3a3a3"}
+                      radius={[3, 3, 0, 0]}
+                      cursor="pointer"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Chart 2: Selected SKU Live Demand Telemetry, Forecast & Anomalies */}
+          <Card variant="default" className="lg:col-span-6">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3">
+              <div>
+                <CardTitle className="flex items-center gap-1.5">
+                  <Activity className="w-4 h-4" />
+                  <span>
+                    Demand &amp; Forecast Telemetry — {activeTelemetryProduct?.sku}
+                  </span>
+                </CardTitle>
+                <CardDescription>
+                  Last 60 days observed demand vs{" "}
+                  {activeTelemetryData.winner === "model" ? "Seasonal Smoothing" : "7d Baseline"}{" "}
+                  (Holdout WAPE: {activeTelemetryData.wape}%)
+                </CardDescription>
+              </div>
+
+              {/* Quick SKU Selector Pills */}
+              <div className="flex flex-wrap items-center gap-1">
+                {products.map((p) => (
+                  <button
+                    key={p.sku}
+                    type="button"
+                    onClick={() => setSelectedProductId(p.id)}
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors border ${
+                      activeTelemetryProduct?.id === p.id
+                        ? "bg-[#171717] text-white dark:bg-[#f5f5f5] dark:text-[#0a0a0a] border-[#171717] dark:border-[#f5f5f5] font-semibold"
+                        : "bg-[#fafafa] dark:bg-[#0f0f0f] text-[#737373] dark:text-[#a3a3a3] border-[#ebebeb] dark:border-[#262626] hover:text-[#171717] dark:hover:text-[#f5f5f5]"
+                    }`}
+                  >
+                    {p.sku}
+                  </button>
+                ))}
+              </div>
+            </CardHeader>
+            <CardContent className="p-5 pt-2">
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart
+                    data={activeTelemetryData.chartPoints}
+                    margin={{ top: 10, right: 8, bottom: 8, left: -12 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="2 2"
+                      stroke={isDark ? "#262626" : "#ebebeb"}
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 10, fill: isDark ? "#a3a3a3" : "#737373" }}
+                      interval={9}
+                      axisLine={{ stroke: isDark ? "#262626" : "#ebebeb" }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: isDark ? "#a3a3a3" : "#737373" }}
+                      axisLine={{ stroke: isDark ? "#262626" : "#ebebeb" }}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const d = payload[0].payload;
+                          return (
+                            <div className="rounded-md bg-[#171717] text-white border border-[#262626] p-2.5 text-xs space-y-1 font-mono shadow-md">
+                              <div className="text-[#a3a3a3]">
+                                {d.fullDate} {d.isHoldout ? "(Holdout)" : "(Train)"}
+                              </div>
+                              <div className="font-semibold">Actual: {d.actual} units</div>
+                              <div className="text-[#86efac]">
+                                Forecast: {Number(d.forecast).toFixed(1)} units
+                              </div>
+                              {d.anomaly !== null && (
+                                <div className="text-[#fda4af] pt-1 border-t border-[#262626]">
+                                  Flagged Anomaly: {d.anomalyClass}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="actual"
+                      fill={isDark ? "rgba(245,245,245,0.06)" : "rgba(23,23,23,0.05)"}
+                      stroke={isDark ? "#f5f5f5" : "#171717"}
+                      strokeWidth={1.6}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="forecast"
+                      stroke="#10b981"
+                      strokeWidth={1.5}
+                      dot={false}
+                    />
+                    <Scatter dataKey="anomaly" fill="#e11d48" />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Control Bar: Search, Status Filters & Sorting */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
@@ -483,19 +796,15 @@ export const RecommendationsView: React.FC = () => {
                             ? `Runs out around ${stockoutDate}`
                             : "Stock buffer healthy"}
                         </span>
-                        <span className="inline-flex items-center gap-1 text-[#525252] dark:text-[#a3a3a3]">
-                          {aiEnabled ? (
-                            <>
-                              <Sparkles className="w-3 h-3" />
-                              <span>AI + Rules</span>
-                            </>
-                          ) : (
-                            <>
-                              <ShieldCheck className="w-3 h-3" />
-                              <span>Rules</span>
-                            </>
-                          )}
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleQuickRestock(product.sku, rec.q, product.unit)}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#f5f5f5] dark:bg-[#1f1f1f] hover:bg-[#171717] hover:text-white dark:hover:bg-[#f5f5f5] dark:hover:text-[#0a0a0a] text-[#171717] dark:text-[#f5f5f5] border border-[#ebebeb] dark:border-[#262626] transition-colors font-semibold"
+                          title={`Execute +${rec.q} EOQ Replenishment`}
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>Restock +{rec.q}</span>
+                        </button>
                       </div>
                     </div>
                   </div>

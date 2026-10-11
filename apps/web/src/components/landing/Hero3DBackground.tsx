@@ -571,3 +571,4 @@ export const Hero3DBackground: React.FC = () => {
 };
 
 export default Hero3DBackground;
+

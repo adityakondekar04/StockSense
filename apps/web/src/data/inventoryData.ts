@@ -517,7 +517,9 @@ export const INITIAL_AUDIT_LOG: AuditRecord[] = [
 export function calculateProductPolicy(
   product: ProductRecord,
   serviceLevel: number,
-  includeUnknowns = true
+  includeUnknowns = true,
+  productAnomalies?: AnomalyRecord[],
+  aiEnabled = true
 ): {
   rec: InventoryRecommendation;
   cost: AnnualCostBreakdown;
@@ -529,11 +531,27 @@ export function calculateProductPolicy(
   demandShare: number;
   leadShare: number;
 } {
-  // If unknowns are excluded, slightly lower the standard deviation (removing the unexplained spike)
-  const effectiveSd = !includeUnknowns && product.sku === "PCM-02" ? product.sdDemand * 0.85 : product.sdDemand;
+  // Dynamically adjust effective demand variance & mean based on anomaly treatment & AI advisory mode
+  const hasUnknownSpike =
+    product.sku === "PCM-02" ||
+    (productAnomalies && productAnomalies.some((a) => a.class === "UNKNOWN"));
+
+  let effectiveSd = !includeUnknowns && hasUnknownSpike ? product.sdDemand * 0.84 : product.sdDemand;
+  let effectiveMean = product.meanDailyDemand;
+
+  if (productAnomalies && productAnomalies.length > 0) {
+    const dataErrors = productAnomalies.filter((a) => a.class === "DATA_ERROR").length;
+    const promos = productAnomalies.filter((a) => a.class === "PROMOTION").length;
+    if (dataErrors > 0) {
+      effectiveSd = Math.max(0.5, effectiveSd * (1 - Math.min(0.18, dataErrors * 0.04)));
+    }
+    if (promos > 0 && aiEnabled) {
+      effectiveMean = effectiveMean * (1 + Math.min(0.08, promos * 0.025));
+    }
+  }
 
   const input: InventoryInput = {
-    meanDemand: product.meanDailyDemand,
+    meanDemand: effectiveMean,
     sdDemand: effectiveSd,
     leadTimeMean: product.leadTimeMean,
     leadTimeSd: product.leadTimeSd,
@@ -551,7 +569,7 @@ export function calculateProductPolicy(
   const pos = product.onHand + product.onOrder;
   const operationalRop = rec.ropOperational;
   const isOrderNow = pos <= operationalRop;
-  const cover = daysOfCover(pos, product.meanDailyDemand) ?? 0;
+  const cover = daysOfCover(pos, effectiveMean) ?? 0;
   const stockoutDate = isOrderNow ? projectedStockoutDate(new Date(), cover) : null;
 
   const totalVar = (rec.split.demand + rec.split.leadTime) || 1;

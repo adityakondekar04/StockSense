@@ -1,8 +1,17 @@
 // apps/web/src/components/dashboard/ProductDetailView.tsx
-// Minimalist Product Detail View matching Landing Page theme
+// Minimalist Product Detail View with Live Dynamic Demand & Inventory Trajectory Analytics
 
 import React, { useMemo, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from "recharts";
 import {
   ArrowLeft,
   BarChart3,
@@ -11,8 +20,10 @@ import {
   Printer,
   AlertTriangle,
   CheckCircle2,
+  Plus,
 } from "lucide-react";
 import { useInventory } from "../../context/InventoryContext";
+import { useTheme } from "../../context/ThemeContext";
 import { calculateProductPolicy } from "../../data/inventoryData";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
@@ -27,6 +38,8 @@ function getProductCategory(sku: string): string {
   if (sku.startsWith("FLU")) return "Antivirals";
   if (sku.startsWith("BND")) return "Surgical";
   if (sku.startsWith("ANT")) return "Antibiotics";
+  if (sku.startsWith("AZI")) return "Antibiotics";
+  if (sku.startsWith("MET")) return "Metabolic";
   return "General";
 }
 
@@ -38,10 +51,17 @@ export const ProductDetailView: React.FC = () => {
     setSelectedProductId,
     serviceLevel,
     zValue,
+    aiEnabled,
     includeUnknowns,
+    anomalies,
+    getSalesForProduct,
+    restockProduct,
     isLoading,
     loadDemoData,
   } = useInventory();
+
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const activeProduct = useMemo(() => {
     if (!id) return selectedProduct;
@@ -56,10 +76,26 @@ export const ProductDetailView: React.FC = () => {
   }, [activeProduct, selectedProduct, setSelectedProductId]);
 
   const isUnknownIncluded = activeProduct ? (includeUnknowns[activeProduct.sku] ?? true) : true;
+  const skuAnomalies = useMemo(() => {
+    if (!activeProduct) return [];
+    return anomalies.filter((a) => a.sku === activeProduct.sku);
+  }, [anomalies, activeProduct]);
+
   const policy = useMemo(() => {
     if (!activeProduct) return null;
-    return calculateProductPolicy(activeProduct, serviceLevel, isUnknownIncluded);
-  }, [activeProduct, serviceLevel, isUnknownIncluded]);
+    return calculateProductPolicy(
+      activeProduct,
+      serviceLevel,
+      isUnknownIncluded,
+      skuAnomalies,
+      aiEnabled
+    );
+  }, [activeProduct, serviceLevel, isUnknownIncluded, skuAnomalies, aiEnabled]);
+
+  const salesSeries = useMemo(() => {
+    if (!activeProduct) return [];
+    return getSalesForProduct(activeProduct.id).slice(-45);
+  }, [activeProduct, getSalesForProduct]);
 
   const category = activeProduct ? getProductCategory(activeProduct.sku) : "General";
 
@@ -92,7 +128,7 @@ export const ProductDetailView: React.FC = () => {
         </Link>
         <EmptyState
           title="Product Not Found"
-          description={`The requested SKU or product identifier "${id || 'N/A'}" does not exist in the active catalog.`}
+          description={`The requested SKU or product identifier "${id || "N/A"}" does not exist in the active catalog.`}
           action={{
             label: "Return to Products Directory",
             to: "/products",
@@ -119,10 +155,18 @@ export const ProductDetailView: React.FC = () => {
         </Link>
 
         <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => restockProduct(activeProduct.sku, policy.rec.q)}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Restock +{policy.rec.q} {activeProduct.unit}</span>
+          </Button>
           <Link to={`/products/${activeProduct.sku}/cleaning`}>
             <Button variant="outline" size="sm">
               <BarChart3 className="w-3.5 h-3.5" />
-              <span>Sales &amp; Anomalies</span>
+              <span>Sales &amp; Anomalies ({skuAnomalies.length})</span>
             </Button>
           </Link>
           <Link to={`/products/${activeProduct.sku}/forecast`}>
@@ -250,6 +294,70 @@ export const ProductDetailView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Live 45-Day Demand Telemetry Chart */}
+      {salesSeries.length > 0 && (
+        <Card variant="default">
+          <CardHeader>
+            <CardTitle>Recent Daily Demand Velocity (Last 45 Days)</CardTitle>
+            <CardDescription>
+              Observed dispensing volume for {activeProduct.sku} (Mean: {activeProduct.meanDailyDemand}{" "}
+              {activeProduct.unit}/day, σ = {activeProduct.sdDemand})
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-5 pt-2">
+            <div className="h-56 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={salesSeries}
+                  margin={{ top: 8, right: 8, bottom: 8, left: -12 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="2 2"
+                    stroke={isDark ? "#262626" : "#ebebeb"}
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 10, fill: isDark ? "#a3a3a3" : "#737373" }}
+                    interval={6}
+                    axisLine={{ stroke: isDark ? "#262626" : "#ebebeb" }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: isDark ? "#a3a3a3" : "#737373" }}
+                    axisLine={{ stroke: isDark ? "#262626" : "#ebebeb" }}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const d = payload[0].payload;
+                        return (
+                          <div className="rounded-md bg-[#171717] text-white border border-[#262626] p-2.5 text-xs font-mono">
+                            <div className="text-[#a3a3a3]">{d.date}</div>
+                            <div className="font-semibold">
+                              Demand: {d.demand} {activeProduct.unit}
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="demand"
+                    fill={isDark ? "rgba(245,245,245,0.08)" : "rgba(23,23,23,0.06)"}
+                    stroke={isDark ? "#f5f5f5" : "#171717"}
+                    strokeWidth={1.8}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Variance Breakdown & Annual Cost */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

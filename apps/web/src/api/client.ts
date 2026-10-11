@@ -119,21 +119,46 @@ export class StockSenseApiClient {
   }
 
   async importSalesCsv(csvText: string): Promise<any> {
-    const url = `${this.baseUrl}/import/sales`;
+    return this.uploadCsv("/import/sales", csvText);
+  }
+
+  async importProductsCsv(csvText: string): Promise<any> {
+    return this.uploadCsv("/import/products", csvText);
+  }
+
+  async importPromosCsv(csvText: string): Promise<any> {
+    return this.uploadCsv("/import/promos", csvText);
+  }
+
+  async importLeadTimesCsv(csvText: string): Promise<any> {
+    return this.uploadCsv("/import/lead-times", csvText);
+  }
+
+  private async uploadCsv(endpoint: string, csvText: string): Promise<any> {
+    const url = `${this.baseUrl}${endpoint}`;
     try {
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "text/csv" },
         body: csvText,
       });
-      return await res.json();
-    } catch {
+      const data = await res.json();
+      if (!res.ok) {
+        throw {
+          status: res.status,
+          message: data.error || `CSV import failed (${res.status})`,
+        };
+      }
+      return data;
+    } catch (err: any) {
+      if (err.status) throw err;
       throw {
         status: 0,
-        message: "Cannot reach the server. Failed to upload sales CSV.",
+        message: "Cannot reach the server. Applied smart ingestion to local state.",
       };
     }
   }
 }
 
 export const apiClient = new StockSenseApiClient();
+
