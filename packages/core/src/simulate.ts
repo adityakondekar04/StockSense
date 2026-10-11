@@ -4,6 +4,8 @@
 import { cdf } from "./normal";
 import type { InventoryInput } from "./inventory";
 
+
+
 export interface ScenarioParams {
   surgePct: number;
   delayDays: number;

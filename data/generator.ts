@@ -3,8 +3,10 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { mulberry32, boxMuller } from "../packages/core/src/simulate.ts";
-import type { ProductInput, SaleRow, PromoRow, LeadTimeRow } from "../packages/core/src/schemas.ts";
+import { mulberry32, boxMuller, type ProductInput, type SaleRow, type PromoRow, type LeadTimeRow } from "@stocksense/core";
+
+
+
 
 export const GENERATOR_SEED = 20261011;
 export const TOTAL_DAYS = 150;

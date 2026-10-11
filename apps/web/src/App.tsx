@@ -1,21 +1,148 @@
 // apps/web/src/App.tsx
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { InventoryProvider } from "./context/InventoryContext";
 import { LandingPage } from "./pages/LandingPage";
-import { DashboardView } from "./pages/DashboardView";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
+import { DashboardLayout } from "./components/dashboard/DashboardLayout";
+import { RecommendationsView } from "./components/dashboard/RecommendationsView";
+import { CleaningView } from "./components/dashboard/CleaningView";
+import { ForecastView } from "./components/dashboard/ForecastView";
+import { ScenarioView } from "./components/dashboard/ScenarioView";
+import { SetupView } from "./components/dashboard/SetupView";
+import { AuditView } from "./components/dashboard/AuditView";
+import { MethodologyView } from "./components/dashboard/MethodologyView";
+import { PrintReportView } from "./components/dashboard/PrintReportView";
 
 export function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/recommendations" element={<DashboardView />} />
-        <Route path="/dashboard" element={<DashboardView />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <InventoryProvider>
+        <Routes>
+          {/* Landing Page */}
+          <Route path="/" element={<LandingPage />} />
+
+          {/* Authentication Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+
+          {/* Primary Replenishment Recommendations Screen */}
+          <Route
+            path="/recommendations"
+            element={
+              <DashboardLayout>
+                <RecommendationsView />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <DashboardLayout>
+                <RecommendationsView />
+              </DashboardLayout>
+            }
+          />
+
+          {/* Screen 2: Data Cleaning */}
+          <Route
+            path="/products/:id/cleaning"
+            element={
+              <DashboardLayout>
+                <CleaningView />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/cleaning"
+            element={
+              <DashboardLayout>
+                <CleaningView />
+              </DashboardLayout>
+            }
+          />
+
+          {/* Screen 3: Forecast Check */}
+          <Route
+            path="/products/:id/forecast"
+            element={
+              <DashboardLayout>
+                <ForecastView />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/forecast"
+            element={
+              <DashboardLayout>
+                <ForecastView />
+              </DashboardLayout>
+            }
+          />
+
+          {/* Screen 5: Scenario Lab */}
+          <Route
+            path="/products/:id/scenario"
+            element={
+              <DashboardLayout>
+                <ScenarioView />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/scenario"
+            element={
+              <DashboardLayout>
+                <ScenarioView />
+              </DashboardLayout>
+            }
+          />
+
+          {/* Screen 1 & 1b: Setup & Manual Form */}
+          <Route
+            path="/setup"
+            element={
+              <DashboardLayout>
+                <SetupView />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/setup/manual"
+            element={
+              <DashboardLayout>
+                <SetupView />
+              </DashboardLayout>
+            }
+          />
+
+          {/* Screen 7: Decision Log (Audit) */}
+          <Route
+            path="/audit"
+            element={
+              <DashboardLayout>
+                <AuditView />
+              </DashboardLayout>
+            }
+          />
+
+          {/* Screen 6: Methodology & Formulas */}
+          <Route
+            path="/methodology"
+            element={
+              <DashboardLayout>
+                <MethodologyView />
+              </DashboardLayout>
+            }
+          />
+
+          {/* Screen 8: Print Report */}
+          <Route path="/report/:id" element={<PrintReportView />} />
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </InventoryProvider>
     </BrowserRouter>
   );
 }
