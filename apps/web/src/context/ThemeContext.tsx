@@ -17,19 +17,17 @@ function getInitialTheme(): ThemeMode {
   if (typeof window !== "undefined") {
     try {
       const saved = localStorage.getItem("stocksense_theme");
-      if (saved === "dark" || saved === "light") {
-        return saved;
-      }
-      if (document.documentElement.classList.contains("dark")) {
+      if (saved === "dark") {
         return "dark";
       }
-      if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        return "dark";
+      if (saved === "light") {
+        return "light";
       }
     } catch {
       // ignore storage errors
     }
   }
+  // Default to light mode following design.md
   return "light";
 }
 

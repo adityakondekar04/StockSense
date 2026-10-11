@@ -67,7 +67,7 @@ export const ProductDetailView: React.FC = () => {
     return (
       <div className="space-y-6 animate-fadeIn">
         <Skeleton className="h-8 w-48" />
-        <div className="p-8 border border-[#E7E5E4] dark:border-[#292524] bg-white dark:bg-[#1C1917] space-y-4">
+        <div className="p-8 border border-[#ebebeb] dark:border-[#262626] bg-white dark:bg-[#141414] rounded-lg space-y-4">
           <Skeleton className="h-6 w-32" />
           <Skeleton className="h-4 w-64" />
           <div className="grid grid-cols-4 gap-4 pt-4">
@@ -86,7 +86,7 @@ export const ProductDetailView: React.FC = () => {
       <div className="space-y-6 animate-fadeIn">
         <Link
           to="/products"
-          className="inline-flex items-center gap-2 text-xs font-mono text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#FAFAF9] transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-mono text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5] transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to Products Directory
         </Link>
