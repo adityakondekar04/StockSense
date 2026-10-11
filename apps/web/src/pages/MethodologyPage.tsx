@@ -49,3 +49,4 @@ export const MethodologyPage: React.FC = () => {
 };
 
 export default MethodologyPage;
+

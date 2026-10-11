@@ -102,14 +102,14 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-[#fafafa]/95 backdrop-blur-sm border-b border-[#ebebeb] transition-colors shrink-0">
+    <header className="sticky top-0 z-30 bg-[#fafafa]/95 dark:bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-[#ebebeb] dark:border-[#262626] transition-colors shrink-0">
       <div className="flex items-center justify-between h-14 px-4 sm:px-6">
         {/* Left: Mobile trigger & Breadcrumb */}
         <div className="flex items-center gap-2.5 min-w-0">
           <button
             type="button"
             onClick={onMenuToggle}
-            className="p-1.5 rounded-md text-[#525252] hover:text-[#171717] hover:bg-[#f0f0f0] lg:hidden"
+            className="p-1.5 rounded-md text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5] hover:bg-[#f0f0f0] dark:hover:bg-[#1a1a1a] lg:hidden"
             aria-label="Toggle navigation menu"
           >
             <Menu className="w-4 h-4" />
@@ -122,8 +122,8 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
             <span className="text-[#737373] hidden sm:inline">
               {section}
             </span>
-            <ChevronRight className="w-3.5 h-3.5 text-[#d4d4d4] hidden sm:inline shrink-0" />
-            <span className="font-heading font-semibold text-sm text-[#171717] truncate">
+            <ChevronRight className="w-3.5 h-3.5 text-[#d4d4d4] dark:text-[#333333] hidden sm:inline shrink-0" />
+            <span className="font-heading font-semibold text-sm text-[#171717] dark:text-[#f5f5f5] truncate">
               {title}
             </span>
           </nav>
@@ -132,19 +132,19 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
         {/* Right: Global Controls (SKU, Service Level + z, AI Toggle, Print, User Profile) */}
         <div className="flex items-center gap-2">
           {/* Active SKU Switcher */}
-          <div className="flex items-center rounded-md border border-[#ebebeb] bg-white px-2.5 py-1 text-xs">
+          <div className="flex items-center rounded-md border border-[#ebebeb] dark:border-[#262626] bg-white dark:bg-[#141414] px-2.5 py-1 text-xs">
             <span className="text-[#737373] text-[11px] font-mono mr-1.5 hidden sm:inline">
               Product:
             </span>
             <select
               value={selectedProduct?.sku || ""}
               onChange={(e) => handleProductChange(e.target.value)}
-              className="bg-transparent font-mono font-medium text-[#171717] text-xs focus:outline-none cursor-pointer"
+              className="bg-transparent font-mono font-medium text-[#171717] dark:text-[#f5f5f5] text-xs focus:outline-none cursor-pointer"
               aria-label="Active Product SKU"
               disabled={products.length === 0}
             >
               {products.length === 0 ? (
-                <option value="" className="bg-white text-[#171717]">
+                <option value="" className="bg-white dark:bg-[#141414] text-[#171717] dark:text-[#f5f5f5]">
                   No products
                 </option>
               ) : (
@@ -152,7 +152,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
                   <option
                     key={p.sku}
                     value={p.sku}
-                    className="bg-white text-[#171717]"
+                    className="bg-white dark:bg-[#141414] text-[#171717] dark:text-[#f5f5f5]"
                   >
                     {p.sku} · {p.name.length > 16 ? p.name.substring(0, 16) + "…" : p.name}
                   </option>
@@ -162,25 +162,25 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
           </div>
 
           {/* Service Level & Z Factor Selector */}
-          <div className="hidden md:flex items-center rounded-md border border-[#ebebeb] bg-white px-2.5 py-1 text-xs">
+          <div className="hidden md:flex items-center rounded-md border border-[#ebebeb] dark:border-[#262626] bg-white dark:bg-[#141414] px-2.5 py-1 text-xs">
             <span className="text-[#737373] text-[11px] font-mono mr-1.5">
               SL:
             </span>
             <select
               value={serviceLevel}
               onChange={(e) => setServiceLevel(Number(e.target.value))}
-              className="bg-transparent font-mono font-medium text-[#171717] text-xs focus:outline-none cursor-pointer"
+              className="bg-transparent font-mono font-medium text-[#171717] dark:text-[#f5f5f5] text-xs focus:outline-none cursor-pointer"
               aria-label="Service Level Target"
             >
-              <option value={0.8} className="bg-white">80%</option>
-              <option value={0.9} className="bg-white">90%</option>
-              <option value={0.95} className="bg-white">95%</option>
-              <option value={0.975} className="bg-white">97.5%</option>
-              <option value={0.99} className="bg-white">99%</option>
-              <option value={0.999} className="bg-white">99.9%</option>
+              <option value={0.8} className="bg-white dark:bg-[#141414]">80%</option>
+              <option value={0.9} className="bg-white dark:bg-[#141414]">90%</option>
+              <option value={0.95} className="bg-white dark:bg-[#141414]">95%</option>
+              <option value={0.975} className="bg-white dark:bg-[#141414]">97.5%</option>
+              <option value={0.99} className="bg-white dark:bg-[#141414]">99%</option>
+              <option value={0.999} className="bg-white dark:bg-[#141414]">99.9%</option>
             </select>
             <span
-              className="ml-2 font-mono text-[11px] text-[#737373] border-l border-[#ebebeb] pl-2"
+              className="ml-2 font-mono text-[11px] text-[#737373] border-l border-[#ebebeb] dark:border-[#262626] pl-2"
               title="Standard normal inverse factor z"
             >
               z={zValue.toFixed(3)}
@@ -193,8 +193,8 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
             onClick={() => setAiEnabled(!aiEnabled)}
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-medium border transition-colors select-none ${
               aiEnabled
-                ? "bg-[#171717] text-white border-[#171717]"
-                : "bg-white text-[#525252] border-[#ebebeb] hover:text-[#171717]"
+                ? "bg-[#171717] dark:bg-[#f5f5f5] text-white dark:text-[#0a0a0a] border-[#171717] dark:border-[#f5f5f5]"
+                : "bg-white dark:bg-[#141414] text-[#525252] dark:text-[#a3a3a3] border-[#ebebeb] dark:border-[#262626] hover:text-[#171717] dark:hover:text-[#f5f5f5]"
             }`}
             title={
               aiEnabled
@@ -219,7 +219,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
           {selectedProduct && (
             <Link
               to={`/report/${selectedProduct.sku}`}
-              className="hidden sm:inline-flex p-1.5 rounded-md border border-[#ebebeb] bg-white text-[#525252] hover:text-[#171717] hover:bg-[#f5f5f5] transition-colors"
+              className="hidden sm:inline-flex p-1.5 rounded-md border border-[#ebebeb] dark:border-[#262626] bg-white dark:bg-[#141414] text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] transition-colors"
               title="Print 1-Page Summary"
               aria-label="Print 1-Page Summary"
             >
@@ -232,25 +232,25 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
             <button
               type="button"
               onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-[#ebebeb] bg-white text-xs hover:border-[#171717] transition-colors cursor-pointer select-none"
+              className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-[#ebebeb] dark:border-[#262626] bg-white dark:bg-[#141414] text-xs hover:border-[#171717] dark:hover:border-[#f5f5f5] transition-colors cursor-pointer select-none"
               title="Current Account & Role"
             >
-              <div className="w-4 h-4 rounded-full bg-[#171717] text-white flex items-center justify-center text-[10px] font-bold">
+              <div className="w-4 h-4 rounded-full bg-[#171717] dark:bg-[#f5f5f5] text-white dark:text-[#0a0a0a] flex items-center justify-center text-[10px] font-bold">
                 {user?.name ? user.name[0].toUpperCase() : "U"}
               </div>
-              <span className="hidden md:inline text-[11px] font-mono font-semibold text-[#171717] max-w-[100px] truncate">
+              <span className="hidden md:inline text-[11px] font-mono font-semibold text-[#171717] dark:text-[#f5f5f5] max-w-[100px] truncate">
                 {user?.name || "User"}
               </span>
-              <span className="font-mono text-[9px] uppercase px-1 py-0.2 rounded bg-[#f5f5f5] text-[#525252] border border-[#ebebeb]">
+              <span className="font-mono text-[9px] uppercase px-1 py-0.2 rounded bg-[#f5f5f5] dark:bg-[#262626] text-[#525252] dark:text-[#d4d4d4] border border-[#ebebeb] dark:border-[#333333]">
                 {role}
               </span>
               <ChevronDown className="w-3 h-3 text-[#737373]" />
             </button>
 
             {userMenuOpen && (
-              <div className="absolute right-0 mt-1 w-64 bg-white border border-[#ebebeb] rounded-lg shadow-lg p-3 z-50 text-xs space-y-3">
-                <div className="border-b border-[#ebebeb] pb-2">
-                  <div className="font-semibold text-[#171717] truncate">
+              <div className="absolute right-0 mt-1 w-64 bg-white dark:bg-[#141414] border border-[#ebebeb] dark:border-[#262626] rounded-lg shadow-lg p-3 z-50 text-xs space-y-3">
+                <div className="border-b border-[#ebebeb] dark:border-[#262626] pb-2">
+                  <div className="font-semibold text-[#171717] dark:text-[#f5f5f5] truncate">
                     {user?.name}
                   </div>
                   <div className="text-[11px] text-[#737373] truncate">
@@ -276,8 +276,8 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
                         }}
                         className={`px-2 py-1 text-[10px] font-mono text-left rounded border cursor-pointer ${
                           role === r
-                            ? "bg-[#171717] text-white border-[#171717] font-bold"
-                            : "bg-[#fafafa] text-[#525252] border-[#ebebeb] hover:border-[#d4d4d4]"
+                            ? "bg-[#171717] dark:bg-[#f5f5f5] text-white dark:text-[#0a0a0a] border-[#171717] dark:border-[#f5f5f5] font-bold"
+                            : "bg-[#fafafa] dark:bg-[#0a0a0a] text-[#525252] dark:text-[#a3a3a3] border-[#ebebeb] dark:border-[#262626] hover:border-[#d4d4d4] dark:hover:border-[#404040]"
                         }`}
                       >
                         {r}
@@ -286,7 +286,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
                   </div>
                 </div>
 
-                <div className="border-t border-[#ebebeb] pt-2 flex items-center justify-between">
+                <div className="border-t border-[#ebebeb] dark:border-[#262626] pt-2 flex items-center justify-between">
                   <span className="text-[10px] font-mono text-[#737373]">
                     {role === "STOREKEEPER" || role === "ADMIN"
                       ? "Full order authority"
@@ -298,7 +298,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
                       logout();
                       navigate("/login");
                     }}
-                    className="flex items-center gap-1 text-[11px] text-red-600 hover:underline cursor-pointer"
+                    className="flex items-center gap-1 text-[11px] text-red-600 dark:text-red-400 hover:underline cursor-pointer"
                   >
                     <LogOut className="w-3 h-3" />
                     <span>Sign out</span>

@@ -1,5 +1,5 @@
 // apps/web/src/context/ThemeContext.tsx
-// Minimalist light theme provider (dark/light switcher removed per user request)
+// Global theme provider keeping the original dark monochrome theme active across pages
 
 import React, { createContext, useContext, useEffect } from "react";
 
@@ -16,15 +16,15 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove("dark");
-    root.classList.add("light");
+    root.classList.add("dark");
+    root.classList.remove("light");
   }, []);
 
   const setTheme = () => {};
   const toggleTheme = () => {};
 
   return (
-    <ThemeContext.Provider value={{ theme: "light", setTheme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme: "dark", setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
