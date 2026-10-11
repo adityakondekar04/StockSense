@@ -1,14 +1,14 @@
 // apps/web/src/components/landing/Navbar.tsx
-// Compact, minimalist navigation bar with functional theme toggle and responsive menu
+// Minimalist navigation bar for the Landing Page and standalone Methodology Page
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { Boxes, Menu, X, ArrowRight, Sun, Moon } from "lucide-react";
-import { useTheme } from "../../context/ThemeContext";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Boxes, Menu, X, ArrowDown } from "lucide-react";
 
 export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { theme, setTheme, toggleTheme } = useTheme();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const navLinks = [
     { label: "The Problem", href: "#problem" },
@@ -21,6 +21,16 @@ export const Navbar: React.FC = () => {
     if (href.startsWith("#")) {
       e.preventDefault();
       setMobileMenuOpen(false);
+      if (location.pathname !== "/") {
+        navigate("/");
+        setTimeout(() => {
+          const target = document.querySelector(href);
+          if (target) {
+            target.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 100);
+        return;
+      }
       const target = document.querySelector(href);
       if (target) {
         target.scrollIntoView({ behavior: "smooth" });
@@ -58,7 +68,11 @@ export const Navbar: React.FC = () => {
                 <Link
                   key={link.label}
                   to={link.href}
-                  className="text-xs font-medium text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5] transition-colors py-1"
+                  className={`text-xs font-medium transition-colors py-1 ${
+                    location.pathname === link.href
+                      ? "text-[#171717] dark:text-[#f5f5f5] font-semibold"
+                      : "text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5]"
+                  }`}
                 >
                   {link.label}
                 </Link>
@@ -77,38 +91,6 @@ export const Navbar: React.FC = () => {
 
           {/* Right Action Cluster */}
           <div className="hidden md:flex items-center gap-3">
-            {/* Segmented Light / Dark Switcher */}
-            <div className="flex items-center rounded-full p-0.5 border border-[#ebebeb] dark:border-[#262626] bg-[#f5f5f5] dark:bg-[#141414] text-[11px] font-mono select-none">
-              <button
-                type="button"
-                onClick={() => setTheme("light")}
-                className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full transition-all ${
-                  theme === "light"
-                    ? "bg-white text-[#171717] shadow-sm font-semibold border border-[#ebebeb]"
-                    : "text-[#737373] hover:text-[#171717]"
-                }`}
-                title="Light mode (design.md default)"
-                aria-label="Switch to light mode"
-              >
-                <Sun className="w-3 h-3 text-[#f59e0b]" />
-                <span>Light</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setTheme("dark")}
-                className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full transition-all ${
-                  theme === "dark"
-                    ? "bg-[#262626] text-white shadow-sm font-semibold border border-[#383838]"
-                    : "text-[#737373] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5]"
-                }`}
-                title="Dark mode"
-                aria-label="Switch to dark mode"
-              >
-                <Moon className="w-3 h-3 text-[#94a3b8]" />
-                <span>Dark</span>
-              </button>
-            </div>
-
             {/* Sign In */}
             <Link
               to="/login"
@@ -117,27 +99,19 @@ export const Navbar: React.FC = () => {
               Sign In
             </Link>
 
-            {/* Primary Action Button */}
-            <Link
-              to="/recommendations"
+            {/* Primary Action Button -> Scrolls to Working Section (#how-it-works) */}
+            <a
+              href="#how-it-works"
+              onClick={(e) => handleScrollClick(e, "#how-it-works")}
               className="inline-flex items-center gap-1.5 bg-[#171717] hover:bg-[#2b2b2b] text-white dark:bg-[#f5f5f5] dark:hover:bg-white dark:text-[#0a0a0a] text-xs font-medium px-3.5 py-1.5 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-[#171717] dark:focus:ring-[#f5f5f5] focus:ring-offset-1 active:scale-[0.98]"
             >
               <span>Explore StockSense</span>
-              <ArrowRight className="w-3 h-3" />
-            </Link>
+              <ArrowDown className="w-3 h-3" />
+            </a>
           </div>
 
-          {/* Mobile Right Bar: Theme Toggle + Menu Button */}
+          {/* Mobile Right Bar: Menu Button */}
           <div className="flex md:hidden items-center gap-2">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="p-1.5 rounded-md text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f0f0f0] dark:hover:bg-[#1f1f1f]"
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -186,14 +160,14 @@ export const Navbar: React.FC = () => {
             >
               Sign In
             </Link>
-            <Link
-              to="/recommendations"
-              onClick={() => setMobileMenuOpen(false)}
+            <a
+              href="#how-it-works"
+              onClick={(e) => handleScrollClick(e, "#how-it-works")}
               className="w-full flex items-center justify-center gap-1.5 bg-[#171717] text-white dark:bg-[#f5f5f5] dark:text-[#0a0a0a] py-2 rounded-full text-xs font-medium"
             >
               <span>Explore StockSense</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+              <ArrowDown className="w-3.5 h-3.5" />
+            </a>
           </div>
         </div>
       )}

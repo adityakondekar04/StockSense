@@ -76,9 +76,6 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
     if (path === "/audit") {
       return { section: "System", title: "Decision Log" };
     }
-    if (path === "/methodology") {
-      return { section: "System", title: "Methodology" };
-    }
     if (path.startsWith("/report/")) {
       return { section: "System", title: "Print Report" };
     }

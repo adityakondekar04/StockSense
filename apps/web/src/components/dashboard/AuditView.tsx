@@ -99,9 +99,9 @@ export const AuditView: React.FC = () => {
             <Download className="w-3.5 h-3.5" />
             <span>Export CSV</span>
           </Button>
-          <Link to="/methodology">
+          <Link to="/recommendations">
             <Button variant="primary" size="sm">
-              <span>Methodology</span>
+              <span>Recommendations</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </Link>

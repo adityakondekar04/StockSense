@@ -12,7 +12,6 @@ import {
   Sliders,
   Upload,
   History,
-  BookOpen,
   Printer,
   X,
   UserCheck,
@@ -98,11 +97,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           label: "Decision Log",
           path: "/audit",
           icon: History,
-        },
-        {
-          label: "Methodology",
-          path: "/methodology",
-          icon: BookOpen,
         },
         {
           label: "Print Report",

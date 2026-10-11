@@ -6,6 +6,14 @@ import { Link } from "react-router-dom";
 import { ArrowRight, ShieldCheck, ChevronRight } from "lucide-react";
 
 export const FinalCTA: React.FC = () => {
+  const handleScrollToWorkflow = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const target = document.querySelector("#how-it-works");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <section className="py-14 sm:py-20 border-b border-[#ebebeb] dark:border-[#262626]">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -34,9 +42,17 @@ export const FinalCTA: React.FC = () => {
                 to="/recommendations"
                 className="inline-flex items-center justify-center gap-2 bg-white hover:bg-[#f5f5f5] text-[#171717] font-medium px-5 py-2.5 rounded-full text-xs sm:text-sm transition-all focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#171717]"
               >
-                <span>Explore StockSense</span>
+                <span>Open Dashboard</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
+              <a
+                href="#how-it-works"
+                onClick={handleScrollToWorkflow}
+                className="inline-flex items-center justify-center gap-1.5 bg-transparent hover:bg-[#262626] text-[#d4d4d4] hover:text-white font-medium px-4 py-2.5 rounded-full text-xs sm:text-sm border border-[#383838] transition-all"
+              >
+                <span>Explore StockSense</span>
+                <ChevronRight className="w-3.5 h-3.5 text-[#a3a3a3]" />
+              </a>
               <Link
                 to="/methodology"
                 className="inline-flex items-center justify-center gap-1.5 bg-transparent hover:bg-[#262626] text-[#d4d4d4] hover:text-white font-medium px-4 py-2.5 rounded-full text-xs sm:text-sm border border-[#383838] transition-all"

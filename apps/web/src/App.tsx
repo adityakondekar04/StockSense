@@ -3,6 +3,7 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { AuthProvider } from "./context/AuthContext";
 import { InventoryProvider } from "./context/InventoryContext";
 import { LandingPage } from "./pages/LandingPage";
+import { MethodologyPage } from "./pages/MethodologyPage";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { DashboardLayout } from "./components/dashboard/DashboardLayout";
@@ -14,7 +15,6 @@ import { ForecastView } from "./components/dashboard/ForecastView";
 import { ScenarioView } from "./components/dashboard/ScenarioView";
 import { SetupView } from "./components/dashboard/SetupView";
 import { AuditView } from "./components/dashboard/AuditView";
-import { MethodologyView } from "./components/dashboard/MethodologyView";
 import { PrintReportView } from "./components/dashboard/PrintReportView";
 
 export function App() {
@@ -26,6 +26,9 @@ export function App() {
             <Routes>
               {/* Public Landing Page */}
               <Route path="/" element={<LandingPage />} />
+
+              {/* Standalone Mathematical Methodology Page (Separate from Dashboard) */}
+              <Route path="/methodology" element={<MethodologyPage />} />
 
               {/* Authentication Routes */}
               <Route path="/login" element={<LoginPage />} />
@@ -147,16 +150,6 @@ export function App() {
                 element={
                   <DashboardLayout>
                     <AuditView />
-                  </DashboardLayout>
-                }
-              />
-
-              {/* Screen 6: Mathematical Methodology & Whitepaper */}
-              <Route
-                path="/methodology"
-                element={
-                  <DashboardLayout>
-                    <MethodologyView />
                   </DashboardLayout>
                 }
               />
