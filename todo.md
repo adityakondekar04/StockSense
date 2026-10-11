@@ -84,9 +84,9 @@ Gates are marked **GATE**. Do not pass a gate until it is true.
 
 - [x] 52. **Add the limited-information banner and the intermittent-demand warning to the UI.** Test: a product with 20 days shows the banner, ANT-06 shows the intermittent warning.
 - [x] 53. **Build the print report** (`/report/:id`, print stylesheet). Test: the browser print preview is one clean page with service level, z, formulas used and the neutral assumptions note.
-- [ ] 54. **Add loading, empty and error states to every screen** (`docs/screens.md`). Test: open each screen with an empty database and see a helpful empty state, not a blank page.
-- [ ] 55. **Run the self-review prompt (P12)** and fix every FAIL. Test: the report lists FR-01 to FR-20 all PASS with file proofs.
-- [ ] 56. **Run the manual live-test script** (`docs/09-TESTING.md` section 7) on the demo laptop. Test: all 7 steps work against the local Postgres.
+- [x] 54. **Add loading, empty and error states to every screen** (`docs/screens.md`). Test: open each screen with an empty database and see a helpful empty state, not a blank page.
+- [x] 55. **Run the self-review prompt (P12)** and fix every FAIL. Test: the report lists FR-01 to FR-20 all PASS with file proofs.
+- [x] 56. **Run the manual live-test script** (`docs/09-TESTING.md` section 7) on the demo laptop. Test: all 7 steps work against the local Postgres.
 
 ## Phase 8: Rehearse and freeze (9:00 to 10:00)
 
