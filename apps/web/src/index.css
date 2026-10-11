@@ -4,27 +4,70 @@
 
 @layer base {
   :root {
-    --bg-page: #FAFAF9;
-    --surface-card: #F5F5F4;
-    --surface-raised: #EFEDEB;
-    --text-primary: #1C1917;
-    --text-secondary: #57534E;
-    --text-muted: #A8A29E;
-    --border-subtle: #E7E5E4;
-    --border-medium: #D6D3D1;
-    --border-strong: #A8A29E;
+    --bg-page: #fafafa;
+    --surface-card: #ffffff;
+    --surface-raised: #f5f5f5;
+    --text-primary: #171717;
+    --text-secondary: #525252;
+    --text-muted: #737373;
+    --border-subtle: #ebebeb;
+    --border-medium: #d4d4d4;
+    --border-strong: #a3a3a3;
+
+    /* shadcn hsl tokens */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 92%;
+    --input: 0 0% 92%;
+    --ring: 0 0% 9%;
+    --radius: 0.375rem;
   }
 
   .dark {
-    --bg-page: #0C0A09;
-    --surface-card: #1C1917;
-    --surface-raised: #292524;
-    --text-primary: #FAFAF9;
-    --text-secondary: #D6D3D1;
-    --text-muted: #78716C;
-    --border-subtle: #292524;
-    --border-medium: #44403C;
-    --border-strong: #78716C;
+    --bg-page: #0a0a0a;
+    --surface-card: #141414;
+    --surface-raised: #1c1c1c;
+    --text-primary: #f5f5f5;
+    --text-secondary: #d4d4d4;
+    --text-muted: #a3a3a3;
+    --border-subtle: #262626;
+    --border-medium: #404040;
+    --border-strong: #737373;
+
+    /* shadcn hsl tokens */
+    --background: 0 0% 4%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 64%;
+    --accent: 0 0% 12%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 98%;
   }
 
   * {
@@ -37,14 +80,24 @@
     color: var(--text-primary);
   }
 
-  h1, h2, h3, .font-serif {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'DM Sans', Inter, -apple-system, sans-serif;
+  }
+
+  .font-serif {
     font-family: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
   }
 
-  /* Focus ring per ThoughtStream spec */
+  .font-mono {
+    font-family: 'Geist Mono', 'Source Code Pro', monospace;
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Focus ring */
   :focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px var(--bg-page), 0 0 0 4px #78716C;
+    box-shadow: 0 0 0 2px var(--bg-page), 0 0 0 4px var(--border-strong);
   }
 }
 

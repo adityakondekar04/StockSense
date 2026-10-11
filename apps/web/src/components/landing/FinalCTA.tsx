@@ -1,57 +1,64 @@
 // apps/web/src/components/landing/FinalCTA.tsx
+// Section D: Final CTA — high-contrast monochrome section with clear actions
+
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Boxes, ShieldCheck, Play } from "lucide-react";
+import { ArrowRight, ShieldCheck, ChevronRight } from "lucide-react";
 
 export const FinalCTA: React.FC = () => {
   return (
-    <section className="py-16 sm:py-24 bg-[#fafafa] border-t border-[#ebebeb]">
+    <section className="py-14 sm:py-20 border-b border-[#ebebeb] dark:border-[#262626]">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-[#171717] rounded-2xl border border-neutral-800 p-8 sm:p-12 lg:p-14 text-white relative overflow-hidden">
-          <div className="relative z-10 max-w-2xl space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800/80 text-neutral-300 text-xs font-mono font-medium border border-neutral-700">
-              <Boxes className="w-3.5 h-3.5 text-neutral-300" />
-              <span>DETERMINISTIC EVALUATION</span>
+        <div className="rounded-xl border border-[#ebebeb] dark:border-[#262626] bg-[#171717] dark:bg-[#141414] p-8 sm:p-12 lg:p-14 text-white relative overflow-hidden">
+          <div className="relative z-10 max-w-2xl space-y-5">
+            {/* Tag */}
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-[#262626] text-[#d4d4d4] text-[11px] font-mono tracking-wider uppercase border border-[#383838]">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#d4d4d4]" />
+              <span>DETERMINISTIC INVENTORY INTELLIGENCE</span>
             </div>
 
-            <h2 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight leading-tight">
-              Make your next replenishment decision with empirical certainty.
+            {/* Heading */}
+            <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-semibold text-white tracking-[-0.03em] leading-tight">
+              Make your next replenishment decision with greater confidence.
             </h2>
 
-            <p className="text-sm sm:text-base text-neutral-400 leading-relaxed font-normal">
-              Explore mathematical reorder points, calibrate safety stock against supplier variance,
-              and run what-if stress tests before committing capital to orders.
+            {/* Subtitle */}
+            <p className="text-sm sm:text-[15px] text-[#a3a3a3] leading-relaxed font-normal">
+              Eliminate stockout surprises and buffer waste. Calculate empirical safety stocks,
+              inspect cleaned sales anomalies, and trace every recommendation down to the underlying formula.
             </p>
 
+            {/* Action buttons */}
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <Link
                 to="/recommendations"
-                className="inline-flex items-center justify-center gap-2 bg-white hover:bg-neutral-100 text-[#171717] font-medium px-6 py-3 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#171717]"
+                className="inline-flex items-center justify-center gap-2 bg-white hover:bg-[#f5f5f5] text-[#171717] font-medium px-5 py-2.5 rounded-full text-xs sm:text-sm transition-all focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#171717]"
               >
                 <span>Explore StockSense</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
-              <a
-                href="#simulation"
-                className="inline-flex items-center justify-center gap-2 bg-transparent hover:bg-neutral-800 text-neutral-200 font-medium px-5 py-3 rounded-full text-sm border border-neutral-700 transition-all"
+              <Link
+                to="/methodology"
+                className="inline-flex items-center justify-center gap-1.5 bg-transparent hover:bg-[#262626] text-[#d4d4d4] hover:text-white font-medium px-4 py-2.5 rounded-full text-xs sm:text-sm border border-[#383838] transition-all"
               >
-                <Play className="w-3.5 h-3.5 fill-current text-neutral-300" />
-                <span>Watch 7-Day Simulation</span>
-              </a>
+                <span>Review Methodology</span>
+                <ChevronRight className="w-3.5 h-3.5 text-[#a3a3a3]" />
+              </Link>
             </div>
 
-            <div className="pt-4 border-t border-neutral-800/80 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-mono text-neutral-400">
+            {/* Footnote */}
+            <div className="pt-4 border-t border-[#262626] flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px] font-mono text-[#a3a3a3]">
               <span className="flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-neutral-300" />
-                Pure math in @stocksense/core
+                <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                Pure math in packages/core
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-neutral-500" />
-                Deterministic fallback guarantee
+                <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                Deterministic fallbacks
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-neutral-500" />
-                Continuous review (s, Q)
+                <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                VORTEXA 3.0 · S-02
               </span>
             </div>
           </div>

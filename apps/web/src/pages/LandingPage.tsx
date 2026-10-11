@@ -1,30 +1,33 @@
 // apps/web/src/pages/LandingPage.tsx
+// StockSense Minimalist Website — Redesigned into 4 concise editorial sections
+
 import React from "react";
 import { Navbar } from "../components/landing/Navbar";
 import { HeroSection } from "../components/landing/HeroSection";
-import { CapabilityStrip } from "../components/landing/CapabilityStrip";
-import { InventorySimulation } from "../components/landing/InventorySimulation";
-import { ProblemSolutionSection } from "../components/landing/ProblemSolutionSection";
-import { HowItWorksSection } from "../components/landing/HowItWorksSection";
-import { FeaturesSection } from "../components/landing/FeaturesSection";
-import { ScenarioLabPreview } from "../components/landing/ScenarioLabPreview";
-import { ExplainabilitySection } from "../components/landing/ExplainabilitySection";
+import { ProblemSection } from "../components/landing/ProblemSection";
+import { WorkflowSection } from "../components/landing/WorkflowSection";
+import { CapabilitiesSection } from "../components/landing/CapabilitiesSection";
 import { FinalCTA } from "../components/landing/FinalCTA";
 import { Footer } from "../components/landing/Footer";
 
 export const LandingPage: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-[#fafafa] text-[#171717] selection:bg-[#171717] selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#fafafa] dark:bg-[#0a0a0a] text-[#171717] dark:text-[#f5f5f5] selection:bg-[#171717] selection:text-white dark:selection:bg-[#f5f5f5] dark:selection:text-[#0a0a0a] transition-colors duration-150">
       <Navbar />
       <main className="flex-1">
+        {/* Hero Section with lightweight InventorySignalAnimation */}
         <HeroSection />
-        <CapabilityStrip />
-        <InventorySimulation />
-        <ProblemSolutionSection />
-        <HowItWorksSection />
-        <FeaturesSection />
-        <ScenarioLabPreview />
-        <ExplainabilitySection />
+
+        {/* Section A — The inventory problem */}
+        <ProblemSection />
+
+        {/* Section B — How StockSense works */}
+        <WorkflowSection />
+
+        {/* Section C — Core capabilities */}
+        <CapabilitiesSection />
+
+        {/* Section D — Final CTA */}
         <FinalCTA />
       </main>
       <Footer />
