@@ -268,7 +268,7 @@ export const ScenarioView: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-[13px] text-[#57534E] dark:text-[#A8A29E] leading-relaxed">
-                    If you maintain the old Reorder Point (<strong>{baseRec.rop} units</strong>) without adjusting for this shock, the probability of stockout during replenishment rises to{" "}
+                    If you maintain the old Reorder Point (<strong>{baseRec.ropOperational.toLocaleString()} units</strong>) without adjusting for this shock, the probability of stockout during replenishment rises to{" "}
                     <strong>{(oldRisk.stockoutProbability * 100).toFixed(1)}%</strong>.
                   </p>
                   <div className="pt-2 flex items-center justify-between text-xs font-mono text-[#78716C] dark:text-[#A8A29E] border-t border-[#E7E5E4] dark:border-[#292524]">
@@ -309,20 +309,20 @@ export const ScenarioView: React.FC = () => {
                   {/* ROP */}
                   <TableRow>
                     <TableCell className="font-semibold">Reorder Point (ROP)</TableCell>
-                    <TableCell className="text-right font-mono">{baseRec.rop} units</TableCell>
-                    <TableCell className="text-right font-mono font-bold">{scenarioRec.rop} units</TableCell>
+                    <TableCell className="text-right font-mono">{baseRec.ropOperational.toLocaleString()} units</TableCell>
+                    <TableCell className="text-right font-mono font-bold">{scenarioRec.ropOperational.toLocaleString()} units</TableCell>
                     <TableCell className="text-right font-mono font-bold text-[#DC2626]">
-                      +{scenarioRec.rop - baseRec.rop} units
+                      +{Math.max(0, scenarioRec.ropOperational - baseRec.ropOperational).toLocaleString()} units
                     </TableCell>
                   </TableRow>
 
                   {/* Safety Stock */}
                   <TableRow>
                     <TableCell className="font-semibold">Safety Stock (SS)</TableCell>
-                    <TableCell className="text-right font-mono">{baseRec.ss} units</TableCell>
-                    <TableCell className="text-right font-mono font-bold">{scenarioRec.ss} units</TableCell>
+                    <TableCell className="text-right font-mono">{Math.ceil(baseRec.ss).toLocaleString()} units</TableCell>
+                    <TableCell className="text-right font-mono font-bold">{Math.ceil(scenarioRec.ss).toLocaleString()} units</TableCell>
                     <TableCell className="text-right font-mono font-bold text-[#78716C]">
-                      +{scenarioRec.ss - baseRec.ss} units
+                      +{Math.max(0, Math.ceil(scenarioRec.ss) - Math.ceil(baseRec.ss)).toLocaleString()} units
                     </TableCell>
                   </TableRow>
 

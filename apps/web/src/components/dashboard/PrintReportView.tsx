@@ -128,15 +128,15 @@ export const PrintReportView: React.FC = () => {
             <div className="border border-[#E7E5E4] dark:border-[#292524] p-4">
               <span className="text-[11px] text-[#78716C] dark:text-[#A8A29E] uppercase">Reorder Point</span>
               <div className="text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9] mt-1">
-                {policy.rec.rop}
+                {policy.rec.ropOperational.toLocaleString()} units
               </div>
-              <span className="text-[10px] text-[#57534E] dark:text-[#A8A29E]">Safety Stock: {policy.rec.ss}</span>
+              <span className="text-[10px] text-[#57534E] dark:text-[#A8A29E]">Safety Stock: {Math.ceil(policy.rec.ss).toLocaleString()} units</span>
             </div>
 
             <div className="border border-[#E7E5E4] dark:border-[#292524] p-4">
               <span className="text-[11px] text-[#78716C] dark:text-[#A8A29E] uppercase">Order Quantity (Q)</span>
               <div className="text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9] mt-1">
-                {policy.rec.q}
+                {policy.rec.q.toLocaleString()} units
               </div>
               <span className="text-[10px] text-[#57534E] dark:text-[#A8A29E]">Economic lot size</span>
             </div>

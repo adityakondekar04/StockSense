@@ -142,41 +142,50 @@ export const ProductDetailView: React.FC = () => {
 
       {/* 4-KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card variant="elevated">
+        <Card variant="elevated" className="min-w-0">
           <CardContent className="p-5">
             <span className="text-[11px] font-mono uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">
               Reorder Point (ROP)
             </span>
-            <div className="mt-2 font-mono text-3xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
-              {policy.rec.rop}
+            <div
+              className="mt-2 font-mono text-2xl sm:text-3xl font-bold text-[#1C1917] dark:text-[#FAFAF9] truncate"
+              title={`${policy.rec.ropOperational.toLocaleString()} units`}
+            >
+              {policy.rec.ropOperational.toLocaleString()} units
             </div>
-            <p className="mt-1 text-[12px] text-[#57534E] dark:text-[#A8A29E]">
-              Trigger purchase order when stock drops below this level.
+            <p className="mt-1 text-[12px] text-[#57534E] dark:text-[#A8A29E] leading-relaxed">
+              Trigger purchase order when stock drops to or below this level.
             </p>
           </CardContent>
         </Card>
 
-        <Card variant="elevated">
+        <Card variant="elevated" className="min-w-0">
           <CardContent className="p-5">
             <span className="text-[11px] font-mono uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">
               Safety Stock (SS)
             </span>
-            <div className="mt-2 font-mono text-3xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
-              {policy.rec.ss}
+            <div
+              className="mt-2 font-mono text-2xl sm:text-3xl font-bold text-[#1C1917] dark:text-[#FAFAF9] truncate"
+              title={`${Math.ceil(policy.rec.ss).toLocaleString()} units`}
+            >
+              {Math.ceil(policy.rec.ss).toLocaleString()} units
             </div>
-            <p className="mt-1 text-[12px] text-[#57534E] dark:text-[#A8A29E]">
+            <p className="mt-1 text-[12px] text-[#57534E] dark:text-[#A8A29E] leading-relaxed">
               Buffer to absorb demand surges and supplier delays.
             </p>
           </CardContent>
         </Card>
 
-        <Card variant="elevated">
+        <Card variant="elevated" className="min-w-0">
           <CardContent className="p-5">
             <span className="text-[11px] font-mono uppercase tracking-wider text-[#78716C] dark:text-[#A8A29E]">
               Economic Order Q (EOQ)
             </span>
-            <div className="mt-2 font-mono text-3xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
-              {policy.rec.q}
+            <div
+              className="mt-2 font-mono text-2xl sm:text-3xl font-bold text-[#1C1917] dark:text-[#FAFAF9] truncate"
+              title={`${policy.rec.q.toLocaleString()} units`}
+            >
+              {policy.rec.q.toLocaleString()} units
             </div>
             <p className="mt-1 text-[12px] text-[#57534E] dark:text-[#A8A29E]">
               Optimal lot size minimizing holding + ordering costs.

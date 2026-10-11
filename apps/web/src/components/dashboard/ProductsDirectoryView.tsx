@@ -100,7 +100,7 @@ export const ProductsDirectoryView: React.FC = () => {
       } else if (sortField === "stock") {
         comparison = a.product.onHand - b.product.onHand;
       } else if (sortField === "rop") {
-        comparison = a.policy.rec.rop - b.policy.rec.rop;
+        comparison = a.policy.rec.ropOperational - b.policy.rec.ropOperational;
       } else if (sortField === "daysCover") {
         comparison = a.policy.daysCover - b.policy.daysCover;
       }
@@ -303,11 +303,11 @@ export const ProductsDirectoryView: React.FC = () => {
                     <TableCell className="text-right font-mono font-bold text-[#1C1917] dark:text-[#FAFAF9]">
                       {product.onHand.toLocaleString()}
                     </TableCell>
-                    <TableCell className="text-right font-mono text-[#1C1917] dark:text-[#FAFAF9]">
-                      {policy.rec.rop}
+                    <TableCell className="text-right font-mono font-medium text-[#1C1917] dark:text-[#FAFAF9]">
+                      {policy.rec.ropOperational.toLocaleString()} units
                     </TableCell>
                     <TableCell className="text-right font-mono text-[#78716C] dark:text-[#A8A29E]">
-                      {policy.rec.ss}
+                      {Math.ceil(policy.rec.ss).toLocaleString()} units
                     </TableCell>
                     <TableCell className="text-right font-mono">
                       <span

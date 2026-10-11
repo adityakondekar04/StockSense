@@ -338,27 +338,36 @@ export const RecommendationsView: React.FC = () => {
                   {/* Stock vs ROP Comparison */}
                   <div className="p-6 space-y-5">
                     <div className="grid grid-cols-2 gap-4 pb-4 border-b border-[#E7E5E4] dark:border-[#292524]">
-                      <div>
+                      <div className="min-w-0">
                         <span className="text-[11px] font-mono uppercase text-[#78716C] dark:text-[#A8A29E]">
                           Current Stock
                         </span>
-                        <div className="font-mono text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9] mt-0.5">
-                          {product.onHand}
+                        <div
+                          className="font-mono text-xl sm:text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9] mt-0.5 truncate"
+                          title={`${product.onHand.toLocaleString()} units`}
+                        >
+                          {product.onHand.toLocaleString()} units
                         </div>
-                        <span className="text-[11px] text-[#57534E] dark:text-[#A8A29E]">
+                        <span className="text-[11px] text-[#57534E] dark:text-[#A8A29E] block truncate">
                           {daysCover.toFixed(1)} days cover
                         </span>
                       </div>
 
-                      <div>
+                      <div className="min-w-0">
                         <span className="text-[11px] font-mono uppercase text-[#78716C] dark:text-[#A8A29E]">
                           Reorder Point
                         </span>
-                        <div className="font-mono text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9] mt-0.5">
-                          {rec.rop}
+                        <div
+                          className="font-mono text-xl sm:text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9] mt-0.5 truncate"
+                          title={`${rec.ropOperational.toLocaleString()} units`}
+                        >
+                          {rec.ropOperational.toLocaleString()} units
                         </div>
-                        <span className="text-[11px] text-[#57534E] dark:text-[#A8A29E]">
-                          SS: {rec.ss} units
+                        <span
+                          className="text-[11px] text-[#57534E] dark:text-[#A8A29E] block truncate"
+                          title={`Safety Stock: ${Math.ceil(rec.ss).toLocaleString()} units`}
+                        >
+                          SS: {Math.ceil(rec.ss).toLocaleString()} units
                         </span>
                       </div>
                     </div>

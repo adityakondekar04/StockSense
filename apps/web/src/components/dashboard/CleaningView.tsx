@@ -91,7 +91,7 @@ export const CleaningView: React.FC = () => {
     }
   };
 
-  const deltaRop = withUnknownsPolicy.rec.rop - withoutUnknownsPolicy.rec.rop;
+  const deltaRop = withUnknownsPolicy.rec.ropOperational - withoutUnknownsPolicy.rec.ropOperational;
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -141,10 +141,10 @@ export const CleaningView: React.FC = () => {
               <div className="text-right">
                 <div className="text-[11px] font-mono text-[#78716C] dark:text-[#A8A29E] uppercase">ROP Impact Delta</div>
                 <div className="font-mono text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
-                  {deltaRop >= 0 ? `+${deltaRop}` : deltaRop} units
+                  {deltaRop >= 0 ? `+${deltaRop.toLocaleString()}` : deltaRop.toLocaleString()} units
                 </div>
                 <div className="text-[11px] text-[#78716C] dark:text-[#A8A29E]">
-                  Current ROP: {isUnknownsIncluded ? withUnknownsPolicy.rec.rop : withoutUnknownsPolicy.rec.rop}
+                  Current ROP: {isUnknownsIncluded ? `${withUnknownsPolicy.rec.ropOperational.toLocaleString()} units` : `${withoutUnknownsPolicy.rec.ropOperational.toLocaleString()} units`}
                 </div>
               </div>
 

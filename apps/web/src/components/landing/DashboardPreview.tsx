@@ -134,7 +134,7 @@ export const DashboardPreview: React.FC = () => {
                       On Hand: <strong className="text-slate-900">{prod.currentStock}</strong>
                     </span>
                     <span>
-                      ROP: <strong className="text-slate-900">{prod.rop}</strong>
+                      ROP: <strong className="text-slate-900">{prod.rop} units</strong>
                     </span>
                   </div>
                 </button>
@@ -168,7 +168,7 @@ export const DashboardPreview: React.FC = () => {
             <div className="bg-white rounded-lg p-2 border border-slate-200/80">
               <span className="text-[10px] uppercase font-medium text-slate-500">Reorder Point (ROP)</span>
               <div className="text-base font-bold text-indigo-700 mt-0.5">
-                {activeProduct.rop.toLocaleString()}
+                {activeProduct.rop.toLocaleString()} units
               </div>
               <span className="text-[10px] text-indigo-600">Trigger level</span>
             </div>
