@@ -19,7 +19,16 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 4000;
 
-app.use(cors());
+// Production-safe CORS: allow configured origin or all origins in dev
+const corsOrigin = process.env.CORS_ORIGIN;
+app.use(
+  cors({
+    origin: corsOrigin
+      ? corsOrigin.split(",").map((o) => o.trim())
+      : true, // allow all in dev
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.text({ type: ["text/csv", "text/plain"] }));
 
