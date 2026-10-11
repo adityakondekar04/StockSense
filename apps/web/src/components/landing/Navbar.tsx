@@ -1,34 +1,14 @@
 // apps/web/src/components/landing/Navbar.tsx
 // Compact, minimalist navigation bar with functional theme toggle and responsive menu
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Boxes, Menu, X, ArrowRight, Sun, Moon } from "lucide-react";
+import { useTheme } from "../../context/ThemeContext";
 
 export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("stocksense_theme");
-      if (saved === "dark") return "dark";
-      if (saved === "light") return "light";
-      return document.documentElement.classList.contains("dark") ? "dark" : "light";
-    }
-    return "light";
-  });
-
-  useEffect(() => {
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    localStorage.setItem("stocksense_theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  };
+  const { theme, toggleTheme } = useTheme();
 
   const navLinks = [
     { label: "The Problem", href: "#problem" },

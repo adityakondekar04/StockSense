@@ -1,7 +1,7 @@
 // apps/web/src/components/dashboard/TopBar.tsx
-// Top navigation bar adhering to ThoughtStream minimalist design system
+// Minimalist SaaS TopBar matching the Landing Page Navbar and design.md tokens
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import {
   Menu,
@@ -11,8 +11,12 @@ import {
   ShieldCheck,
   ChevronRight,
   Printer,
+  ChevronDown,
+  LogOut,
 } from "lucide-react";
 import { useInventory } from "../../context/InventoryContext";
+import { useTheme } from "../../context/ThemeContext";
+import { useAuth, UserRole } from "../../context/AuthContext";
 
 interface TopBarProps {
   onMenuToggle: () => void;
@@ -30,66 +34,55 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
     setAiEnabled,
   } = useInventory();
 
+  const { theme, toggleTheme } = useTheme();
+  const { user, role, switchRole, logout } = useAuth();
+  const [userMenuOpen, setUserMenuOpen] = React.useState(false);
+
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("stocksense_theme");
-      if (saved === "dark") return "dark";
-      if (saved === "light") return "light";
-      return document.documentElement.classList.contains("dark") ? "dark" : "light";
-    }
-    return "light";
-  });
-
-  useEffect(() => {
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    localStorage.setItem("stocksense_theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  };
-
-  // Derive current page name from route
+  // Derive current page name from route (matching simplified Sidebar names)
   const getPageTitle = (): { section: string; title: string } => {
     const path = location.pathname;
     if (path === "/recommendations" || path === "/dashboard") {
-      return { section: "Core", title: "Inventory Recommendations" };
+      return { section: "Inventory", title: "Recommendations" };
     }
     if (path === "/products") {
-      return { section: "Core", title: "Products Directory" };
+      return { section: "Inventory", title: "All Products" };
     }
-    if (path.startsWith("/products/") && !path.includes("/cleaning") && !path.includes("/forecast") && !path.includes("/scenario")) {
-      return { section: "Products", title: selectedProduct ? `${selectedProduct.sku} Details` : "Product Details" };
+    if (
+      path.startsWith("/products/") &&
+      !path.includes("/cleaning") &&
+      !path.includes("/forecast") &&
+      !path.includes("/scenario")
+    ) {
+      return {
+        section: "Inventory",
+        title: selectedProduct ? `${selectedProduct.sku} Details` : "Product Details",
+      };
     }
     if (path.includes("/cleaning")) {
-      return { section: "Intelligence", title: "Data Cleaning & Anomalies" };
+      return { section: "Analysis", title: "Sales & Anomalies" };
     }
     if (path.includes("/forecast")) {
-      return { section: "Intelligence", title: "Forecast Validation" };
+      return { section: "Analysis", title: "Demand Forecast" };
     }
     if (path.includes("/scenario")) {
-      return { section: "Operations", title: "Scenario Stress Lab" };
+      return { section: "Analysis", title: "Scenario Lab" };
     }
     if (path === "/setup" || path === "/setup/manual") {
-      return { section: "Operations", title: "Setup & CSV Ingestion" };
+      return { section: "System", title: "Import Data" };
     }
     if (path === "/audit") {
-      return { section: "Governance", title: "Audit Trail & Decision Log" };
+      return { section: "System", title: "Decision Log" };
     }
     if (path === "/methodology") {
-      return { section: "Governance", title: "Mathematical Methodology" };
+      return { section: "System", title: "Methodology" };
     }
     if (path.startsWith("/report/")) {
-      return { section: "Reports", title: "Printable Dispatch Sheet" };
+      return { section: "System", title: "Print Report" };
     }
-    return { section: "Console", title: "Dashboard" };
+    return { section: "Console", title: "Recommendations" };
   };
 
   const { section, title } = getPageTitle();
@@ -104,63 +97,74 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
         navigate(`/products/${found.sku}/forecast`);
       } else if (location.pathname.includes("/scenario")) {
         navigate(`/products/${found.sku}/scenario`);
-      } else if (location.pathname.startsWith("/products/") && !location.pathname.includes("/cleaning") && !location.pathname.includes("/forecast") && !location.pathname.includes("/scenario")) {
+      } else if (
+        location.pathname.startsWith("/products/") &&
+        !location.pathname.includes("/cleaning") &&
+        !location.pathname.includes("/forecast") &&
+        !location.pathname.includes("/scenario")
+      ) {
         navigate(`/products/${found.sku}`);
       }
     }
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-[#FAFAF9] dark:bg-[#12100E] border-b border-[#E7E5E4] dark:border-[#292524] transition-colors">
+    <header className="sticky top-0 z-30 bg-[#fafafa]/95 dark:bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-[#ebebeb] dark:border-[#262626] transition-colors shrink-0">
       <div className="flex items-center justify-between h-14 px-4 sm:px-6">
         {/* Left: Mobile trigger & Breadcrumb */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
           <button
             type="button"
             onClick={onMenuToggle}
-            className="p-1.5 rounded-none text-[#57534E] hover:text-[#1C1917] dark:text-[#A8A29E] dark:hover:text-[#FAFAF9] hover:bg-[#F5F5F4] dark:hover:bg-[#1C1917] lg:hidden"
+            className="p-1.5 rounded-md text-[#525252] hover:text-[#171717] dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] hover:bg-[#f0f0f0] dark:hover:bg-[#1f1f1f] lg:hidden"
             aria-label="Toggle navigation menu"
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-4 h-4" />
           </button>
 
-          <nav className="flex items-center gap-1.5 text-xs sm:text-sm font-sans" aria-label="Breadcrumb">
-            <span className="text-[#A8A29E] dark:text-[#78716C] font-mono uppercase tracking-wider text-[11px] hidden sm:inline">
-              StockSense
-            </span>
-            <ChevronRight className="w-3.5 h-3.5 text-[#D6D3D1] dark:text-[#44403C] hidden sm:inline" />
-            <span className="text-[#78716C] dark:text-[#A8A29E] hidden md:inline">
+          <nav
+            className="flex items-center gap-1.5 text-xs font-sans truncate"
+            aria-label="Breadcrumb"
+          >
+            <span className="text-[#737373] dark:text-[#8e8e8e] hidden sm:inline">
               {section}
             </span>
-            <ChevronRight className="w-3.5 h-3.5 text-[#D6D3D1] dark:text-[#44403C] hidden md:inline" />
-            <span className="text-[#1C1917] dark:text-[#FAFAF9] font-medium font-serif">
+            <ChevronRight className="w-3.5 h-3.5 text-[#d4d4d4] dark:text-[#404040] hidden sm:inline shrink-0" />
+            <span className="font-heading font-semibold text-sm text-[#171717] dark:text-[#f5f5f5] truncate">
               {title}
             </span>
           </nav>
         </div>
 
-        {/* Center/Right Controls */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        {/* Right: Global Controls (SKU, Service Level + z, AI Toggle, Theme Toggle, Print) */}
+        <div className="flex items-center gap-2">
           {/* Active SKU Switcher */}
-          <div className="flex items-center border border-[#D6D3D1] dark:border-[#44403C] bg-white dark:bg-[#1C1917] px-2 py-1 text-xs">
-            <span className="text-[#78716C] dark:text-[#A8A29E] text-[11px] font-mono uppercase mr-1 hidden sm:inline">
-              SKU:
+          <div className="flex items-center rounded-md border border-[#ebebeb] dark:border-[#262626] bg-white dark:bg-[#141414] px-2.5 py-1 text-xs">
+            <span className="text-[#737373] dark:text-[#a3a3a3] text-[11px] font-mono mr-1.5 hidden sm:inline">
+              Product:
             </span>
             <select
               value={selectedProduct?.sku || ""}
               onChange={(e) => handleProductChange(e.target.value)}
-              className="bg-transparent font-mono font-semibold text-[#1C1917] dark:text-[#FAFAF9] text-xs focus:outline-none cursor-pointer"
+              className="bg-transparent font-mono font-medium text-[#171717] dark:text-[#f5f5f5] text-xs focus:outline-none cursor-pointer"
               aria-label="Active Product SKU"
               disabled={products.length === 0}
             >
               {products.length === 0 ? (
-                <option value="" className="bg-white dark:bg-[#1C1917] text-[#1C1917] dark:text-[#FAFAF9]">
+                <option
+                  value=""
+                  className="bg-white dark:bg-[#141414] text-[#171717] dark:text-[#f5f5f5]"
+                >
                   No products
                 </option>
               ) : (
                 products.map((p) => (
-                  <option key={p.sku} value={p.sku} className="bg-white dark:bg-[#1C1917] text-[#1C1917] dark:text-[#FAFAF9]">
-                    {p.sku} · {p.name.length > 15 ? p.name.substring(0, 15) + "…" : p.name}
+                  <option
+                    key={p.sku}
+                    value={p.sku}
+                    className="bg-white dark:bg-[#141414] text-[#171717] dark:text-[#f5f5f5]"
+                  >
+                    {p.sku} · {p.name.length > 16 ? p.name.substring(0, 16) + "…" : p.name}
                   </option>
                 ))
               )}
@@ -168,26 +172,28 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
           </div>
 
           {/* Service Level & Z Factor Selector */}
-          <div className="hidden lg:flex items-center border border-[#D6D3D1] dark:border-[#44403C] bg-white dark:bg-[#1C1917] px-2 py-1 text-xs">
-            <span className="text-[#78716C] dark:text-[#A8A29E] text-[11px] font-mono mr-1">SL:</span>
+          <div className="hidden md:flex items-center rounded-md border border-[#ebebeb] dark:border-[#262626] bg-white dark:bg-[#141414] px-2.5 py-1 text-xs">
+            <span className="text-[#737373] dark:text-[#a3a3a3] text-[11px] font-mono mr-1.5">
+              SL:
+            </span>
             <select
               value={serviceLevel}
               onChange={(e) => setServiceLevel(Number(e.target.value))}
-              className="bg-transparent font-sans font-semibold text-[#1C1917] dark:text-[#FAFAF9] text-xs focus:outline-none cursor-pointer"
+              className="bg-transparent font-mono font-medium text-[#171717] dark:text-[#f5f5f5] text-xs focus:outline-none cursor-pointer"
               aria-label="Service Level Target"
             >
-              <option value={0.80} className="bg-white dark:bg-[#1C1917]">80%</option>
-              <option value={0.90} className="bg-white dark:bg-[#1C1917]">90%</option>
-              <option value={0.95} className="bg-white dark:bg-[#1C1917]">95%</option>
-              <option value={0.975} className="bg-white dark:bg-[#1C1917]">97.5%</option>
-              <option value={0.99} className="bg-white dark:bg-[#1C1917]">99%</option>
-              <option value={0.999} className="bg-white dark:bg-[#1C1917]">99.9%</option>
+              <option value={0.8} className="bg-white dark:bg-[#141414]">80%</option>
+              <option value={0.9} className="bg-white dark:bg-[#141414]">90%</option>
+              <option value={0.95} className="bg-white dark:bg-[#141414]">95%</option>
+              <option value={0.975} className="bg-white dark:bg-[#141414]">97.5%</option>
+              <option value={0.99} className="bg-white dark:bg-[#141414]">99%</option>
+              <option value={0.999} className="bg-white dark:bg-[#141414]">99.9%</option>
             </select>
             <span
-              className="ml-2 font-mono text-[11px] text-[#57534E] dark:text-[#A8A29E] border-l border-[#E7E5E4] dark:border-[#292524] pl-2"
+              className="ml-2 font-mono text-[11px] text-[#737373] dark:text-[#a3a3a3] border-l border-[#ebebeb] dark:border-[#262626] pl-2"
               title="Standard normal inverse factor z"
             >
-              z={zValue.toFixed(2)}
+              z={zValue.toFixed(3)}
             </span>
           </div>
 
@@ -195,40 +201,27 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
           <button
             type="button"
             onClick={() => setAiEnabled(!aiEnabled)}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-medium border transition-colors select-none ${
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-medium border transition-colors select-none ${
               aiEnabled
-                ? "bg-[#78716C] text-[#FAFAF9] border-[#78716C]"
-                : "bg-transparent text-[#57534E] dark:text-[#A8A29E] border-[#D6D3D1] dark:border-[#44403C] hover:bg-[#F5F5F4] dark:hover:bg-[#1C1917]"
+                ? "bg-[#171717] text-white border-[#171717] dark:bg-[#f5f5f5] dark:text-[#0a0a0a] dark:border-[#f5f5f5]"
+                : "bg-white dark:bg-[#141414] text-[#525252] dark:text-[#a3a3a3] border-[#ebebeb] dark:border-[#262626] hover:text-[#171717] dark:hover:text-[#f5f5f5]"
             }`}
-            title={aiEnabled ? "AI Advisory enabled. Click for rules only." : "Rules-only mode. Click to enable AI suggestions."}
+            title={
+              aiEnabled
+                ? "AI suggestions enabled. Click to run with deterministic rules only."
+                : "Rules-only mode active. Click to enable AI suggestions."
+            }
           >
             {aiEnabled ? (
               <>
-                <Sparkles className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">AI Advisory</span>
-                <span className="sm:hidden">AI</span>
+                <Sparkles className="w-3 h-3" />
+                <span className="hidden sm:inline">AI: On</span>
               </>
             ) : (
               <>
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Rules Mode</span>
-                <span className="sm:hidden">Rules</span>
+                <ShieldCheck className="w-3 h-3" />
+                <span className="hidden sm:inline">Rules Only</span>
               </>
-            )}
-          </button>
-
-          {/* Theme Toggle Button */}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="p-1.5 border border-[#D6D3D1] dark:border-[#44403C] bg-white dark:bg-[#1C1917] text-[#57534E] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#FAFAF9] transition-colors"
-            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            aria-label="Toggle theme"
-          >
-            {theme === "dark" ? (
-              <Sun className="w-4 h-4 text-[#FAFAF9]" />
-            ) : (
-              <Moon className="w-4 h-4 text-[#1C1917]" />
             )}
           </button>
 
@@ -236,12 +229,105 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
           {selectedProduct && (
             <Link
               to={`/report/${selectedProduct.sku}`}
-              className="hidden sm:inline-flex p-1.5 border border-[#D6D3D1] dark:border-[#44403C] bg-white dark:bg-[#1C1917] text-[#57534E] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#FAFAF9] transition-colors"
-              title="Print 1-Page Report"
+              className="hidden sm:inline-flex p-1.5 rounded-md border border-[#ebebeb] dark:border-[#262626] bg-white dark:bg-[#141414] text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5] hover:bg-[#f5f5f5] dark:hover:bg-[#1f1f1f] transition-colors"
+              title="Print 1-Page Summary"
+              aria-label="Print 1-Page Summary"
             >
-              <Printer className="w-4 h-4" />
+              <Printer className="w-3.5 h-3.5" />
             </Link>
           )}
+
+          {/* Theme Toggle Button (matches Navbar) */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="p-1.5 rounded-full text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5] hover:bg-[#f0f0f0] dark:hover:bg-[#1f1f1f] border border-transparent hover:border-[#ebebeb] dark:hover:border-[#262626] transition-colors"
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+
+          {/* User Profile & Role Switcher */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setUserMenuOpen(!userMenuOpen)}
+              className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-[#ebebeb] dark:border-[#262626] bg-white dark:bg-[#141414] text-xs hover:border-[#171717] dark:hover:border-[#f5f5f5] transition-colors cursor-pointer select-none"
+              title="Current Account & Role"
+            >
+              <div className="w-4 h-4 rounded-full bg-[#171717] dark:bg-[#f5f5f5] text-white dark:text-[#0a0a0a] flex items-center justify-center text-[10px] font-bold">
+                {user?.name ? user.name[0].toUpperCase() : "U"}
+              </div>
+              <span className="hidden md:inline text-[11px] font-mono font-semibold text-[#171717] dark:text-[#f5f5f5] max-w-[100px] truncate">
+                {user?.name || "User"}
+              </span>
+              <span className="font-mono text-[9px] uppercase px-1 py-0.2 rounded bg-[#f5f5f5] dark:bg-[#1a1a1a] text-[#525252] dark:text-[#a3a3a3] border border-[#ebebeb] dark:border-[#262626]">
+                {role}
+              </span>
+              <ChevronDown className="w-3 h-3 text-[#737373]" />
+            </button>
+
+            {userMenuOpen && (
+              <div className="absolute right-0 mt-1 w-64 bg-white dark:bg-[#141414] border border-[#ebebeb] dark:border-[#262626] rounded-lg shadow-lg p-3 z-50 text-xs space-y-3">
+                <div className="border-b border-[#ebebeb] dark:border-[#262626] pb-2">
+                  <div className="font-semibold text-[#171717] dark:text-[#f5f5f5] truncate">
+                    {user?.name}
+                  </div>
+                  <div className="text-[11px] text-[#737373] dark:text-[#a3a3a3] truncate">
+                    {user?.email}
+                  </div>
+                  <div className="text-[10px] font-mono text-[#737373] dark:text-[#8e8e8e] mt-0.5 truncate">
+                    {user?.facilityName}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-[10px] font-mono uppercase text-[#737373] dark:text-[#a3a3a3] font-bold">
+                    Switch Active Role (RBAC):
+                  </div>
+                  <div className="grid grid-cols-2 gap-1 pt-1">
+                    {(["STOREKEEPER", "ADMIN", "ANALYST", "VIEWER"] as UserRole[]).map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => {
+                          switchRole(r);
+                          setUserMenuOpen(false);
+                        }}
+                        className={`px-2 py-1 text-[10px] font-mono text-left rounded border cursor-pointer ${
+                          role === r
+                            ? "bg-[#171717] dark:bg-[#f5f5f5] text-white dark:text-[#0a0a0a] border-[#171717] dark:border-[#f5f5f5] font-bold"
+                            : "bg-[#fafafa] dark:bg-[#191919] text-[#525252] dark:text-[#a3a3a3] border-[#ebebeb] dark:border-[#262626] hover:border-[#d4d4d4]"
+                        }`}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-[#ebebeb] dark:border-[#262626] pt-2 flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-[#737373]">
+                    {role === "STOREKEEPER" || role === "ADMIN"
+                      ? "Full order authority"
+                      : "Read-only access"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      logout();
+                      navigate("/login");
+                    }}
+                    className="flex items-center gap-1 text-[11px] text-red-600 dark:text-red-400 hover:underline cursor-pointer"
+                  >
+                    <LogOut className="w-3 h-3" />
+                    <span>Sign out</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

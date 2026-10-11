@@ -1,4 +1,6 @@
 // apps/web/src/pages/SignupPage.tsx
+// Minimalist, modern editorial Sign Up page with Role-Based Access Control (RBAC)
+
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -11,15 +13,23 @@ import {
   EyeOff,
   ArrowRight,
   ArrowLeft,
-  CheckCircle2,
+  ShieldCheck,
+  Sun,
+  Moon,
   Sparkles,
-  ShieldAlert,
+  AlertCircle,
 } from "lucide-react";
+import { useAuth, UserRole } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 
 export const SignupPage: React.FC = () => {
   const navigate = useNavigate();
+  const { signup } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [role, setRole] = useState<UserRole>("STOREKEEPER");
   const [facilityName, setFacilityName] = useState("");
   const [facilityType, setFacilityType] = useState("Community Pharmacy");
   const [password, setPassword] = useState("");
@@ -29,12 +39,23 @@ export const SignupPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleQuickDemoFill = () => {
+    setFullName("Dr. Aditi Sharma");
+    setEmail("aditi@citycare-pharmacy.in");
+    setRole("STOREKEEPER");
+    setFacilityName("CityCare Community Pharmacy");
+    setFacilityType("Community Pharmacy");
+    setPassword("securestock2026");
+    setConfirmPassword("securestock2026");
+    setError(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (!fullName.trim() || !email.trim() || !facilityName.trim() || !password.trim()) {
-      setError("Please complete all required fields.");
+      setError("Please fill out all required fields.");
       return;
     }
 
@@ -44,93 +65,103 @@ export const SignupPage: React.FC = () => {
     }
 
     if (password.length < 6) {
-      setError("Password should be at least 6 characters.");
+      setError("Password must be at least 6 characters.");
       return;
     }
 
     if (!agreeTerms) {
-      setError("Please agree to the demo policy and terms to proceed.");
+      setError("Please confirm acknowledgment of the decision-support policy.");
       return;
     }
 
     setIsLoading(true);
-    // Simulate setup and route to console
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate("/recommendations");
-    }, 600);
-  };
+    const result = await signup({
+      name: fullName,
+      email,
+      password,
+      role,
+      facilityName,
+      facilityType,
+    });
+    setIsLoading(false);
 
-  const handleQuickDemoFill = () => {
-    setFullName("Aditi Sharma");
-    setEmail("aditi@citycare-pharmacy.in");
-    setFacilityName("CityCare Community Pharmacy");
-    setFacilityType("Community Pharmacy");
-    setPassword("securestock2026");
-    setConfirmPassword("securestock2026");
-    setError(null);
+    if (result.success) {
+      navigate("/recommendations");
+    } else {
+      setError(result.error || "Failed to create account.");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between text-slate-900 selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] flex flex-col justify-between text-[#171717] dark:text-[#f5f5f5] selection:bg-[#171717] selection:text-white dark:selection:bg-[#f5f5f5] dark:selection:text-[#0a0a0a] transition-colors duration-150">
       {/* Top Header */}
-      <header className="px-6 py-4 flex items-center justify-between max-w-7xl w-full mx-auto">
+      <header className="px-4 sm:px-8 py-4 flex items-center justify-between max-w-5xl w-full mx-auto border-b border-[#ebebeb] dark:border-[#262626]">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors p-1 rounded-lg"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5] transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to Home</span>
         </Link>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Already registered?</span>
-          <Link
-            to="/login"
-            className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-colors border border-indigo-100"
+
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="p-1.5 rounded-full text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5] hover:bg-[#f0f0f0] dark:hover:bg-[#1f1f1f] transition-colors"
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label="Toggle theme"
           >
-            Sign in
-          </Link>
+            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-[#737373] dark:text-[#8e8e8e]">Already registered?</span>
+            <Link
+              to="/login"
+              className="font-medium text-[#171717] dark:text-[#f5f5f5] hover:underline"
+            >
+              Sign in
+            </Link>
+          </div>
         </div>
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-2">
+      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-6">
         <div className="w-full max-w-lg">
-          {/* Card */}
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-xl p-8 sm:p-10 space-y-6">
-            {/* Header */}
-            <div className="space-y-2 text-center sm:text-left">
-              <div className="inline-flex items-center gap-2.5 mb-1">
-                <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-sm">
-                  <Boxes className="w-5 h-5" />
+          {/* Main Card */}
+          <div className="bg-white dark:bg-[#141414] rounded-xl border border-[#ebebeb] dark:border-[#262626] p-7 sm:p-9 space-y-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+            {/* Brand Header */}
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 mb-1">
+                <div className="w-6 h-6 rounded bg-[#171717] dark:bg-[#f5f5f5] flex items-center justify-center text-white dark:text-[#0a0a0a]">
+                  <Boxes className="w-3.5 h-3.5 stroke-[2.2]" />
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold text-slate-900 tracking-tight">StockSense</span>
-                  <span className="text-[10px] uppercase font-semibold tracking-wider px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100">
-                    S-02
-                  </span>
-                </div>
+                <span className="font-heading text-sm font-semibold tracking-tight text-[#171717] dark:text-[#f5f5f5]">
+                  StockSense
+                </span>
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#f5f5f5] dark:bg-[#1a1a1a] text-[#737373] dark:text-[#a3a3a3] border border-[#ebebeb] dark:border-[#262626]">
+                  S-02
+                </span>
               </div>
-              <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-                Create your storekeeper account
+              <h1 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-[#171717] dark:text-[#f5f5f5]">
+                Create account
               </h1>
-              <p className="text-xs text-slate-500">
-                Set up adaptive inventory replenishment, service-level calibration, and scenario simulations.
+              <p className="text-xs text-[#525252] dark:text-[#a3a3a3] leading-relaxed">
+                Provision adaptive replenishment intelligence and configure role permissions.
               </p>
             </div>
 
             {/* Quick Demo Fill Banner */}
-            <div className="bg-indigo-50/80 border border-indigo-200/80 rounded-2xl p-3.5 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-xs text-indigo-900">
-                <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
-                <span className="leading-tight">
-                  Evaluating live? Auto-fill sample storekeeper profile in one click.
-                </span>
+            <div className="bg-[#f5f5f5] dark:bg-[#1a1a1a] border border-[#ebebeb] dark:border-[#262626] rounded-lg p-3 flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2 text-[#525252] dark:text-[#a3a3a3]">
+                <Sparkles className="w-4 h-4 text-[#171717] dark:text-[#f5f5f5] shrink-0" />
+                <span className="leading-snug">Evaluating live? Pre-fill sample profile in one click.</span>
               </div>
               <button
                 type="button"
                 onClick={handleQuickDemoFill}
-                className="shrink-0 text-xs font-bold text-indigo-700 bg-white hover:bg-indigo-100 border border-indigo-200 px-2.5 py-1 rounded-lg shadow-sm transition-colors"
+                className="shrink-0 text-xs font-mono font-medium text-[#171717] dark:text-[#f5f5f5] bg-white dark:bg-[#141414] hover:bg-[#fafafa] dark:hover:bg-[#202020] border border-[#ebebeb] dark:border-[#262626] px-2.5 py-1 rounded transition-colors"
               >
                 Auto-fill
               </button>
@@ -138,23 +169,26 @@ export const SignupPage: React.FC = () => {
 
             {/* Error Alert */}
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-700 font-medium flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-red-600 shrink-0" />
+              <div className="bg-[#fff1f2] dark:bg-[#2b1114] border border-[#fecdd3] dark:border-[#52171f] rounded p-2.5 text-xs text-[#9f1239] dark:text-[#fca5a5] flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Full Name & Email (2 columns on sm) */}
+              {/* Full Name & Work Email */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div className="space-y-1.5">
-                  <label htmlFor="fullName" className="block text-xs font-semibold text-slate-700">
+                  <label
+                    htmlFor="fullName"
+                    className="block text-xs font-medium text-[#171717] dark:text-[#f5f5f5]"
+                  >
                     Full Name
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <User className="w-4 h-4" />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373] dark:text-[#a3a3a3]">
+                      <User className="w-3.5 h-3.5" />
                     </div>
                     <input
                       id="fullName"
@@ -163,42 +197,84 @@ export const SignupPage: React.FC = () => {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Dr. Aditi Sharma"
-                      className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                      className="w-full pl-9 pr-3 py-2 bg-white dark:bg-[#141414] border border-[#ebebeb] dark:border-[#262626] rounded text-xs sm:text-sm text-[#171717] dark:text-[#f5f5f5] placeholder:text-[#a3a3a3] focus:outline-none focus:ring-1 focus:ring-[#171717] dark:focus:ring-[#f5f5f5] transition-colors"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="email" className="block text-xs font-semibold text-slate-700">
+                  <label
+                    htmlFor="email"
+                    className="block text-xs font-medium text-[#171717] dark:text-[#f5f5f5]"
+                  >
                     Work Email
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Mail className="w-4 h-4" />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373] dark:text-[#a3a3a3]">
+                      <Mail className="w-3.5 h-3.5" />
                     </div>
                     <input
                       id="email"
                       type="email"
-                      autoComplete="email"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="aditi@pharmacy.in"
-                      className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                      className="w-full pl-9 pr-3 py-2 bg-white dark:bg-[#141414] border border-[#ebebeb] dark:border-[#262626] rounded text-xs sm:text-sm text-[#171717] dark:text-[#f5f5f5] placeholder:text-[#a3a3a3] focus:outline-none focus:ring-1 focus:ring-[#171717] dark:focus:ring-[#f5f5f5] transition-colors"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Facility Name & Type */}
+              {/* Operational Role Selection (RBAC) */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-[#171717] dark:text-[#f5f5f5]">
+                  Operational Role (RBAC)
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { id: "STOREKEEPER" as UserRole, label: "Storekeeper", sub: "Operational orders" },
+                    { id: "ADMIN" as UserRole, label: "Admin", sub: "Full governance" },
+                    { id: "ANALYST" as UserRole, label: "Analyst", sub: "Data & stress tests" },
+                    { id: "VIEWER" as UserRole, label: "Auditor", sub: "Read-only inspection" },
+                  ].map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => setRole(r.id)}
+                      className={`p-2 rounded text-left border text-xs transition-all flex flex-col justify-between ${
+                        role === r.id
+                          ? "bg-[#171717] text-white dark:bg-[#f5f5f5] dark:text-[#0a0a0a] border-[#171717] dark:border-[#f5f5f5] font-semibold"
+                          : "bg-white dark:bg-[#141414] text-[#525252] dark:text-[#a3a3a3] border-[#ebebeb] dark:border-[#262626] hover:border-[#d4d4d4]"
+                      }`}
+                    >
+                      <span className="font-medium text-[11px]">{r.label}</span>
+                      <span
+                        className={`text-[9px] line-clamp-1 mt-0.5 ${
+                          role === r.id
+                            ? "text-[#d4d4d4] dark:text-[#525252]"
+                            : "text-[#737373] dark:text-[#8e8e8e]"
+                        }`}
+                      >
+                        {r.sub}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Facility Name & Category */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div className="space-y-1.5">
-                  <label htmlFor="facilityName" className="block text-xs font-semibold text-slate-700">
+                  <label
+                    htmlFor="facilityName"
+                    className="block text-xs font-medium text-[#171717] dark:text-[#f5f5f5]"
+                  >
                     Facility / Store Name
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Building2 className="w-4 h-4" />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373] dark:text-[#a3a3a3]">
+                      <Building2 className="w-3.5 h-3.5" />
                     </div>
                     <input
                       id="facilityName"
@@ -207,20 +283,23 @@ export const SignupPage: React.FC = () => {
                       value={facilityName}
                       onChange={(e) => setFacilityName(e.target.value)}
                       placeholder="City Community Pharmacy"
-                      className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                      className="w-full pl-9 pr-3 py-2 bg-white dark:bg-[#141414] border border-[#ebebeb] dark:border-[#262626] rounded text-xs sm:text-sm text-[#171717] dark:text-[#f5f5f5] placeholder:text-[#a3a3a3] focus:outline-none focus:ring-1 focus:ring-[#171717] dark:focus:ring-[#f5f5f5] transition-colors"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="facilityType" className="block text-xs font-semibold text-slate-700">
+                  <label
+                    htmlFor="facilityType"
+                    className="block text-xs font-medium text-[#171717] dark:text-[#f5f5f5]"
+                  >
                     Facility Category
                   </label>
                   <select
                     id="facilityType"
                     value={facilityType}
                     onChange={(e) => setFacilityType(e.target.value)}
-                    className="w-full py-2.5 px-3 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                    className="w-full py-2 px-3 bg-white dark:bg-[#141414] border border-[#ebebeb] dark:border-[#262626] rounded text-xs sm:text-sm text-[#171717] dark:text-[#f5f5f5] focus:outline-none focus:ring-1 focus:ring-[#171717] dark:focus:ring-[#f5f5f5] transition-colors"
                   >
                     <option value="Community Pharmacy">Community Pharmacy</option>
                     <option value="Primary Health Centre">Primary Health Centre (PHC)</option>
@@ -233,12 +312,15 @@ export const SignupPage: React.FC = () => {
               {/* Password & Confirm */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div className="space-y-1.5">
-                  <label htmlFor="password" className="block text-xs font-semibold text-slate-700">
+                  <label
+                    htmlFor="password"
+                    className="block text-xs font-medium text-[#171717] dark:text-[#f5f5f5]"
+                  >
                     Password
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Lock className="w-4 h-4" />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373] dark:text-[#a3a3a3]">
+                      <Lock className="w-3.5 h-3.5" />
                     </div>
                     <input
                       id="password"
@@ -247,26 +329,29 @@ export const SignupPage: React.FC = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••••••"
-                      className="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                      className="w-full pl-9 pr-9 py-2 bg-white dark:bg-[#141414] border border-[#ebebeb] dark:border-[#262626] rounded text-xs sm:text-sm text-[#171717] dark:text-[#f5f5f5] placeholder:text-[#a3a3a3] focus:outline-none focus:ring-1 focus:ring-[#171717] dark:focus:ring-[#f5f5f5] transition-colors"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       aria-label={showPassword ? "Hide password" : "Show password"}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#737373] hover:text-[#171717] dark:hover:text-[#f5f5f5]"
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="confirmPassword" className="block text-xs font-semibold text-slate-700">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-xs font-medium text-[#171717] dark:text-[#f5f5f5]"
+                  >
                     Confirm Password
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Lock className="w-4 h-4" />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373] dark:text-[#a3a3a3]">
+                      <Lock className="w-3.5 h-3.5" />
                     </div>
                     <input
                       id="confirmPassword"
@@ -275,7 +360,7 @@ export const SignupPage: React.FC = () => {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••••••"
-                      className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                      className="w-full pl-9 pr-3 py-2 bg-white dark:bg-[#141414] border border-[#ebebeb] dark:border-[#262626] rounded text-xs sm:text-sm text-[#171717] dark:text-[#f5f5f5] placeholder:text-[#a3a3a3] focus:outline-none focus:ring-1 focus:ring-[#171717] dark:focus:ring-[#f5f5f5] transition-colors"
                     />
                   </div>
                 </div>
@@ -283,16 +368,16 @@ export const SignupPage: React.FC = () => {
 
               {/* Policy Checkbox */}
               <div className="pt-1">
-                <label className="flex items-start gap-2.5 cursor-pointer text-xs text-slate-600 select-none">
+                <label className="flex items-start gap-2.5 cursor-pointer text-xs text-[#525252] dark:text-[#a3a3a3] select-none">
                   <input
                     type="checkbox"
                     checked={agreeTerms}
                     onChange={(e) => setAgreeTerms(e.target.checked)}
-                    className="w-4 h-4 mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 accent-indigo-600"
+                    className="w-3.5 h-3.5 mt-0.5 rounded border-[#d4d4d4] dark:border-[#404040] text-[#171717] dark:text-[#f5f5f5] accent-[#171717] dark:accent-[#f5f5f5]"
                   />
                   <span className="leading-tight">
-                    I understand this platform provides inventory decision support based on statistical models
-                    and fictional demo records.
+                    I acknowledge that StockSense provides deterministic inventory decision support and that
+                    rules decide while AI advises.
                   </span>
                 </label>
               </div>
@@ -301,31 +386,31 @@ export const SignupPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full mt-2 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-indigo-800 disabled:opacity-70 text-sm"
+                className="w-full mt-2 flex items-center justify-center gap-2 bg-[#171717] hover:bg-[#2b2b2b] text-white dark:bg-[#f5f5f5] dark:hover:bg-white dark:text-[#0a0a0a] font-medium py-2.5 px-4 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-[#171717] dark:focus:ring-[#f5f5f5] focus:ring-offset-1 disabled:opacity-60 text-xs sm:text-sm"
               >
                 {isLoading ? (
                   <span>Creating Account...</span>
                 ) : (
                   <>
                     <span>Create Account & Launch Console</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </>
                 )}
               </button>
             </form>
 
-            {/* Safe Note */}
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Full compliance with VORTEXA 3.0 S-02 architecture</span>
+            {/* Footnote */}
+            <div className="pt-2 border-t border-[#ebebeb] dark:border-[#262626] flex items-center justify-center gap-1.5 text-[11px] font-mono text-[#737373] dark:text-[#8e8e8e]">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#171717] dark:text-[#f5f5f5]" />
+              <span>Continuous review (s, Q) replenishment policy</span>
             </div>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="py-4 text-center text-xs text-slate-400">
-        StockSense · Fictional Demonstration Data · Problem S-02
+      <footer className="py-4 text-center text-[11px] font-mono text-[#737373] dark:text-[#8e8e8e] border-t border-[#ebebeb] dark:border-[#262626]">
+        StockSense · Role-Based Access Control · VORTEXA 3.0 S-02
       </footer>
     </div>
   );

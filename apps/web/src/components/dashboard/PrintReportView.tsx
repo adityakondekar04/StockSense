@@ -1,16 +1,21 @@
 // apps/web/src/components/dashboard/PrintReportView.tsx
-// Screen 8: 1-Page Printable Report adhering to ThoughtStream design system
+// Screen 8: 1-Page Printable Summary matching the Landing Page minimalist theme
 
 import React, { useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Printer, ArrowLeft, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Printer, ArrowLeft, CheckCircle2, AlertTriangle, Boxes } from "lucide-react";
 import { useInventory } from "../../context/InventoryContext";
 import { calculateProductPolicy } from "../../data/inventoryData";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui/table";
-import { EmptyState } from "../ui/empty-state";
-import { Skeleton } from "../ui/skeleton";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "../ui/table";
 
 function getProductCategory(sku: string): string {
   if (sku.startsWith("ORS")) return "Electrolytes";
@@ -24,11 +29,11 @@ function getProductCategory(sku: string): string {
 
 export const PrintReportView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { products, selectedProduct, serviceLevel, zValue, includeUnknowns, isLoading } = useInventory();
+  const { products, selectedProduct, serviceLevel, zValue, includeUnknowns } = useInventory();
 
   const product = useMemo(() => {
     if (!id) return selectedProduct;
-    return products.find((p) => p.sku === id) || null;
+    return products.find((p) => p.sku === id) || selectedProduct;
   }, [id, products, selectedProduct]);
 
   const isUnknownIncluded = product ? (includeUnknowns[product.sku] ?? true) : true;
@@ -41,211 +46,215 @@ export const PrintReportView: React.FC = () => {
     window.print();
   };
 
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#FAFAF9] dark:bg-[#0C0A09] p-6 sm:p-12">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-80 w-full" />
-        </div>
-      </div>
-    );
-  }
-
   if (!product || !policy) {
     return (
-      <div className="min-h-screen bg-[#FAFAF9] dark:bg-[#0C0A09] p-6 sm:p-12">
-        <div className="max-w-4xl mx-auto">
-          <EmptyState
-            title="Product Not Found"
-            description={
-              id
-                ? `No inventory product was found with identifier "${id}".`
-                : "No product is currently selected and the database contains no inventory records."
-            }
-            action={{
-              label: "Return to Products Directory",
-              to: "/products",
-            }}
-            secondaryAction={{
-              label: "Onboard Products in Setup",
-              to: "/setup",
-            }}
-          />
-        </div>
+      <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] text-[#171717] dark:text-[#f5f5f5] p-6 flex flex-col items-center justify-center space-y-4">
+        <p className="text-sm font-medium">No product selected or found in catalog.</p>
+        <Link to="/products">
+          <Button variant="outline" size="sm">
+            Back to Products
+          </Button>
+        </Link>
       </div>
     );
   }
+
+  const currentDate = new Date().toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 
   const category = getProductCategory(product.sku);
 
   return (
-    <div className="min-h-screen bg-[#FAFAF9] dark:bg-[#0C0A09] text-[#1C1917] dark:text-[#FAFAF9] font-sans p-6 sm:p-12 print:p-0 print:bg-white print:text-black">
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Top Control Bar (Hidden on print) */}
-        <div className="flex items-center justify-between border-b border-[#E7E5E4] dark:border-[#292524] pb-4 print:hidden">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] text-[#171717] dark:text-[#f5f5f5] font-sans p-6 sm:p-10 print:p-0 print:bg-white print:text-black transition-colors">
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* Top Action Bar (Hidden on print) */}
+        <div className="flex items-center justify-between border-b border-[#ebebeb] dark:border-[#262626] pb-4 print:hidden">
           <Link
             to={`/products/${product.sku}`}
-            className="inline-flex items-center gap-1.5 text-xs font-mono text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#FAFAF9]"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5]"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to Product Details
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to {product.sku}</span>
           </Link>
           <div className="flex items-center gap-3">
-            <span className="text-xs font-mono text-[#78716C] dark:text-[#A8A29E]">
-              Print-optimized 1-page layout
-            </span>
-            <Button variant="primary" size="sm" onClick={handlePrint} className="font-mono text-xs">
-              <Printer className="w-3.5 h-3.5 mr-1.5" /> Print Dispatch Report
+            <Link to="/recommendations">
+              <Button variant="outline" size="sm">
+                Dashboard
+              </Button>
+            </Link>
+            <Button variant="primary" size="sm" onClick={handlePrint}>
+              <Printer className="w-3.5 h-3.5" />
+              <span>Print Report</span>
             </Button>
           </div>
         </div>
 
         {/* Printable Document Sheet */}
-        <div className="border border-[#E7E5E4] dark:border-[#292524] bg-white dark:bg-[#12100E] p-8 sm:p-12 space-y-8 print:border-0 print:p-0">
+        <div className="rounded-xl border border-[#ebebeb] dark:border-[#262626] bg-white dark:bg-[#141414] p-6 sm:p-10 space-y-6 print:border-0 print:p-0 print:rounded-none">
           {/* Header */}
-          <div className="border-b border-[#1C1917] dark:border-[#FAFAF9] pb-6 flex items-start justify-between">
-            <div>
-              <span className="font-mono text-[10px] uppercase tracking-widest text-[#78716C] dark:text-[#A8A29E]">
-                Official Inventory Replenishment Dispatch
-              </span>
-              <h1 className="font-serif text-3xl font-bold tracking-tight text-[#1C1917] dark:text-[#FAFAF9] mt-1">
-                StockSense Replenishment Order
+          <div className="border-b border-[#ebebeb] dark:border-[#262626] pb-5 flex items-start justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded bg-[#171717] dark:bg-[#f5f5f5] flex items-center justify-center text-white dark:text-[#0a0a0a]">
+                  <Boxes className="w-3 h-3" />
+                </div>
+                <span className="font-heading text-xs font-semibold tracking-tight">
+                  StockSense · S-02
+                </span>
+              </div>
+              <h1 className="font-heading text-2xl font-semibold tracking-tight">
+                Replenishment Order Summary
               </h1>
-              <p className="text-xs text-[#57534E] dark:text-[#A8A29E] mt-1">
-                Generated: {currentDate} · S-02 VORTEXA Production Engine
+              <p className="text-xs text-[#737373] dark:text-[#a3a3a3] font-mono">
+                Date: {currentDate} · Service level {(serviceLevel * 100).toFixed(1)}% · z ={" "}
+                {zValue.toFixed(3)}
               </p>
             </div>
-            <div className="text-right font-mono text-xs text-[#78716C] dark:text-[#A8A29E]">
-              <div className="font-bold text-[#1C1917] dark:text-[#FAFAF9] text-base">{product.sku}</div>
-              <div>{category}</div>
+
+            <div className="text-right font-mono">
+              <div className="text-base font-semibold">{product.sku}</div>
+              <div className="text-xs text-[#737373] dark:text-[#a3a3a3]">{category}</div>
             </div>
           </div>
 
-          {/* Product Overview Card */}
-          <div className="border border-[#E7E5E4] dark:border-[#292524] p-6 bg-[#FAFAF9] dark:bg-[#1C1917]/50 flex flex-col sm:flex-row justify-between gap-6">
+          {/* Product Summary */}
+          <div className="rounded-lg border border-[#ebebeb] dark:border-[#262626] p-4 bg-[#fafafa] dark:bg-[#1a1a1a] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="text-xs font-mono text-[#78716C] dark:text-[#A8A29E] uppercase">Product Name</div>
-              <div className="font-serif text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9] mt-0.5">
-                {product.name}
+              <div className="text-[11px] font-mono uppercase text-[#737373] dark:text-[#a3a3a3]">
+                Product
               </div>
-              <div className="text-xs text-[#57534E] dark:text-[#A8A29E] mt-1 font-mono">
-                Lead Time: {product.leadTimeMean} days (±{product.leadTimeSd}d) · Unit Cost: ₹{product.unitCost}
+              <div className="font-heading text-lg font-semibold mt-0.5">{product.name}</div>
+              <div className="text-xs text-[#525252] dark:text-[#a3a3a3] font-mono mt-0.5">
+                Lead time: {product.leadTimeMean}d (±{product.leadTimeSd}d) · Unit cost: ₹
+                {product.unitCost}
               </div>
             </div>
-            <div className="text-left sm:text-right font-mono">
-              <div className="text-xs text-[#78716C] dark:text-[#A8A29E] uppercase">Replenishment Status</div>
-              <div className="mt-1">
-                {policy.isOrderNow ? (
-                  <Badge variant="error" size="md">
-                    <AlertTriangle className="w-3.5 h-3.5 mr-1" /> Reorder Triggered (Order Now)
-                  </Badge>
-                ) : (
-                  <Badge variant="success" size="md">
-                    <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Adequate Stock
-                  </Badge>
-                )}
-              </div>
+
+            <div>
+              {policy.isOrderNow ? (
+                <Badge variant="error" size="md">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span>Order now</span>
+                </Badge>
+              ) : (
+                <Badge variant="success" size="md">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Healthy</span>
+                </Badge>
+              )}
             </div>
           </div>
 
-          {/* Recommendation Metrics Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center font-mono">
-            <div className="border border-[#E7E5E4] dark:border-[#292524] p-4">
-              <span className="text-[11px] text-[#78716C] dark:text-[#A8A29E] uppercase">Current Stock</span>
-              <div className="text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9] mt-1">
-                {product.onHand}
+          {/* Key Numbers Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono">
+            <div className="rounded-lg border border-[#ebebeb] dark:border-[#262626] p-4">
+              <div className="text-[10px] uppercase text-[#737373] dark:text-[#a3a3a3]">
+                On Hand
               </div>
-              <span className="text-[10px] text-[#57534E] dark:text-[#A8A29E]">{policy.daysCover.toFixed(1)} days cover</span>
+              <div className="text-xl font-semibold mt-1">
+                {product.onHand.toLocaleString()} {product.unit}
+              </div>
+              <div className="text-[11px] text-[#737373] dark:text-[#a3a3a3]">
+                {policy.daysCover.toFixed(1)}d cover
+              </div>
             </div>
 
-            <div className="border border-[#E7E5E4] dark:border-[#292524] p-4">
-              <span className="text-[11px] text-[#78716C] dark:text-[#A8A29E] uppercase">Reorder Point</span>
-              <div className="text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9] mt-1">
-                {policy.rec.ropOperational.toLocaleString()} units
+            <div className="rounded-lg border border-[#ebebeb] dark:border-[#262626] p-4">
+              <div className="text-[10px] uppercase text-[#737373] dark:text-[#a3a3a3]">
+                Reorder Point
               </div>
-              <span className="text-[10px] text-[#57534E] dark:text-[#A8A29E]">Safety Stock: {Math.ceil(policy.rec.ss).toLocaleString()} units</span>
+              <div className="text-xl font-semibold mt-1">
+                {policy.rec.ropOperational.toLocaleString()} {product.unit}
+              </div>
+              <div className="text-[11px] text-[#737373] dark:text-[#a3a3a3]">
+                SS: {Math.ceil(policy.rec.ss).toLocaleString()}
+              </div>
             </div>
 
-            <div className="border border-[#E7E5E4] dark:border-[#292524] p-4">
-              <span className="text-[11px] text-[#78716C] dark:text-[#A8A29E] uppercase">Order Quantity (Q)</span>
-              <div className="text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9] mt-1">
-                {policy.rec.q.toLocaleString()} units
+            <div className="rounded-lg border border-[#ebebeb] dark:border-[#262626] p-4">
+              <div className="text-[10px] uppercase text-[#737373] dark:text-[#a3a3a3]">
+                Order Qty (EOQ)
               </div>
-              <span className="text-[10px] text-[#57534E] dark:text-[#A8A29E]">Economic lot size</span>
+              <div className="text-xl font-semibold mt-1">
+                {policy.rec.q.toLocaleString()} {product.unit}
+              </div>
+              <div className="text-[11px] text-[#737373] dark:text-[#a3a3a3]">
+                Optimal lot size
+              </div>
             </div>
 
-            <div className="border border-[#E7E5E4] dark:border-[#292524] p-4">
-              <span className="text-[11px] text-[#78716C] dark:text-[#A8A29E] uppercase">Estimated PO Value</span>
-              <div className="text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9] mt-1">
+            <div className="rounded-lg border border-[#ebebeb] dark:border-[#262626] p-4">
+              <div className="text-[10px] uppercase text-[#737373] dark:text-[#a3a3a3]">
+                Est. PO Value
+              </div>
+              <div className="text-xl font-semibold mt-1">
                 ₹{(policy.rec.q * product.unitCost).toLocaleString()}
               </div>
-              <span className="text-[10px] text-[#57534E] dark:text-[#A8A29E]">Excl. shipping</span>
+              <div className="text-[11px] text-[#737373] dark:text-[#a3a3a3]">
+                Excl. shipping
+              </div>
             </div>
           </div>
 
-          {/* Mathematical Audit Table */}
-          <div className="space-y-3">
-            <h3 className="font-serif text-lg font-bold text-[#1C1917] dark:text-[#FAFAF9]">
-              Mathematical Audit Parameters
-            </h3>
+          {/* Parameters Table */}
+          <div className="rounded-lg border border-[#ebebeb] dark:border-[#262626] overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Parameter</TableHead>
                   <TableHead>Value</TableHead>
-                  <TableHead>Definition &amp; Derivation</TableHead>
+                  <TableHead>Basis</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 <TableRow>
-                  <TableCell className="font-semibold text-xs">Target Cycle Service Level (CSL)</TableCell>
-                  <TableCell className="font-mono text-xs font-bold">{(serviceLevel * 100).toFixed(1)}%</TableCell>
-                  <TableCell className="text-xs text-[#57534E] dark:text-[#A8A29E]">
-                    Standard normal inverse quantile z = {zValue.toFixed(3)}
+                  <TableCell className="font-medium text-xs">Service Level</TableCell>
+                  <TableCell className="font-mono text-xs font-semibold">
+                    {(serviceLevel * 100).toFixed(1)}%
+                  </TableCell>
+                  <TableCell className="text-xs text-[#525252] dark:text-[#a3a3a3]">
+                    z = {zValue.toFixed(3)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="font-semibold text-xs">Uncertainty Variance Split</TableCell>
-                  <TableCell className="font-mono text-xs font-bold">D: {policy.demandShare}% / L: {policy.leadShare}%</TableCell>
-                  <TableCell className="text-xs text-[#57534E] dark:text-[#A8A29E]">
-                    Dual-variance decomposition of lead-time demand
+                  <TableCell className="font-medium text-xs">Variance Split</TableCell>
+                  <TableCell className="font-mono text-xs font-semibold">
+                    Demand {policy.demandShare}% / Lead {policy.leadShare}%
+                  </TableCell>
+                  <TableCell className="text-xs text-[#525252] dark:text-[#a3a3a3]">
+                    Dual-variance safety stock formula
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="font-semibold text-xs">Projected Stockout Date</TableCell>
-                  <TableCell className="font-mono text-xs font-bold">{policy.stockoutDate || "Buffer Safe"}</TableCell>
-                  <TableCell className="text-xs text-[#57534E] dark:text-[#A8A29E]">
-                    Based on current stock and daily consumption rate
+                  <TableCell className="font-medium text-xs">Expected Stockout</TableCell>
+                  <TableCell className="font-mono text-xs font-semibold">
+                    {policy.stockoutDate || "Buffer safe"}
+                  </TableCell>
+                  <TableCell className="text-xs text-[#525252] dark:text-[#a3a3a3]">
+                    At current daily demand ({product.meanDailyDemand} {product.unit}/d)
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="font-semibold text-xs">Total Annual Inventory Cost</TableCell>
-                  <TableCell className="font-mono text-xs font-bold">₹{policy.cost.totalAnnualCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}</TableCell>
-                  <TableCell className="text-xs text-[#57534E] dark:text-[#A8A29E]">
-                    Holding cost ₹{policy.cost.holdingCost.toFixed(0)} + Ordering cost ₹{policy.cost.orderingCost.toFixed(0)}
+                  <TableCell className="font-medium text-xs">Annual Inventory Cost</TableCell>
+                  <TableCell className="font-mono text-xs font-semibold">
+                    ₹{policy.cost.totalAnnualCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </TableCell>
+                  <TableCell className="text-xs text-[#525252] dark:text-[#a3a3a3]">
+                    Holding ₹{policy.cost.holdingCost.toFixed(0)} + Ordering ₹
+                    {policy.cost.orderingCost.toFixed(0)}
                   </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
           </div>
 
-          {/* Authorization Footer */}
-          <div className="pt-12 border-t border-[#E7E5E4] dark:border-[#292524] grid grid-cols-2 gap-8 text-xs font-mono">
-            <div>
-              <div className="border-b border-[#1C1917] dark:border-[#FAFAF9] pb-12"></div>
-              <div className="mt-2 text-[#78716C] dark:text-[#A8A29E]">Storekeeper / Pharmacy Officer Signature</div>
-            </div>
-            <div>
-              <div className="border-b border-[#1C1917] dark:border-[#FAFAF9] pb-12"></div>
-              <div className="mt-2 text-[#78716C] dark:text-[#A8A29E]">Procurement Authority Verification</div>
-            </div>
+          {/* Disclaimer Footer */}
+          <div className="pt-4 border-t border-[#ebebeb] dark:border-[#262626] flex items-center justify-between text-[11px] font-mono text-[#737373] dark:text-[#a3a3a3]">
+            <span>Rules decide, AI advises · @stocksense/core</span>
+            <span>Decision support using fictional demo data · Not a guarantee</span>
           </div>
         </div>
       </div>

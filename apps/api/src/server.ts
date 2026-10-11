@@ -12,7 +12,7 @@ import {
 } from "./analysis/routes.js";
 import { scenarioRouter } from "./scenarios/routes.js";
 import { aiRouter, auditRouter } from "./ai/routes.js";
-
+import { authRouter } from "./auth/routes.js";
 
 dotenv.config();
 
@@ -39,6 +39,10 @@ app.get(["/api/health", "/health"], async (_req, res) => {
     llmConfigured: Boolean(process.env.LLM_API_KEY)
   });
 });
+
+// Authentication & RBAC endpoints
+app.use("/api/auth", authRouter);
+app.use("/auth", authRouter);
 
 // Import endpoints
 app.use("/api/import", importRouter);

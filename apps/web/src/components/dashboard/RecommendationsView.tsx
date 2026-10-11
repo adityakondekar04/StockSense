@@ -1,5 +1,5 @@
 // apps/web/src/components/dashboard/RecommendationsView.tsx
-// Screen 4: Recommendations — Primary replenishment decision dashboard adhering to ThoughtStream design system
+// Screen 4: Recommendations — Minimalist replenishment dashboard matching Landing Page theme
 
 import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
@@ -11,12 +11,15 @@ import {
   LineChart,
   BarChart3,
   Package,
+  Upload,
   Plus,
   ArrowRight,
+  Sparkles,
+  ShieldCheck,
 } from "lucide-react";
 import { useInventory } from "../../context/InventoryContext";
 import { calculateProductPolicy } from "../../data/inventoryData";
-import { Card, CardContent } from "../ui/card";
+import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Badge, FilterChip } from "../ui/badge";
@@ -68,8 +71,7 @@ export const RecommendationsView: React.FC = () => {
   const summary = useMemo(() => {
     const totalSKUs = calculatedCards.length;
     const orderNowCount = calculatedCards.filter((c) => c.isOrderNow).length;
-    const totalSafetyUnits = calculatedCards.reduce((acc, c) => acc + c.rec.ss, 0);
-    const totalHoldingCost = calculatedCards.reduce((acc, c) => acc + c.cost.holdingCost, 0);
+    const totalSafetyUnits = calculatedCards.reduce((acc, c) => acc + Math.ceil(c.rec.ss), 0);
     const totalAnnualCost = calculatedCards.reduce((acc, c) => acc + c.cost.totalAnnualCost, 0);
 
     return {
@@ -77,7 +79,6 @@ export const RecommendationsView: React.FC = () => {
       orderNowCount,
       okCount: totalSKUs - orderNowCount,
       totalSafetyUnits,
-      totalHoldingCost,
       totalAnnualCost,
     };
   }, [calculatedCards]);
@@ -129,43 +130,48 @@ export const RecommendationsView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-6">
       {/* Page Header */}
-      <div className="border-b border-[#E7E5E4] dark:border-[#292524] pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-[#ebebeb] dark:border-[#262626]">
         <div>
-          <span className="font-mono text-[11px] uppercase tracking-widest text-[#78716C] dark:text-[#A8A29E]">
-            Executive Replenishment Dispatch
-          </span>
-          <h1 className="font-serif text-3xl font-bold text-[#1C1917] dark:text-[#FAFAF9] tracking-tight mt-1">
-            Replenishment Recommendations
+          <div className="text-[11px] font-mono font-medium uppercase tracking-wider text-[#737373] dark:text-[#a3a3a3] mb-1">
+            REPLENISHMENT OVERVIEW
+          </div>
+          <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-[#171717] dark:text-[#f5f5f5] tracking-[-0.025em]">
+            Recommendations
           </h1>
-          <p className="text-[14px] text-[#57534E] dark:text-[#A8A29E] mt-2 max-w-2xl font-sans">
-            Calibrated replenishment triggers computed via dual-variance safety stock theory at{" "}
-            <strong>{(serviceLevel * 100).toFixed(1)}% service level</strong> (z = {zValue.toFixed(3)}).
-            Pure mathematical optimization strictly separates decision rules from AI advisory notes.
+          <p className="text-xs sm:text-sm text-[#525252] dark:text-[#a3a3a3] mt-1 max-w-2xl">
+            When to reorder and how much, calculated at{" "}
+            <span className="font-mono font-medium text-[#171717] dark:text-[#f5f5f5]">
+              Service level {(serviceLevel * 100).toFixed(1)}% · z = {zValue.toFixed(3)}
+            </span>
+            .
           </p>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-2 shrink-0">
           <Link to="/products">
-            <Button variant="outline" size="sm" className="font-mono text-xs">
-              <Package className="w-3.5 h-3.5 mr-1.5" /> All Products Directory
+            <Button variant="outline" size="sm">
+              <Package className="w-3.5 h-3.5" />
+              <span>All Products</span>
             </Button>
           </Link>
           <Link to="/setup">
-            <Button variant="primary" size="sm" className="font-mono text-xs">
-              <Plus className="w-3.5 h-3.5 mr-1.5" /> Ingest CSV / Add SKU
+            <Button variant="primary" size="sm">
+              <Upload className="w-3.5 h-3.5" />
+              <span>Import Data</span>
             </Button>
           </Link>
         </div>
       </div>
 
       {serverError && (
-        <div className="p-4 bg-[#FEF2F2] dark:bg-[#7F1D1D]/30 border border-[#F87171] dark:border-[#DC2626] text-xs font-mono text-[#991B1B] dark:text-[#FCA5A5] flex items-center justify-between">
+        <div className="p-4 rounded-lg bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-xs font-mono text-[#e11d48] dark:text-[#fda4af] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>Connection error: {serverError}. Operating in local cache fallback mode.</span>
           </div>
-          <Button variant="secondary" size="sm" onClick={() => void refreshProducts()} className="font-mono text-xs">
+          <Button variant="secondary" size="sm" onClick={() => void refreshProducts()}>
             Retry Connection
           </Button>
         </div>
@@ -174,18 +180,24 @@ export const RecommendationsView: React.FC = () => {
       {/* Loading Skeletons */}
       {isLoading && (
         <div className="space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="p-5 border border-[#E7E5E4] dark:border-[#292524] bg-white dark:bg-[#1C1917] space-y-2">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="p-5 rounded-lg border border-[#ebebeb] dark:border-[#262626] bg-white dark:bg-[#141414] space-y-2"
+              >
                 <Skeleton className="h-3 w-20" />
                 <Skeleton className="h-8 w-14" />
                 <Skeleton className="h-3 w-16" />
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="p-6 border border-[#E7E5E4] dark:border-[#292524] bg-white dark:bg-[#1C1917] space-y-4">
+              <div
+                key={i}
+                className="p-5 rounded-lg border border-[#ebebeb] dark:border-[#262626] bg-white dark:bg-[#141414] space-y-4"
+              >
                 <Skeleton className="h-5 w-32" />
                 <Skeleton className="h-4 w-48" />
                 <div className="grid grid-cols-2 gap-2 pt-4">
@@ -217,137 +229,115 @@ export const RecommendationsView: React.FC = () => {
         />
       )}
 
-      {/* KPI Overview Strip - Large ink numbers, flat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card variant="elevated">
-          <CardContent className="p-5">
-            <div className="text-[11px] font-mono text-[#78716C] dark:text-[#A8A29E] uppercase tracking-wider">
-              Total Managed SKUs
-            </div>
-            <div className="mt-2 font-mono text-3xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
-              {summary.totalSKUs}
-            </div>
-            <div className="mt-1 text-[12px] text-[#57534E] dark:text-[#A8A29E]">
-              Active in catalog
-            </div>
-          </CardContent>
-        </Card>
+      {/* Unified Calm KPI Summary Panel */}
+      <div className="rounded-lg border border-[#ebebeb] dark:border-[#262626] bg-white dark:bg-[#141414] grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#ebebeb] dark:divide-[#262626]">
+        <div className="p-4 sm:p-5">
+          <div className="text-[11px] font-mono uppercase tracking-wider text-[#737373] dark:text-[#a3a3a3] flex items-center justify-between">
+            <span>Action Needed</span>
+            <AlertTriangle className="w-3.5 h-3.5 text-[#e11d48] dark:text-[#fda4af]" />
+          </div>
+          <div className="mt-1.5 font-mono text-2xl sm:text-3xl font-semibold text-[#171717] dark:text-[#f5f5f5]">
+            {summary.orderNowCount}
+          </div>
+          <div className="mt-0.5 text-xs text-[#525252] dark:text-[#a3a3a3]">
+            SKUs at or below reorder point
+          </div>
+        </div>
 
-        <Card variant="elevated">
-          <CardContent className="p-5">
-            <div className="text-[11px] font-mono text-[#DC2626] dark:text-[#FCA5A5] uppercase tracking-wider flex items-center gap-1">
-              <AlertTriangle className="w-3.5 h-3.5" /> Order Now
-            </div>
-            <div className="mt-2 font-mono text-3xl font-bold text-[#DC2626] dark:text-[#FCA5A5]">
-              {summary.orderNowCount}
-            </div>
-            <div className="mt-1 text-[12px] text-[#57534E] dark:text-[#A8A29E]">
-              Stock below ROP
-            </div>
-          </CardContent>
-        </Card>
+        <div className="p-4 sm:p-5">
+          <div className="text-[11px] font-mono uppercase tracking-wider text-[#737373] dark:text-[#a3a3a3] flex items-center justify-between">
+            <span>Healthy Stock</span>
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#15803d] dark:text-[#86efac]" />
+          </div>
+          <div className="mt-1.5 font-mono text-2xl sm:text-3xl font-semibold text-[#171717] dark:text-[#f5f5f5]">
+            {summary.okCount}
+          </div>
+          <div className="mt-0.5 text-xs text-[#525252] dark:text-[#a3a3a3]">
+            SKUs above reorder point
+          </div>
+        </div>
 
-        <Card variant="elevated">
-          <CardContent className="p-5">
-            <div className="text-[11px] font-mono text-[#65A30D] dark:text-[#86EFAC] uppercase tracking-wider flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Adequate Stock
-            </div>
-            <div className="mt-2 font-mono text-3xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
-              {summary.okCount}
-            </div>
-            <div className="mt-1 text-[12px] text-[#57534E] dark:text-[#A8A29E]">
-              Above reorder trigger
-            </div>
-          </CardContent>
-        </Card>
+        <div className="p-4 sm:p-5">
+          <div className="text-[11px] font-mono uppercase tracking-wider text-[#737373] dark:text-[#a3a3a3]">
+            Safety Buffer
+          </div>
+          <div className="mt-1.5 font-mono text-2xl sm:text-3xl font-semibold text-[#171717] dark:text-[#f5f5f5]">
+            {summary.totalSafetyUnits.toLocaleString()}{" "}
+            <span className="text-xs font-normal text-[#737373] dark:text-[#a3a3a3]">units</span>
+          </div>
+          <div className="mt-0.5 text-xs text-[#525252] dark:text-[#a3a3a3]">
+            Reserved across {summary.totalSKUs} SKUs
+          </div>
+        </div>
 
-        <Card variant="elevated">
-          <CardContent className="p-5">
-            <div className="text-[11px] font-mono text-[#78716C] dark:text-[#A8A29E] uppercase tracking-wider">
-              Total Safety Buffer
-            </div>
-            <div className="mt-2 font-mono text-3xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
-              {summary.totalSafetyUnits.toLocaleString()}
-            </div>
-            <div className="mt-1 text-[12px] text-[#57534E] dark:text-[#A8A29E]">
-              Units reserved
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card variant="elevated" className="col-span-2 lg:col-span-1">
-          <CardContent className="p-5">
-            <div className="text-[11px] font-mono text-[#78716C] dark:text-[#A8A29E] uppercase tracking-wider">
-              Annual Inventory Cost
-            </div>
-            <div className="mt-2 font-mono text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
-              ₹{summary.totalAnnualCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            </div>
-            <div className="mt-1 text-[12px] text-[#57534E] dark:text-[#A8A29E]">
-              Holding + Ordering
-            </div>
-          </CardContent>
-        </Card>
+        <div className="p-4 sm:p-5">
+          <div className="text-[11px] font-mono uppercase tracking-wider text-[#737373] dark:text-[#a3a3a3]">
+            Est. Annual Cost
+          </div>
+          <div className="mt-1.5 font-mono text-2xl sm:text-3xl font-semibold text-[#171717] dark:text-[#f5f5f5]">
+            ₹{summary.totalAnnualCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+          </div>
+          <div className="mt-0.5 text-xs text-[#525252] dark:text-[#a3a3a3]">
+            Holding + ordering total
+          </div>
+        </div>
       </div>
 
       {/* Control Bar: Search, Status Filters & Sorting */}
-      <Card variant="default">
-        <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          {/* Search bar */}
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-[#A8A29E]" />
-            <Input
-              placeholder="Search SKU or product name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        <div className="relative w-full md:w-72">
+          <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-[#a3a3a3]" />
+          <Input
+            placeholder="Search SKU or product..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between md:justify-end gap-2">
+          <div className="flex items-center gap-1.5">
+            <FilterChip
+              selected={statusFilter === "ALL"}
+              onClick={() => setStatusFilter("ALL")}
+            >
+              All ({calculatedCards.length})
+            </FilterChip>
+            <FilterChip
+              selected={statusFilter === "ORDER_NOW"}
+              onClick={() => setStatusFilter("ORDER_NOW")}
+            >
+              Order now ({summary.orderNowCount})
+            </FilterChip>
+            <FilterChip
+              selected={statusFilter === "OK"}
+              onClick={() => setStatusFilter("OK")}
+            >
+              Healthy ({summary.okCount})
+            </FilterChip>
           </div>
 
-          {/* Filter Chips & Sort Select */}
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-end">
-            <div className="flex items-center gap-1.5">
-              <FilterChip
-                selected={statusFilter === "ALL"}
-                onClick={() => setStatusFilter("ALL")}
-              >
-                All ({calculatedCards.length})
-              </FilterChip>
-              <FilterChip
-                selected={statusFilter === "ORDER_NOW"}
-                onClick={() => setStatusFilter("ORDER_NOW")}
-              >
-                Order Now ({summary.orderNowCount})
-              </FilterChip>
-              <FilterChip
-                selected={statusFilter === "OK"}
-                onClick={() => setStatusFilter("OK")}
-              >
-                Healthy ({summary.okCount})
-              </FilterChip>
-            </div>
-
-            <div className="flex items-center gap-2 border-l border-[#E7E5E4] dark:border-[#292524] pl-3">
-              <span className="text-[11px] font-mono text-[#78716C] dark:text-[#A8A29E] uppercase">
-                Sort:
-              </span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="bg-white dark:bg-[#1C1917] border border-[#D6D3D1] dark:border-[#44403C] rounded-none px-2 py-1 text-xs font-mono font-medium text-[#1C1917] dark:text-[#FAFAF9] focus:outline-none"
-              >
-                <option value="URGENCY">Urgency First</option>
-                <option value="COVER">Days Cover (Low to High)</option>
-                <option value="SKU">SKU Code</option>
-                <option value="NAME">Product Name</option>
-              </select>
-            </div>
+          <div className="flex items-center gap-1.5 pl-2 border-l border-[#ebebeb] dark:border-[#262626]">
+            <span className="text-[11px] font-mono text-[#737373] dark:text-[#a3a3a3]">
+              Sort:
+            </span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as "URGENCY" | "SKU" | "NAME" | "COVER")}
+              className="h-9 rounded-md bg-white dark:bg-[#141414] border border-[#ebebeb] dark:border-[#262626] px-2.5 text-xs font-medium text-[#171717] dark:text-[#f5f5f5] focus:outline-none"
+              aria-label="Sort products"
+            >
+              <option value="URGENCY">Urgency first</option>
+              <option value="COVER">Days cover</option>
+              <option value="SKU">SKU code</option>
+              <option value="NAME">Product name</option>
+            </select>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Recommendations Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredCards.length === 0 ? (
           <div className="col-span-full">
             <EmptyState
@@ -365,32 +355,45 @@ export const RecommendationsView: React.FC = () => {
           </div>
         ) : (
           filteredCards.map((card) => {
-            const { product, category, rec, daysCover, stockoutDate, isOrderNow, demandShare, leadShare } = card;
+            const {
+              product,
+              category,
+              rec,
+              daysCover,
+              stockoutDate,
+              isOrderNow,
+              demandShare,
+              leadShare,
+            } = card;
 
             return (
               <Card
                 key={product.sku}
                 variant="default"
-                className={`flex flex-col justify-between transition-all ${
-                  isOrderNow
-                    ? "border-t-2 border-t-[#DC2626] dark:border-t-[#DC2626]"
-                    : "border-t-2 border-t-[#65A30D] dark:border-t-[#65A30D]"
-                }`}
+                className="flex flex-col justify-between hover:border-[#d4d4d4] dark:hover:border-[#383838]"
               >
                 <div>
                   {/* Card Header */}
-                  <div className="p-6 border-b border-[#E7E5E4] dark:border-[#292524]">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-mono text-xs font-bold px-2 py-0.5 bg-[#F5F5F4] dark:bg-[#292524] text-[#1C1917] dark:text-[#FAFAF9] border border-[#E7E5E4] dark:border-[#44403C]">
-                        {product.sku}
-                      </span>
+                  <div className="p-5 border-b border-[#ebebeb] dark:border-[#262626]">
+                    <div className="flex items-center justify-between gap-2 mb-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[11px] font-semibold px-2 py-0.5 rounded bg-[#f5f5f5] dark:bg-[#1f1f1f] text-[#171717] dark:text-[#f5f5f5] border border-[#ebebeb] dark:border-[#262626]">
+                          {product.sku}
+                        </span>
+                        <span className="text-[11px] font-mono text-[#737373] dark:text-[#a3a3a3]">
+                          {category}
+                        </span>
+                      </div>
+
                       {isOrderNow ? (
                         <Badge variant="error" size="sm">
-                          <AlertTriangle className="w-3 h-3 mr-0.5" /> Order Now
+                          <AlertTriangle className="w-3 h-3" />
+                          <span>Order now</span>
                         </Badge>
                       ) : (
                         <Badge variant="success" size="sm">
-                          <CheckCircle2 className="w-3 h-3 mr-0.5" /> Healthy
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Healthy</span>
                         </Badge>
                       )}
                     </div>
@@ -398,136 +401,145 @@ export const RecommendationsView: React.FC = () => {
                     <Link
                       to={`/products/${product.sku}`}
                       onClick={() => handleSelectProduct(product.sku)}
-                      className="group"
+                      className="group block"
                     >
-                      <h3 className="font-serif text-xl font-bold text-[#1C1917] dark:text-[#FAFAF9] group-hover:text-[#78716C] dark:group-hover:text-[#A8A29E] transition-colors leading-snug">
+                      <h3 className="font-heading text-base font-semibold text-[#171717] dark:text-[#f5f5f5] group-hover:underline leading-snug">
                         {product.name}
                       </h3>
                     </Link>
-                    <div className="text-[12px] font-mono text-[#78716C] dark:text-[#A8A29E] mt-1">
-                      {category} · Lead Time: {product.leadTimeMean}d (±{product.leadTimeSd}d)
+
+                    <div className="mt-1.5 flex items-center justify-between text-[11px] font-mono text-[#737373] dark:text-[#a3a3a3]">
+                      <span>
+                        SL {(serviceLevel * 100).toFixed(0)}% · z = {zValue.toFixed(3)}
+                      </span>
+                      <span>
+                        Lead {product.leadTimeMean}d (±{product.leadTimeSd}d)
+                      </span>
                     </div>
                   </div>
 
-                  {/* Stock vs ROP Comparison */}
-                  <div className="p-6 space-y-5">
-                    <div className="grid grid-cols-2 gap-4 pb-4 border-b border-[#E7E5E4] dark:border-[#292524]">
+                  {/* Card Body: Key Numbers */}
+                  <div className="p-5 space-y-4">
+                    <div className="grid grid-cols-3 gap-3 pb-4 border-b border-[#f0f0f0] dark:border-[#1f1f1f]">
                       <div className="min-w-0">
-                        <span className="text-[11px] font-mono uppercase text-[#78716C] dark:text-[#A8A29E]">
-                          Current Stock
-                        </span>
-                        <div
-                          className="font-mono text-xl sm:text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9] mt-0.5 truncate"
-                          title={`${product.onHand.toLocaleString()} units`}
-                        >
-                          {product.onHand.toLocaleString()} units
+                        <div className="text-[10px] font-mono uppercase text-[#737373] dark:text-[#a3a3a3]">
+                          On Hand
                         </div>
-                        <span className="text-[11px] text-[#57534E] dark:text-[#A8A29E] block truncate">
-                          {daysCover.toFixed(1)} days cover
-                        </span>
+                        <div className="font-mono text-lg font-semibold text-[#171717] dark:text-[#f5f5f5] mt-0.5 truncate">
+                          {product.onHand.toLocaleString()}
+                        </div>
+                        <div className="text-[11px] text-[#737373] dark:text-[#a3a3a3] truncate">
+                          {daysCover.toFixed(1)}d cover
+                        </div>
                       </div>
 
                       <div className="min-w-0">
-                        <span className="text-[11px] font-mono uppercase text-[#78716C] dark:text-[#A8A29E]">
+                        <div className="text-[10px] font-mono uppercase text-[#737373] dark:text-[#a3a3a3]">
                           Reorder Point
-                        </span>
-                        <div
-                          className="font-mono text-xl sm:text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9] mt-0.5 truncate"
-                          title={`${rec.ropOperational.toLocaleString()} units`}
-                        >
-                          {rec.ropOperational.toLocaleString()} units
                         </div>
-                        <span
-                          className="text-[11px] text-[#57534E] dark:text-[#A8A29E] block truncate"
-                          title={`Safety Stock: ${Math.ceil(rec.ss).toLocaleString()} units`}
-                        >
-                          SS: {Math.ceil(rec.ss).toLocaleString()} units
-                        </span>
+                        <div className="font-mono text-lg font-semibold text-[#171717] dark:text-[#f5f5f5] mt-0.5 truncate">
+                          {rec.ropOperational.toLocaleString()}
+                        </div>
+                        <div className="text-[11px] text-[#737373] dark:text-[#a3a3a3] truncate">
+                          SS: {Math.ceil(rec.ss).toLocaleString()} u
+                        </div>
+                      </div>
+
+                      <div className="min-w-0">
+                        <div className="text-[10px] font-mono uppercase text-[#737373] dark:text-[#a3a3a3]">
+                          Order Qty
+                        </div>
+                        <div className="font-mono text-lg font-semibold text-[#171717] dark:text-[#f5f5f5] mt-0.5 truncate">
+                          {rec.q.toLocaleString()}
+                        </div>
+                        <div className="text-[11px] text-[#737373] dark:text-[#a3a3a3] truncate">
+                          ₹{(rec.q * product.unitCost).toLocaleString()}
+                        </div>
                       </div>
                     </div>
 
-                    {/* Replenishment Order Recommendation */}
-                    <div className="bg-[#F5F5F4] dark:bg-[#1C1917]/70 p-4 border border-[#E7E5E4] dark:border-[#292524]">
-                      <div className="flex items-center justify-between text-xs font-mono">
-                        <span className="text-[#78716C] dark:text-[#A8A29E] uppercase font-semibold">
-                          Recommended Order Q
-                        </span>
-                        <span className="font-bold text-[#1C1917] dark:text-[#FAFAF9] text-base">
-                          {rec.q} units
-                        </span>
+                    {/* Variance Split & Stockout Line */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-[11px] font-mono text-[#737373] dark:text-[#a3a3a3]">
+                        <span>Demand var {demandShare}%</span>
+                        <span>Lead var {leadShare}%</span>
                       </div>
-                      <div className="mt-2 flex items-center justify-between text-[11px] text-[#57534E] dark:text-[#A8A29E]">
-                        <span>Est. PO Value: ₹{(rec.q * product.unitCost).toLocaleString()}</span>
-                        <span>Stockout by: <strong>{stockoutDate || "Buffer Safe"}</strong></span>
-                      </div>
-                    </div>
-
-                    {/* Dual-Variance Uncertainty Bar */}
-                    <div className="space-y-1.5 pt-1">
-                      <div className="flex justify-between text-[11px] font-mono text-[#78716C] dark:text-[#A8A29E]">
-                        <span>Demand Volatility ({demandShare}%)</span>
-                        <span>Lead Uncertainty ({leadShare}%)</span>
-                      </div>
-                      <div className="h-2 w-full bg-[#E7E5E4] dark:bg-[#292524] flex overflow-hidden">
+                      <div className="h-1.5 w-full rounded-full bg-[#ebebeb] dark:bg-[#262626] flex overflow-hidden">
                         <div
-                          className="bg-[#1C1917] dark:bg-[#FAFAF9] h-full"
+                          className="bg-[#171717] dark:bg-[#f5f5f5] h-full"
                           style={{ width: `${demandShare}%` }}
-                          title={`Demand variance: ${demandShare}%`}
+                          title={`Demand variability: ${demandShare}%`}
                         />
                         <div
-                          className="bg-[#78716C] dark:bg-[#78716C] h-full"
+                          className="bg-[#a3a3a3] dark:bg-[#525252] h-full"
                           style={{ width: `${leadShare}%` }}
-                          title={`Lead time variance: ${leadShare}%`}
+                          title={`Lead time variability: ${leadShare}%`}
                         />
                       </div>
-                    </div>
 
-                    {/* AI Advisory / Rules Badge */}
-                    <div className="pt-2 text-[11px] font-mono text-[#78716C] dark:text-[#A8A29E] flex items-center justify-between">
-                      <span>Source Basis:</span>
-                      <span className="font-semibold text-[#1C1917] dark:text-[#FAFAF9]">
-                        {aiEnabled ? "AI Advisory · Rules Decided" : "Deterministic Rules Only"}
-                      </span>
+                      <div className="pt-1 flex items-center justify-between text-[11px] font-mono">
+                        <span className="text-[#737373] dark:text-[#a3a3a3]">
+                          {isOrderNow && stockoutDate
+                            ? `Runs out around ${stockoutDate}`
+                            : "Stock buffer healthy"}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[#525252] dark:text-[#a3a3a3]">
+                          {aiEnabled ? (
+                            <>
+                              <Sparkles className="w-3 h-3" />
+                              <span>AI + Rules</span>
+                            </>
+                          ) : (
+                            <>
+                              <ShieldCheck className="w-3 h-3" />
+                              <span>Rules</span>
+                            </>
+                          )}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Card Action Footer */}
-                <div className="p-4 border-t border-[#E7E5E4] dark:border-[#292524] bg-[#FAFAF9] dark:bg-[#12100E] flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5">
+                {/* Card Footer: Quick Navigation */}
+                <div className="px-5 py-3 border-t border-[#ebebeb] dark:border-[#262626] bg-[#fafafa]/60 dark:bg-[#0f0f0f]/60 rounded-b-lg flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1">
                     <Link
                       to={`/products/${product.sku}/cleaning`}
                       onClick={() => handleSelectProduct(product.sku)}
-                      className="p-1.5 border border-[#E7E5E4] dark:border-[#292524] text-[#78716C] hover:text-[#1C1917] dark:hover:text-[#FAFAF9] hover:bg-[#F5F5F4] dark:hover:bg-[#1C1917]"
-                      title="Inspect Sales Series & Anomalies"
+                      className="px-2 py-1 rounded text-[11px] font-mono text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5] hover:bg-[#ebebeb]/60 dark:hover:bg-[#1f1f1f] transition-colors inline-flex items-center gap-1"
+                      title="Review sales history & anomalies"
                     >
-                      <BarChart3 className="w-3.5 h-3.5" />
+                      <BarChart3 className="w-3 h-3" />
+                      <span>Anomalies</span>
                     </Link>
                     <Link
                       to={`/products/${product.sku}/forecast`}
                       onClick={() => handleSelectProduct(product.sku)}
-                      className="p-1.5 border border-[#E7E5E4] dark:border-[#292524] text-[#78716C] hover:text-[#1C1917] dark:hover:text-[#FAFAF9] hover:bg-[#F5F5F4] dark:hover:bg-[#1C1917]"
-                      title="Validate Holdout Forecast"
+                      className="px-2 py-1 rounded text-[11px] font-mono text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5] hover:bg-[#ebebeb]/60 dark:hover:bg-[#1f1f1f] transition-colors inline-flex items-center gap-1"
+                      title="Check demand forecast"
                     >
-                      <LineChart className="w-3.5 h-3.5" />
+                      <LineChart className="w-3 h-3" />
+                      <span>Forecast</span>
                     </Link>
                     <Link
                       to={`/products/${product.sku}/scenario`}
                       onClick={() => handleSelectProduct(product.sku)}
-                      className="p-1.5 border border-[#E7E5E4] dark:border-[#292524] text-[#78716C] hover:text-[#1C1917] dark:hover:text-[#FAFAF9] hover:bg-[#F5F5F4] dark:hover:bg-[#1C1917]"
-                      title="Run Stress Simulation Lab"
+                      className="px-2 py-1 rounded text-[11px] font-mono text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5] hover:bg-[#ebebeb]/60 dark:hover:bg-[#1f1f1f] transition-colors inline-flex items-center gap-1"
+                      title="Run What-If Scenario Lab"
                     >
-                      <Sliders className="w-3.5 h-3.5" />
+                      <Sliders className="w-3 h-3" />
+                      <span>What if?</span>
                     </Link>
                   </div>
 
                   <Link
                     to={`/products/${product.sku}`}
                     onClick={() => handleSelectProduct(product.sku)}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-[#171717] dark:text-[#f5f5f5] hover:underline"
                   >
-                    <Button variant="outline" size="sm" className="font-mono text-xs">
-                      Inspect SKU <ArrowRight className="w-3 h-3 ml-1" />
-                    </Button>
+                    <span>Details</span>
+                    <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>
               </Card>

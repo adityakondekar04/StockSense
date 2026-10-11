@@ -1,30 +1,31 @@
 // apps/web/src/components/dashboard/Sidebar.tsx
-// Professional ThoughtStream Minimalist SaaS Sidebar Navigation
+// Minimalist SaaS Sidebar matching the Landing Page monochrome design system
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  Package,
+  Boxes,
   LayoutDashboard,
+  Package,
   BarChart3,
   LineChart,
-  FileSpreadsheet,
   Sliders,
-  Printer,
+  Upload,
   History,
   BookOpen,
+  Printer,
   X,
-  Layers,
-  ArrowUpRight,
+  UserCheck,
 } from "lucide-react";
 import { useInventory } from "../../context/InventoryContext";
+import { useAuth } from "../../context/AuthContext";
 
 interface NavItem {
   label: string;
+  subtitle?: string;
   path: string;
   altPath?: string;
   icon: React.FC<{ className?: string }>;
-  badge?: string;
 }
 
 interface NavSection {
@@ -39,13 +40,14 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { selectedProduct } = useInventory();
+  const { user, role } = useAuth();
   const location = useLocation();
 
   const productSku = selectedProduct?.sku;
 
   const navSections: NavSection[] = [
     {
-      label: "INVENTORY CORE",
+      label: "Inventory",
       items: [
         {
           label: "Recommendations",
@@ -54,54 +56,44 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           icon: LayoutDashboard,
         },
         {
-          label: "Products Directory",
+          label: "All Products",
           path: "/products",
           icon: Package,
         },
       ],
     },
     {
-      label: "DATA INTELLIGENCE",
+      label: "Analysis",
       items: [
         {
-          label: "Data Cleaning",
+          label: "Sales & Anomalies",
           path: productSku ? `/products/${productSku}/cleaning` : "/cleaning",
           altPath: "/cleaning",
           icon: BarChart3,
         },
         {
-          label: "Forecast Check",
+          label: "Demand Forecast",
           path: productSku ? `/products/${productSku}/forecast` : "/forecast",
           altPath: "/forecast",
           icon: LineChart,
         },
-      ],
-    },
-    {
-      label: "OPERATIONS & STRESS",
-      items: [
         {
           label: "Scenario Lab",
           path: productSku ? `/products/${productSku}/scenario` : "/scenario",
           altPath: "/scenario",
           icon: Sliders,
         },
-        {
-          label: "Setup & Ingestion",
-          path: "/setup",
-          altPath: "/setup/manual",
-          icon: FileSpreadsheet,
-        },
-        {
-          label: "Print Report",
-          path: productSku ? `/report/${productSku}` : "/products",
-          icon: Printer,
-        },
       ],
     },
     {
-      label: "GOVERNANCE & AUDIT",
+      label: "System",
       items: [
+        {
+          label: "Import Data",
+          path: "/setup",
+          altPath: "/setup/manual",
+          icon: Upload,
+        },
         {
           label: "Decision Log",
           path: "/audit",
@@ -112,6 +104,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           path: "/methodology",
           icon: BookOpen,
         },
+        {
+          label: "Print Report",
+          path: productSku ? `/report/${productSku}` : "/products",
+          icon: Printer,
+        },
       ],
     },
   ];
@@ -120,16 +117,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     const current = location.pathname;
     if (current === item.path) return true;
     if (item.altPath && current.startsWith(item.altPath)) return true;
-    if (item.path === "/recommendations" && (current === "/dashboard" || current === "/recommendations")) {
+    if (
+      item.path === "/recommendations" &&
+      (current === "/dashboard" || current === "/recommendations")
+    ) {
       return true;
     }
-    if (item.path.includes("/products/") && item.path.includes("/cleaning") && current.includes("/cleaning")) {
+    if (
+      item.path === "/products" &&
+      current.startsWith("/products/") &&
+      !current.includes("/cleaning") &&
+      !current.includes("/forecast") &&
+      !current.includes("/scenario")
+    ) {
       return true;
     }
-    if (item.path.includes("/products/") && item.path.includes("/forecast") && current.includes("/forecast")) {
+    if (item.path.includes("/cleaning") && current.includes("/cleaning")) {
       return true;
     }
-    if (item.path.includes("/products/") && item.path.includes("/scenario") && current.includes("/scenario")) {
+    if (item.path.includes("/forecast") && current.includes("/forecast")) {
+      return true;
+    }
+    if (item.path.includes("/scenario") && current.includes("/scenario")) {
       return true;
     }
     return false;
@@ -140,7 +149,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       {/* Mobile Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-[#1C1917]/40 dark:bg-black/60 z-40 lg:hidden backdrop-blur-xs"
+          className="fixed inset-0 bg-black/40 dark:bg-black/60 z-40 lg:hidden backdrop-blur-[1px]"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -150,25 +159,29 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       <aside
         className={`
           fixed lg:static inset-y-0 left-0 z-50
-          w-64 bg-[#FAFAF9] dark:bg-[#12100E] border-r border-[#E7E5E4] dark:border-[#292524]
+          w-60 bg-[#fafafa] dark:bg-[#0a0a0a] border-r border-[#ebebeb] dark:border-[#262626]
           flex flex-col h-screen shrink-0
           transition-transform duration-200 ease-in-out
           ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
         aria-label="Sidebar navigation"
       >
-        {/* Brand header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-[#E7E5E4] dark:border-[#292524]">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-8 h-8 rounded-none bg-[#1C1917] dark:bg-[#FAFAF9] flex items-center justify-center text-[#FAFAF9] dark:text-[#1C1917] transition-colors">
-              <Layers className="w-4 h-4" />
+        {/* Brand header — matches Landing Page Navbar height (h-14) and wordmark */}
+        <div className="flex items-center justify-between h-14 px-5 border-b border-[#ebebeb] dark:border-[#262626] shrink-0">
+          <Link
+            to="/"
+            className="flex items-center gap-2 group focus:outline-none"
+            aria-label="StockSense home"
+          >
+            <div className="w-6 h-6 rounded bg-[#171717] dark:bg-[#f5f5f5] flex items-center justify-center text-white dark:text-[#0a0a0a] transition-colors">
+              <Boxes className="w-3.5 h-3.5 stroke-[2.2]" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-serif font-bold text-[17px] text-[#1C1917] dark:text-[#FAFAF9] tracking-tight leading-tight">
+            <div className="flex items-center gap-2">
+              <span className="font-heading text-sm font-semibold text-[#171717] dark:text-[#f5f5f5] tracking-tight">
                 StockSense
               </span>
-              <span className="text-[10px] uppercase font-mono tracking-widest text-[#78716C] dark:text-[#A8A29E]">
-                Enterprise S-02
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#f5f5f5] dark:bg-[#1a1a1a] text-[#737373] dark:text-[#a3a3a3] border border-[#ebebeb] dark:border-[#262626]">
+                S-02
               </span>
             </div>
           </Link>
@@ -177,18 +190,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-none text-[#57534E] hover:text-[#1C1917] dark:text-[#A8A29E] dark:hover:text-[#FAFAF9] lg:hidden"
+            className="p-1 rounded-md text-[#525252] hover:text-[#171717] dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] lg:hidden"
             aria-label="Close sidebar"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Navigation sections */}
-        <nav className="flex-1 overflow-y-auto px-4 py-5 space-y-6">
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
           {navSections.map((section) => (
-            <div key={section.label} className="space-y-1.5">
-              <h4 className="px-3 text-[10px] font-semibold text-[#A8A29E] dark:text-[#78716C] uppercase tracking-widest font-sans">
+            <div key={section.label} className="space-y-1">
+              <h4 className="px-2.5 text-[10px] font-mono font-medium text-[#737373] dark:text-[#8e8e8e] uppercase tracking-wider">
                 {section.label}
               </h4>
               <ul className="space-y-0.5">
@@ -201,27 +214,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                         to={item.path}
                         onClick={onClose}
                         className={`
-                          flex items-center justify-between px-3 py-2 text-[13px] font-medium transition-all duration-150 rounded-none border-l-2
+                          flex items-center justify-between px-2.5 py-2 text-xs font-medium rounded-md transition-colors duration-150
                           ${
                             active
-                              ? "bg-[#EFEDEB] dark:bg-[#1C1917] text-[#1C1917] dark:text-[#FAFAF9] border-[#1C1917] dark:border-[#FAFAF9] font-semibold"
-                              : "text-[#57534E] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#FAFAF9] hover:bg-[#F5F5F4] dark:hover:bg-[#1C1917]/50 border-transparent"
+                              ? "bg-[#171717] text-white dark:bg-[#f5f5f5] dark:text-[#0a0a0a]"
+                              : "text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5] hover:bg-[#f0f0f0]/80 dark:hover:bg-[#141414]"
                           }
                         `}
                       >
                         <div className="flex items-center gap-2.5 truncate">
                           <Icon
-                            className={`w-4 h-4 shrink-0 ${
+                            className={`w-3.5 h-3.5 shrink-0 ${
                               active
-                                ? "text-[#1C1917] dark:text-[#FAFAF9]"
-                                : "text-[#78716C] dark:text-[#78716C]"
+                                ? "text-white dark:text-[#0a0a0a]"
+                                : "text-[#737373] dark:text-[#8e8e8e]"
                             }`}
                           />
                           <span className="truncate">{item.label}</span>
                         </div>
-                        {active && (
-                          <span className="w-1.5 h-1.5 bg-[#1C1917] dark:bg-[#FAFAF9] shrink-0" />
-                        )}
                       </Link>
                     </li>
                   );
@@ -231,38 +241,52 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           ))}
         </nav>
 
-        {/* Active Product Quick Info */}
+        {/* Active Product Quick Summary */}
         {selectedProduct ? (
-          <div className="p-4 mx-4 mb-3 bg-[#F5F5F4] dark:bg-[#1C1917] border border-[#E7E5E4] dark:border-[#292524] rounded-none">
-            <div className="flex items-center justify-between text-[11px] font-mono text-[#57534E] dark:text-[#A8A29E] mb-1">
-              <span>SELECTED SKU</span>
-              <span className="font-semibold text-[#1C1917] dark:text-[#FAFAF9]">{selectedProduct.sku}</span>
+          <div className="p-3 mx-3 mb-3 rounded-lg bg-white dark:bg-[#141414] border border-[#ebebeb] dark:border-[#262626]">
+            <div className="flex items-center justify-between text-[10px] font-mono text-[#737373] dark:text-[#a3a3a3] mb-1">
+              <span>ACTIVE SKU</span>
+              <span className="font-semibold text-[#171717] dark:text-[#f5f5f5]">
+                {selectedProduct.sku}
+              </span>
             </div>
-            <div className="text-[12px] font-sans font-medium text-[#1C1917] dark:text-[#FAFAF9] truncate">
+            <div className="text-xs font-medium text-[#171717] dark:text-[#f5f5f5] truncate">
               {selectedProduct.name}
             </div>
-            <div className="mt-2 flex items-center justify-between text-[11px] text-[#78716C] dark:text-[#A8A29E] border-t border-[#E7E5E4] dark:border-[#292524] pt-1.5">
-              <span>Stock on hand</span>
-              <span className="font-mono font-semibold text-[#1C1917] dark:text-[#FAFAF9]">{selectedProduct.onHand} units</span>
+            <div className="mt-2 pt-1.5 border-t border-[#f0f0f0] dark:border-[#1f1f1f] flex items-center justify-between text-[11px] text-[#525252] dark:text-[#a3a3a3]">
+              <span>On hand</span>
+              <span className="font-mono font-semibold text-[#171717] dark:text-[#f5f5f5]">
+                {selectedProduct.onHand.toLocaleString()} {selectedProduct.unit}
+              </span>
             </div>
           </div>
         ) : (
-          <div className="p-3 mx-4 mb-3 bg-[#F5F5F4] dark:bg-[#1C1917] border border-[#E7E5E4] dark:border-[#292524] text-[11px] text-[#78716C] dark:text-[#A8A29E] text-center font-mono">
+          <div className="p-3 mx-3 mb-3 rounded-lg bg-white dark:bg-[#141414] border border-[#ebebeb] dark:border-[#262626] text-[11px] text-[#737373] dark:text-[#a3a3a3] text-center font-mono">
             No products loaded
           </div>
         )}
 
-        {/* Sidebar Footer */}
-        <div className="px-5 py-4 border-t border-[#E7E5E4] dark:border-[#292524] bg-[#FAFAF9] dark:bg-[#12100E] flex items-center justify-between text-[11px] text-[#78716C] dark:text-[#78716C]">
-          <div>
-            <span className="font-semibold text-[#1C1917] dark:text-[#FAFAF9]">StockSense</span> · VORTEXA 3.0
+        {/* User / Role Footer */}
+        <div className="px-4 py-3 border-t border-[#ebebeb] dark:border-[#262626] flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-6 h-6 rounded-full bg-[#f0f0f0] dark:bg-[#1f1f1f] border border-[#ebebeb] dark:border-[#262626] flex items-center justify-center text-[#171717] dark:text-[#f5f5f5] shrink-0">
+              <UserCheck className="w-3 h-3" />
+            </div>
+            <div className="truncate">
+              <div className="text-[11px] font-medium text-[#171717] dark:text-[#f5f5f5] truncate">
+                {user?.name || "Storekeeper"}
+              </div>
+              <div className="text-[10px] font-mono text-[#737373] dark:text-[#8e8e8e]">
+                {role}
+              </div>
+            </div>
           </div>
           <Link
-            to="/methodology"
-            className="hover:text-[#1C1917] dark:hover:text-[#FAFAF9] flex items-center gap-0.5"
-            title="Read documentation"
+            to="/login"
+            className="text-[11px] font-mono text-[#737373] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5] transition-colors shrink-0"
+            title="Switch account or role"
           >
-            Docs <ArrowUpRight className="w-3 h-3" />
+            Switch
           </Link>
         </div>
       </aside>

@@ -73,27 +73,32 @@ export const Footer: React.FC = () => {
                   to="/recommendations"
                   className="text-[#171717] dark:text-[#f5f5f5] font-medium hover:underline transition-colors"
                 >
-                  Replenishment Recommendations →
+                  Recommendations →
+                </Link>
+              </li>
+              <li>
+                <Link to="/products" className="hover:text-[#171717] dark:hover:text-[#f5f5f5] transition-colors">
+                  All Products
                 </Link>
               </li>
               <li>
                 <Link to="/cleaning" className="hover:text-[#171717] dark:hover:text-[#f5f5f5] transition-colors">
-                  Anomaly Cleaning Console
+                  Sales &amp; Anomalies
                 </Link>
               </li>
               <li>
                 <Link to="/forecast" className="hover:text-[#171717] dark:hover:text-[#f5f5f5] transition-colors">
-                  Baseline Forecast Lab
+                  Demand Forecast
                 </Link>
               </li>
               <li>
                 <Link to="/scenario" className="hover:text-[#171717] dark:hover:text-[#f5f5f5] transition-colors">
-                  Scenario Stress Testing
+                  Scenario Lab
                 </Link>
               </li>
               <li>
                 <Link to="/audit" className="hover:text-[#171717] dark:hover:text-[#f5f5f5] transition-colors">
-                  Provenance & Audit Log
+                  Decision Log
                 </Link>
               </li>
             </ul>
