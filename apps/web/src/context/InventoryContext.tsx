@@ -1,8 +1,9 @@
 // apps/web/src/context/InventoryContext.tsx
 // Central React State for StockSense Dashboard
 
-import React, { createContext, useContext, useState, useMemo, type ReactNode } from "react";
+import React, { createContext, useContext, useState, useMemo, useEffect, type ReactNode } from "react";
 import { inverseNormalCDF } from "@stocksense/core";
+import { apiClient } from "../api/client";
 import {
   OFFICIAL_DEMO_PRODUCTS,
   INITIAL_AUDIT_LOG,
@@ -34,8 +35,10 @@ interface InventoryContextType {
   addAnomalyNote: (id: string, note: string) => void;
   auditLog: AuditRecord[];
   addAuditLog: (entry: Omit<AuditRecord, "id" | "at">) => void;
-  loadDemoData: () => void;
+  loadDemoData: () => Promise<void> | void;
   addProduct: (product: Omit<ProductRecord, "id" | "historyDays">, dailyDemands?: number[]) => ProductRecord;
+  serverOnline: boolean;
+  serverError: string | null;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -83,6 +86,56 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
   });
 
   const [auditLog, setAuditLog] = useState<AuditRecord[]>(INITIAL_AUDIT_LOG);
+  const [serverOnline, setServerOnline] = useState<boolean>(true);
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  // Sync products with API on mount, with graceful fallback
+  useEffect(() => {
+    let cancelled = false;
+    async function init() {
+      try {
+        const remoteProds = await apiClient.getProducts();
+        if (!cancelled && Array.isArray(remoteProds) && remoteProds.length > 0) {
+          setProducts((prev) => {
+            return remoteProds.map((rp: any) => {
+              const local = prev.find((p) => p.sku === rp.sku);
+              return {
+                id: rp.id,
+                sku: rp.sku,
+                name: rp.name,
+                unit: rp.unit || "units",
+                unitCost: rp.unitCost,
+                orderCost: rp.orderCost,
+                holdingRate: rp.holdingRate,
+                leadTimeMean: rp.leadTimeMean,
+                leadTimeSd: rp.leadTimeSd,
+                onHand: rp.onHand,
+                onOrder: rp.onOrder,
+                packSize: rp.packSize,
+                minOrderQty: rp.minOrderQty,
+                shortageCost: rp.shortageCost || 20,
+                meanDailyDemand: local?.meanDailyDemand || 100,
+                sdDemand: local?.sdDemand || 20,
+                historyDays: local?.historyDays || 150,
+                isIntermittent: local?.isIntermittent || rp.sku === "ANT-06",
+              };
+            });
+          });
+          setServerOnline(true);
+          setServerError(null);
+        }
+      } catch (err: any) {
+        if (!cancelled) {
+          setServerOnline(false);
+          setServerError(err?.message || "Cannot reach the server.");
+        }
+      }
+    }
+    init();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Compute z from packages/core
   const zValue = useMemo(() => {
@@ -218,7 +271,15 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     setAuditLog((prev) => [fullEntry, ...prev]);
   };
 
-  const loadDemoData = () => {
+  const loadDemoData = async () => {
+    try {
+      await apiClient.importDemo();
+      setServerOnline(true);
+      setServerError(null);
+    } catch {
+      // Fallback cleanly to local mock if server unreachable
+    }
+
     setProducts(OFFICIAL_DEMO_PRODUCTS);
     setSelectedProductIdState(OFFICIAL_DEMO_PRODUCTS[0].id);
 
@@ -311,6 +372,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
         addAuditLog,
         loadDemoData,
         addProduct,
+        serverOnline,
+        serverError,
       }}
     >
       {children}

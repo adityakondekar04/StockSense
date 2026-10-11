@@ -17,6 +17,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     selectedProduct,
     aiEnabled,
     setAiEnabled,
+    serverOnline,
+    serverError,
   } = useInventory();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -36,6 +38,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             {/* Contextual Warning & Guardrail Banners */}
             <div className="space-y-2 mb-6">
+              {/* Offline Server Notification */}
+              {!serverOnline && (
+                <div className="bg-[#FEFCE8] dark:bg-[#713F12]/20 border border-[#FEF08A] dark:border-[#A16207]/40 p-3.5 flex items-start gap-3 text-xs text-[#CA8A04] dark:text-[#FDE047]">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="font-semibold uppercase tracking-wider font-mono">Backend Offline:</strong>{" "}
+                    {serverError || "Failed to connect to the backend API at http://localhost:4000."} Running in deterministic offline fallback mode with seeded clinical data.
+                  </div>
+                </div>
+              )}
+
               {/* Limited history warning (<28 days) */}
               {selectedProduct.historyDays < 28 && (
                 <div className="bg-[#FEFCE8] dark:bg-[#713F12]/20 border border-[#FEF08A] dark:border-[#A16207]/40 p-3.5 flex items-start gap-3 text-xs text-[#CA8A04] dark:text-[#FDE047]">
