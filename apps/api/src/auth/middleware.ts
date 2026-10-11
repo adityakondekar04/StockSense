@@ -2,7 +2,7 @@
 // Express middleware for authentication and Role-Based Access Control (RBAC)
 
 import { Request, Response, NextFunction } from "express";
-import { verifyAuthToken, getUserById } from "./service.js";
+import { verifyAuthToken, getUserByIdAsync } from "./service.js";
 import { AuthUser, UserRole } from "./types.js";
 
 // Extend Express Request interface to include authenticated user
@@ -14,7 +14,7 @@ declare global {
   }
 }
 
-export function requireAuth(req: Request, res: Response, next: NextFunction): void {
+export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     res.status(401).json({
@@ -34,7 +34,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
     return;
   }
 
-  const fullUser = getUserById(payload.id);
+  const fullUser = await getUserByIdAsync(payload.id);
   if (!fullUser) {
     res.status(401).json({
       error: "USER_NOT_FOUND",

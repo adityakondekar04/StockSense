@@ -37,6 +37,51 @@ function getCSVContent(req: Request): string | null {
   return null;
 }
 
+async function recordImportBatch(params: {
+  schemaType: "PRODUCTS" | "SALES" | "PROMOS" | "LEAD_TIMES";
+  fileName: string;
+  importedRows: number;
+  rejected: RejectedRow[];
+}) {
+  try {
+    const totalRows = params.importedRows + params.rejected.length;
+    const status =
+      params.importedRows > 0 && params.rejected.length === 0
+        ? "COMPLETED"
+        : params.importedRows > 0
+        ? "PARTIAL"
+        : "FAILED";
+
+    await prisma.csvImportBatch.create({
+      data: {
+        schemaType: params.schemaType,
+        fileName: params.fileName,
+        totalRows,
+        importedRows: params.importedRows,
+        rejectedRows: params.rejected.length,
+        status,
+        errorDetailsJson: params.rejected.slice(0, 25) as any,
+      },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        kind: "import",
+        decisionPath: "RULES",
+        detailJson: {
+          schemaType: params.schemaType,
+          fileName: params.fileName,
+          imported: params.importedRows,
+          rejected: params.rejected.length,
+          status,
+        },
+      },
+    });
+  } catch {
+    // Non-blocking audit persistence
+  }
+}
+
 // ---------------------------------------------------------------------------
 // POST /import/sales
 // ---------------------------------------------------------------------------
@@ -109,6 +154,13 @@ importRouter.post("/sales", upload.single("file"), async (req: Request, res: Res
       });
     }
   }
+
+  await recordImportBatch({
+    schemaType: "SALES",
+    fileName: req.file?.originalname || "sales_upload.csv",
+    importedRows: importedCount,
+    rejected,
+  });
 
   res.json({
     imported: importedCount,
@@ -184,6 +236,13 @@ importRouter.post("/products", upload.single("file"), async (req: Request, res: 
     }
   }
 
+  await recordImportBatch({
+    schemaType: "PRODUCTS",
+    fileName: req.file?.originalname || "products_upload.csv",
+    importedRows: importedCount,
+    rejected,
+  });
+
   res.json({
     imported: importedCount,
     rejected,
@@ -254,6 +313,13 @@ importRouter.post("/promos", upload.single("file"), async (req: Request, res: Re
     }
   }
 
+  await recordImportBatch({
+    schemaType: "PROMOS",
+    fileName: req.file?.originalname || "promos_upload.csv",
+    importedRows: importedCount,
+    rejected,
+  });
+
   res.json({
     imported: importedCount,
     rejected,
@@ -322,6 +388,13 @@ importRouter.post("/lead-times", upload.single("file"), async (req: Request, res
       });
     }
   }
+
+  await recordImportBatch({
+    schemaType: "LEAD_TIMES",
+    fileName: req.file?.originalname || "lead_times_upload.csv",
+    importedRows: importedCount,
+    rejected,
+  });
 
   res.json({
     imported: importedCount,

@@ -8,10 +8,91 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// ---------------------------------------------------------------------------
+// 1. Authentication, Users, Sessions & Facilities
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         UserRole  @default(STOREKEEPER)
+  facilityName String    @default("CityCare Community Pharmacy")
+  facilityType String    @default("Community Pharmacy")
+  facilityId   String?
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  facility       Facility?              @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+  sessions       UserSession[]
+  purchaseOrders PurchaseOrder[]
+  transactions   InventoryTransaction[]
+  importBatches  CsvImportBatch[]
+  auditLogs      AuditLog[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  ipAddress String?
+  userAgent String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Facility {
+  id                  String   @id @default(cuid())
+  code                String   @unique
+  name                String
+  facilityType        String   @default("Community Pharmacy")
+  location            String?
+  defaultServiceLevel Float    @default(0.95)
+  aiEnabled           Boolean  @default(true)
+  includeUnknowns     Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  users    User[]
+  products Product[]
+}
+
+// ---------------------------------------------------------------------------
+// 2. Suppliers, Products & Inventory Ledger
+// ---------------------------------------------------------------------------
+
+model Supplier {
+  id               String   @id @default(cuid())
+  code             String   @unique
+  name             String
+  contactEmail     String?
+  phone            String?
+  reliabilityScore Float    @default(0.95)
+  avgLeadTimeDays  Float    @default(5.0)
+  leadTimeSdDays   Float    @default(1.2)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+
+  products       Product[]
+  purchaseOrders PurchaseOrder[]
+}
+
 model Product {
   id            String   @id @default(cuid())
   sku           String   @unique
   name          String
+  category      String   @default("Essential Medicine")
   unit          String   @default("units")
   unitCost      Float
   orderCost     Float
@@ -24,13 +105,20 @@ model Product {
   minOrderQty   Int      @default(1)
   shelfLifeDays Int?
   shortageCost  Float?
+  supplierId    String?
+  facilityId    String?
   createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt @default(now())
 
-  sales     Sale[]
-  promos    Promo[]
-  leadTimes LeadTimeRecord[]
-  anomalies Anomaly[]
-  runs      AnalysisRun[]
+  supplier       Supplier?              @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  facility       Facility?              @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+  sales          Sale[]
+  promos         Promo[]
+  leadTimes      LeadTimeRecord[]
+  anomalies      Anomaly[]
+  runs           AnalysisRun[]
+  purchaseOrders PurchaseOrder[]
+  transactions   InventoryTransaction[]
 }
 
 model Sale {
@@ -61,6 +149,58 @@ model LeadTimeRecord {
   receivedDate DateTime @db.Date
   product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
+
+// ---------------------------------------------------------------------------
+// 3. Procurement, Purchase Orders & Stock Ledger Transactions
+// ---------------------------------------------------------------------------
+
+model PurchaseOrder {
+  id                   String      @id @default(cuid())
+  orderNumber          String      @unique
+  productId            String
+  supplierId           String?
+  orderedByUserId      String?
+  status               OrderStatus @default(ORDERED)
+  quantityUnits        Int
+  unitCost             Float
+  totalCost            Float
+  reorderPointAtOrder  Int?
+  safetyStockAtOrder   Int?
+  eoqAtOrder           Int?
+  expectedDeliveryDate DateTime?   @db.Date
+  receivedAt           DateTime?
+  notes                String?
+  createdAt            DateTime    @default(now())
+
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplier  Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  orderedBy User?     @relation(fields: [orderedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([status])
+}
+
+model InventoryTransaction {
+  id            String          @id @default(cuid())
+  productId     String
+  userId        String?
+  type          TransactionType
+  quantityDelta Int
+  onHandBefore  Int
+  onHandAfter   Int
+  referenceId   String?
+  note          String?
+  createdAt     DateTime        @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([productId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// 4. Anomalies, Analysis Runs, Scenarios, CSV Imports, Policies & Audit Logs
+// ---------------------------------------------------------------------------
 
 model Anomaly {
   id             String       @id @default(cuid())
@@ -107,13 +247,71 @@ model Scenario {
   createdAt  DateTime @default(now())
 }
 
+model CsvImportBatch {
+  id                String   @id @default(cuid())
+  schemaType        String // "PRODUCTS" | "SALES" | "PROMOS" | "LEAD_TIMES"
+  fileName          String
+  uploadedByUserId  String?
+  totalRows         Int      @default(0)
+  importedRows      Int      @default(0)
+  rejectedRows      Int      @default(0)
+  anomaliesDetected Int      @default(0)
+  status            String   @default("COMPLETED") // "COMPLETED" | "PARTIAL" | "FAILED"
+  errorDetailsJson  Json?
+  createdAt         DateTime @default(now())
+
+  uploadedBy User? @relation(fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([schemaType, createdAt])
+}
+
+model PolicySetting {
+  id              String   @id @default(cuid())
+  key             String   @unique
+  valueJson       Json
+  description     String?
+  updatedByUserId String?
+  updatedAt       DateTime @updatedAt
+}
+
 model AuditLog {
   id           String       @id @default(cuid())
   at           DateTime     @default(now())
-  kind         String // "classification" | "adjustment" | "scenario_parse" | "import"
+  kind         String // "classification" | "adjustment" | "scenario_parse" | "import" | "auth" | "order"
   productId    String?
+  userId       String?
   decisionPath DecisionPath
   detailJson   Json
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+// ---------------------------------------------------------------------------
+// 5. Enums
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  ADMIN
+  STOREKEEPER
+  ANALYST
+  VIEWER
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING_APPROVAL
+  ORDERED
+  IN_TRANSIT
+  RECEIVED
+  CANCELLED
+}
+
+enum TransactionType {
+  SALE
+  RESTOCK_RECEIVED
+  MANUAL_ADJUSTMENT
+  EXPIRY_WRITEOFF
+  INITIAL_SEED
 }
 
 enum AnomalyClass {

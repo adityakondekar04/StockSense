@@ -1,7 +1,8 @@
 // apps/api/src/auth/service.ts
-// Authentication and RBAC user service with secure cryptographic hashing and token signing
+// Authentication and RBAC user service backed by PostgreSQL (Prisma) with in-memory fallback
 
 import crypto from "crypto";
+import { prisma } from "../db.js";
 import { AuthUser, AuthTokenPayload, UserRole, ROLE_PERMISSIONS } from "./types.js";
 
 interface StoredUser extends AuthUser {
@@ -27,6 +28,10 @@ export function verifyPassword(password: string, storedHash: string): boolean {
   } catch {
     return false;
   }
+}
+
+export function hashToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
 }
 
 // Token generation using signed Base64 payload (HMAC-SHA256)
@@ -80,7 +85,7 @@ export function verifyAuthToken(token: string): AuthTokenPayload | null {
 }
 
 // Pre-seeded demo accounts for instant evaluation & testing
-const DEMO_USERS: StoredUser[] = [
+export const DEMO_USERS: StoredUser[] = [
   {
     id: "usr_storekeeper_01",
     email: "storekeeper@stocksense.health",
@@ -123,10 +128,9 @@ const DEMO_USERS: StoredUser[] = [
   },
 ];
 
-// In-memory user database with persistent demo users
+// In-memory cache & fallback store
 const usersStore: Map<string, StoredUser> = new Map();
 
-// Initialize demo users
 for (const u of DEMO_USERS) {
   usersStore.set(u.email.toLowerCase(), u);
 }
@@ -140,6 +144,29 @@ export function getUserById(id: string): StoredUser | null {
     if (user.id === id) return user;
   }
   return null;
+}
+
+export async function getUserByIdAsync(id: string): Promise<StoredUser | null> {
+  try {
+    const dbUser = await prisma.user.findUnique({ where: { id } });
+    if (dbUser) {
+      const mapped: StoredUser = {
+        id: dbUser.id,
+        email: dbUser.email,
+        passwordHash: dbUser.passwordHash,
+        name: dbUser.name,
+        role: dbUser.role as UserRole,
+        facilityName: dbUser.facilityName,
+        facilityType: dbUser.facilityType,
+        createdAt: dbUser.createdAt.toISOString(),
+      };
+      usersStore.set(mapped.email.toLowerCase(), mapped);
+      return mapped;
+    }
+  } catch {
+    // Fallback to in-memory cache if DB unreachable
+  }
+  return getUserById(id);
 }
 
 export interface RegisterInput {
@@ -182,6 +209,90 @@ export function registerUser(input: RegisterInput): { user: AuthUser; token: str
   return { user: safeUser, token };
 }
 
+export async function registerUserAsync(input: RegisterInput): Promise<{ user: AuthUser; token: string }> {
+  const normalizedEmail = input.email.toLowerCase().trim();
+
+  // Check in-memory demo store first for immediate conflict detection
+  try {
+    const existingDb = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    if (existingDb || usersStore.has(normalizedEmail)) {
+      throw new Error("An account with this email address already exists.");
+    }
+
+    const role: UserRole = input.role || "STOREKEEPER";
+    const passwordHash = hashPassword(input.password);
+    const facilityName = input.facilityName?.trim() || "StockSense Facility";
+    const facilityType = input.facilityType?.trim() || "Community Pharmacy";
+
+    const created = await prisma.user.create({
+      data: {
+        email: normalizedEmail,
+        passwordHash,
+        name: input.name.trim(),
+        role,
+        facilityName,
+        facilityType,
+        lastLoginAt: new Date(),
+      },
+    });
+
+    const stored: StoredUser = {
+      id: created.id,
+      email: created.email,
+      passwordHash: created.passwordHash,
+      name: created.name,
+      role: created.role as UserRole,
+      facilityName: created.facilityName,
+      facilityType: created.facilityType,
+      createdAt: created.createdAt.toISOString(),
+    };
+    usersStore.set(normalizedEmail, stored);
+
+    const token = createAuthToken({
+      id: stored.id,
+      email: stored.email,
+      role: stored.role,
+      name: stored.name,
+    });
+
+    // Persist session & audit log in PostgreSQL
+    await prisma.userSession
+      .create({
+        data: {
+          userId: created.id,
+          tokenHash: hashToken(token),
+          expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000),
+        },
+      })
+      .catch(() => {});
+
+    await prisma.auditLog
+      .create({
+        data: {
+          kind: "auth",
+          userId: created.id,
+          decisionPath: "RULES",
+          detailJson: {
+            action: "user_registered",
+            email: created.email,
+            role: created.role,
+            facilityName: created.facilityName,
+          },
+        },
+      })
+      .catch(() => {});
+
+    const { passwordHash: _pw, ...safeUser } = stored;
+    return { user: safeUser, token };
+  } catch (err: any) {
+    if (err?.message === "An account with this email address already exists.") {
+      throw err;
+    }
+    // Fallback to in-memory if DB is unavailable
+    return registerUser(input);
+  }
+}
+
 export function loginUser(email: string, password: string): { user: AuthUser; token: string } {
   const user = getUserByEmail(email);
   if (!user) {
@@ -202,6 +313,102 @@ export function loginUser(email: string, password: string): { user: AuthUser; to
 
   const { passwordHash, ...safeUser } = user;
   return { user: safeUser, token };
+}
+
+export async function loginUserAsync(email: string, password: string): Promise<{ user: AuthUser; token: string }> {
+  const normalizedEmail = email.toLowerCase().trim();
+
+  try {
+    let dbUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+
+    // If logging in with one of the demo accounts and DB hasn't seeded it yet, upsert it automatically
+    if (!dbUser) {
+      const demoMatch = DEMO_USERS.find((u) => u.email.toLowerCase() === normalizedEmail);
+      if (demoMatch) {
+        dbUser = await prisma.user.upsert({
+          where: { email: normalizedEmail },
+          update: {},
+          create: {
+            id: demoMatch.id,
+            email: demoMatch.email,
+            passwordHash: demoMatch.passwordHash,
+            name: demoMatch.name,
+            role: demoMatch.role,
+            facilityName: demoMatch.facilityName || "CityCare Community Pharmacy",
+            facilityType: demoMatch.facilityType || "Community Pharmacy",
+          },
+        });
+      }
+    }
+
+    if (dbUser) {
+      const isValid = verifyPassword(password, dbUser.passwordHash);
+      if (!isValid) {
+        throw new Error("Invalid email or password.");
+      }
+
+      await prisma.user
+        .update({
+          where: { id: dbUser.id },
+          data: { lastLoginAt: new Date() },
+        })
+        .catch(() => {});
+
+      const stored: StoredUser = {
+        id: dbUser.id,
+        email: dbUser.email,
+        passwordHash: dbUser.passwordHash,
+        name: dbUser.name,
+        role: dbUser.role as UserRole,
+        facilityName: dbUser.facilityName,
+        facilityType: dbUser.facilityType,
+        createdAt: dbUser.createdAt.toISOString(),
+      };
+      usersStore.set(normalizedEmail, stored);
+
+      const token = createAuthToken({
+        id: stored.id,
+        email: stored.email,
+        role: stored.role,
+        name: stored.name,
+      });
+
+      await prisma.userSession
+        .create({
+          data: {
+            userId: dbUser.id,
+            tokenHash: hashToken(token),
+            expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000),
+          },
+        })
+        .catch(() => {});
+
+      await prisma.auditLog
+        .create({
+          data: {
+            kind: "auth",
+            userId: dbUser.id,
+            decisionPath: "RULES",
+            detailJson: {
+              action: "user_login",
+              email: dbUser.email,
+              role: dbUser.role,
+            },
+          },
+        })
+        .catch(() => {});
+
+      const { passwordHash: _pw, ...safeUser } = stored;
+      return { user: safeUser, token };
+    }
+  } catch (err: any) {
+    if (err?.message === "Invalid email or password.") {
+      throw err;
+    }
+    // Fallback to in-memory if DB is offline
+  }
+
+  return loginUser(email, password);
 }
 
 export function getDemoAccounts() {

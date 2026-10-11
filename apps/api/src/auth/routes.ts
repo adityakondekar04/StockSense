@@ -1,11 +1,12 @@
 // apps/api/src/auth/routes.ts
-// Express router for authentication and RBAC endpoints
+// Express router for authentication and RBAC endpoints (backed by PostgreSQL User & UserSession tables)
 
 import { Router } from "express";
 import { z } from "zod";
+import { prisma } from "../db.js";
 import {
-  registerUser,
-  loginUser,
+  registerUserAsync,
+  loginUserAsync,
   getDemoAccounts,
 } from "./service.js";
 import { requireAuth } from "./middleware.js";
@@ -28,7 +29,7 @@ const LoginSchema = z.object({
 });
 
 // POST /api/auth/register or /api/auth/signup
-authRouter.post(["/register", "/signup"], (req, res) => {
+authRouter.post(["/register", "/signup"], async (req, res) => {
   try {
     const parseResult = RegisterSchema.safeParse(req.body);
     if (!parseResult.success) {
@@ -40,7 +41,7 @@ authRouter.post(["/register", "/signup"], (req, res) => {
       return;
     }
 
-    const { user, token } = registerUser(parseResult.data);
+    const { user, token } = await registerUserAsync(parseResult.data);
     res.status(201).json({
       ok: true,
       user,
@@ -56,7 +57,7 @@ authRouter.post(["/register", "/signup"], (req, res) => {
 });
 
 // POST /api/auth/login
-authRouter.post("/login", (req, res) => {
+authRouter.post("/login", async (req, res) => {
   try {
     const parseResult = LoginSchema.safeParse(req.body);
     if (!parseResult.success) {
@@ -68,7 +69,7 @@ authRouter.post("/login", (req, res) => {
     }
 
     const { email, password } = parseResult.data;
-    const { user, token } = loginUser(email, password);
+    const { user, token } = await loginUserAsync(email, password);
 
     res.json({
       ok: true,
@@ -96,6 +97,35 @@ authRouter.get("/me", requireAuth, (req, res) => {
     user: req.user,
     permissions: ROLE_PERMISSIONS[req.user.role],
   });
+});
+
+// GET /api/auth/users (returns users stored in PostgreSQL)
+authRouter.get("/users", async (_req, res) => {
+  try {
+    const dbUsers = await prisma.user.findMany({
+      orderBy: { createdAt: "asc" },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        facilityName: true,
+        facilityType: true,
+        isActive: true,
+        lastLoginAt: true,
+        createdAt: true,
+      },
+    });
+    res.json({
+      ok: true,
+      users: dbUsers,
+    });
+  } catch {
+    res.json({
+      ok: true,
+      users: getDemoAccounts(),
+    });
+  }
 });
 
 // GET /api/auth/roles (public directory of available roles, matrix & demo users)
