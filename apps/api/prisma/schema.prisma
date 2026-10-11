@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  sku           String   @unique
+  name          String
+  unit          String   @default("units")
+  unitCost      Float
+  orderCost     Float
+  holdingRate   Float    @default(0.2)
+  leadTimeMean  Float
+  leadTimeSd    Float
+  onHand        Int      @default(0)
+  onOrder       Int      @default(0)
+  packSize      Int      @default(1)
+  minOrderQty   Int      @default(1)
+  shelfLifeDays Int?
+  shortageCost  Float?
+  createdAt     DateTime @default(now())
+
+  sales     Sale[]
+  promos    Promo[]
+  leadTimes LeadTimeRecord[]
+  anomalies Anomaly[]
+  runs      AnalysisRun[]
+}
+
+model Sale {
+  id        String   @id @default(cuid())
+  productId String
+  date      DateTime @db.Date
+  units     Float
+  onHand    Int?
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, date])
+  @@index([productId, date])
+}
+
+model Promo {
+  id        String   @id @default(cuid())
+  productId String
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  note      String?
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model LeadTimeRecord {
+  id           String   @id @default(cuid())
+  productId    String
+  orderDate    DateTime @db.Date
+  receivedDate DateTime @db.Date
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Anomaly {
+  id             String       @id @default(cuid())
+  productId      String
+  date           DateTime     @db.Date
+  value          Float
+  modifiedZ      Float
+  class          AnomalyClass
+  reason         String
+  decisionPath   DecisionPath
+  note           String?
+  proposedAdjPct Float?
+  appliedAdjPct  Float?
+  clamped        Boolean      @default(false)
+  imputedValue   Float?
+  userConfirmed  Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  product        Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, date])
+}
+
+model AnalysisRun {
+  id           String   @id @default(cuid())
+  productId    String
+  serviceLevel Float
+  zValue       Float
+  aiEnabled    Boolean
+  inputsJson   Json
+  resultJson   Json
+  createdAt    DateTime @default(now())
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Scenario {
+  id         String   @id @default(cuid())
+  productId  String
+  surgePct   Float    @default(0)
+  delayDays  Float    @default(0)
+  source     String // "manual" | "text_regex" | "text_llm"
+  rawText    String?
+  confirmed  Boolean  @default(false)
+  resultJson Json?
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id           String       @id @default(cuid())
+  at           DateTime     @default(now())
+  kind         String // "classification" | "adjustment" | "scenario_parse" | "import"
+  productId    String?
+  decisionPath DecisionPath
+  detailJson   Json
+}
+
+enum AnomalyClass {
+  PROMOTION
+  DATA_ERROR
+  UNKNOWN
+}
+
+enum DecisionPath {
+  RULES
+  LLM
+  LLM_FAILED_RULES
+}

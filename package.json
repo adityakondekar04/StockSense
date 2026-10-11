@@ -1,0 +1,19 @@
+{
+  "name": "stocksense",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w @stocksense/api\" \"npm run dev -w @stocksense/web\"",
+    "build": "npm run build -w @stocksense/core && npm run build -w @stocksense/api && npm run build -w @stocksense/web",
+    "test": "npm run test -w @stocksense/core && npm run test -w @stocksense/api",
+    "seed": "npm run seed -w @stocksense/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.7.3"
+  }
+}
