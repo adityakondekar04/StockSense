@@ -13,9 +13,9 @@ Gates are marked **GATE**. Do not pass a gate until it is true.
 - [x] 3. **Scaffold the API** (Express + TypeScript + cors + dotenv) with `GET /api/health`. Test: `curl localhost:4000/api/health` returns `{ ok: true }`.
 - [x] 4. **Setup Vitest in `core` and `api`.** Test: `npm test` runs one placeholder test in each package.
 - [ ] 5. **Setup local Postgres via Docker** (`docker-compose.yml`, optional fallback).
-- [ ] 6. **Create the Neon project** and put the pooled string in `apps/api/.env`. Test: the health route reports `db: true` with Neon.
+- [x] 6. **Create the Neon project** and put the pooled string in `apps/api/.env`. Test: the health route reports `db: true` with Neon.
 - [x] 7. **Add `schema.prisma`** (from `docs/04-DATABASE.md`). Test: `npx prisma format` runs with no errors.
-- [ ] 8. **Run the first migration** (`prisma migrate dev --name init`). Test: all tables exist, check with `npx prisma studio`.
+- [x] 8. **Run the first migration** (`prisma migrate dev --name init`). Test: all tables exist, check with `npx prisma studio`.
 
 ## Phase 1: Math foundation (0:45 to 2:30)
 

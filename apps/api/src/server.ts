@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { prisma } from "./db";
 
 dotenv.config();
 
@@ -10,10 +11,18 @@ const port = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
 
-app.get("/api/health", (_req, res) => {
+app.get("/api/health", async (_req, res) => {
+  let dbOk = false;
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    dbOk = true;
+  } catch (error) {
+    dbOk = false;
+  }
+
   res.json({
     ok: true,
-    db: false,
+    db: dbOk,
     llmConfigured: Boolean(process.env.LLM_API_KEY)
   });
 });
