@@ -1,7 +1,8 @@
 // packages/core/src/inventory.ts
 // Pure inventory calculations: SS, ROP, EOQ, fill rate, annual cost, split
 
-import { inverseNormalCDF, lossFn } from "./normal";
+import { inverseNormalCDF, lossFn } from "./normal.js";
+
 
 export interface InventoryInput {
   meanDemand: number;

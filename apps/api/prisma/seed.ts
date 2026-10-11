@@ -2,7 +2,8 @@
 // Idempotent seeding script for StockSense demo data
 
 import { PrismaClient } from "@prisma/client";
-import { generateDemoData, GENERATOR_SEED } from "../../../data/generator.ts";
+import { generateDemoData, GENERATOR_SEED } from "../../../data/generator";
+
 
 const prisma = new PrismaClient();
 

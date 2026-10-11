@@ -32,9 +32,10 @@ Gates are marked **GATE**. Do not pass a gate until it is true.
 - [x] 16. **Add Zod schemas** for product, sale, promo and lead-time rows in `packages/core/src/schemas.ts`. Test: a row with a negative lead time or a text quantity is rejected with a specific message.
 - [x] 17. **Write `data/generator.ts`** (fixed seed 20261011, 6 products, 150 days, planted events from `docs/10-DEMO-AND-PITCH.md`). Test: running it twice produces byte-identical CSVs, and the planted 1000, −40 and promo window are at the expected dates.
 - [x] 18. **Write `seed.ts`** that loads the generated data with upserts. Test: `npm run seed` twice leaves the row counts unchanged, and the data is visible in Prisma Studio.
-- [ ] 19. **Build sales CSV import with row-level errors** (`POST /import/sales`). Test: T60 to T62 pass (missing column, bad date, text units, duplicate sku and date each give a specific row and reason).
-- [ ] 20. **Build the products, promos and lead-times imports plus `/import/demo`.** Test: T63 passes (negative lead time rejected), and `/import/demo` loads all six products.
-- [ ] 21. **Build products CRUD** (`GET/POST/PUT/DELETE /products`). Test: create a product with `curl`, see it in Prisma Studio, delete it and its sales cascade.
+- [x] 19. **Build sales CSV import with row-level errors** (`POST /import/sales`). Test: T60 to T62 pass (missing column, bad date, text units, duplicate sku and date each give a specific row and reason).
+- [x] 20. **Build the products, promos and lead-times imports plus `/import/demo`.** Test: T63 passes (negative lead time rejected), and `/import/demo` loads all six products.
+- [x] 21. **Build products CRUD** (`GET/POST/PUT/DELETE /products`). Test: create a product with `curl`, see it in Prisma Studio, delete it and its sales cascade.
+
 
 ## Phase 3: Data intelligence (3:00 to 4:30)
 
