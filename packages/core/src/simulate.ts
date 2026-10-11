@@ -1,8 +1,9 @@
 // packages/core/src/simulate.ts
 // Scenario application, analytic risk, and seeded Monte Carlo simulation
 
-import { cdf } from "./normal.js";
-import type { InventoryInput } from "./inventory.js";
+import { cdf } from "./normal";
+import type { InventoryInput } from "./inventory";
+
 
 
 export interface ScenarioParams {

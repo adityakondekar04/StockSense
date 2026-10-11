@@ -39,14 +39,14 @@ Gates are marked **GATE**. Do not pass a gate until it is true.
 
 ## Phase 3: Data intelligence (3:00 to 4:30)
 
-- [ ] 22. **Implement weekday medians, residuals and modified z-score with IQR fallback** (`anomaly.ts`). Test: T25 (MAD = 0 series still flags the spike) and T26 (high Saturdays are not flagged).
-- [ ] 23. **Implement `detectAnomalies` using the training window only.** Test: the planted spikes in the demo data are flagged and the normal weekday pattern is not.
-- [ ] 24. **Implement `classifyByRules`.** Test: T20 to T24 pass (digit-slip and negative are DATA_ERROR, promo window and 3-day run are PROMOTION, isolated spike is UNKNOWN).
-- [ ] 25. **Implement `applyTreatment`** (impute errors, remove promotions into an uplift factor, keep unknowns, produce the without-unknowns series). Test: T27, T28 pass and `imputedValue` is returned.
-- [ ] 26. **Implement the forecast models** (7-day moving average, seasonal naive, weekday-seasonal smoothing). Test: the moving average matches a hand-computed 10-day example.
-- [ ] 27. **Implement `timeSplit`, `mae`, `wape`, `bias`.** Test: T31 to T33 pass (ordering, a hand-computed 5-point example, WAPE returns null when actuals sum to 0).
-- [ ] 28. **Implement `evaluateModels` with a single train-only fit function, and model selection.** Test: T30 (replace all holdout values, training outputs identical) and T34 (baseline wins on constructed data and the flag is set) pass.
-- [ ] 29. **GATE 3: the intelligence layer is done.** Test: T20 to T34 green, and the demo data shows three different anomaly classes.
+- [x] 22. **Implement weekday medians, residuals and modified z-score with IQR fallback** (`anomaly.ts`). Test: T25 (MAD = 0 series still flags the spike) and T26 (high Saturdays are not flagged).
+- [x] 23. **Implement `detectAnomalies` using the training window only.** Test: the planted spikes in the demo data are flagged and the normal weekday pattern is not.
+- [x] 24. **Implement `classifyByRules`.** Test: T20 to T24 pass (digit-slip and negative are DATA_ERROR, promo window and 3-day run are PROMOTION, isolated spike is UNKNOWN).
+- [x] 25. **Implement `applyTreatment`** (impute errors, remove promotions into an uplift factor, keep unknowns, produce the without-unknowns series). Test: T27, T28 pass and `imputedValue` is returned.
+- [x] 26. **Implement the forecast models** (7-day moving average, seasonal naive, weekday-seasonal smoothing). Test: the moving average matches a hand-computed 10-day example.
+- [x] 27. **Implement `timeSplit`, `mae`, `wape`, `bias`.** Test: T31 to T33 pass (ordering, a hand-computed 5-point example, WAPE returns null when actuals sum to 0).
+- [x] 28. **Implement `evaluateModels` with a single train-only fit function, and model selection.** Test: T30 (replace all holdout values, training outputs identical) and T34 (baseline wins on constructed data and the flag is set) pass.
+- [x] 29. **GATE 3: the intelligence layer is done.** Test: T20 to T34 green, and the demo data shows three different anomaly classes.
 
 ## Phase 4: Analysis API and core screens (3:00 to 6:00)
 

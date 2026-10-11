@@ -3,8 +3,9 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { mulberry32, boxMuller } from "../packages/core/src/simulate";
-import type { ProductInput, SaleRow, PromoRow, LeadTimeRow } from "../packages/core/src/schemas";
+import { mulberry32, boxMuller, type ProductInput, type SaleRow, type PromoRow, type LeadTimeRow } from "@stocksense/core";
+
+
 
 
 export const GENERATOR_SEED = 20261011;

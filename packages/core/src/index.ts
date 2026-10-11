@@ -1,8 +1,10 @@
 export const CORE_VERSION = "1.0.0";
-
-export * from "./normal.js";
-export * from "./inventory.js";
-export * from "./simulate.js";
-export * from "./schemas.js";
-
+export * from "./normal";
+export * from "./inventory";
+export * from "./simulate";
+export * from "./schemas";
+export * from "./intermittency";
+export * from "./anomaly";
+export * from "./forecast";
+export * from "./evaluate";
 
