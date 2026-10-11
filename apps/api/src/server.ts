@@ -10,6 +10,8 @@ import {
   anomaliesRouter,
   anomalyActionsRouter,
 } from "./analysis/routes.js";
+import { scenarioRouter } from "./scenarios/routes.js";
+import { aiRouter, auditRouter } from "./ai/routes.js";
 
 
 dotenv.config();
@@ -57,6 +59,16 @@ app.use("/api/products", anomaliesRouter);
 app.use("/products", anomaliesRouter);
 app.use("/api/anomalies", anomalyActionsRouter);
 app.use("/anomalies", anomalyActionsRouter);
+
+// Scenario Lab endpoints
+app.use("/api/scenarios", scenarioRouter);
+app.use("/scenarios", scenarioRouter);
+
+// AI & Audit endpoints
+app.use("/api/ai", aiRouter);
+app.use("/ai", aiRouter);
+app.use("/api/audit", auditRouter);
+app.use("/audit", auditRouter);
 
 if (process.env.NODE_ENV !== "test") {
   app.listen(port, () => {

@@ -39,6 +39,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     zValue,
     aiEnabled,
     setAiEnabled,
+    serverOnline,
+    serverError,
   } = useInventory();
 
   const location = useLocation();
@@ -354,6 +356,18 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
             >
               Enable AI
             </button>
+          </div>
+        )}
+
+        {/* 4. Offline Server Notification */}
+        {!serverOnline && (
+          <div className="bg-amber-50/90 border border-amber-300 rounded-xl p-3 flex items-center justify-between text-xs text-amber-900 shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>
+                <strong>Cannot reach the server:</strong> {serverError || "Failed to connect to the backend API at http://localhost:4000."} Running in offline fallback mode with seeded data.
+              </span>
+            </div>
           </div>
         )}
       </div>

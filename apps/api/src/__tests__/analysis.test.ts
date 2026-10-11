@@ -19,6 +19,9 @@ describe("Phase 4: Analysis API (Steps 30 - 32, T64, T65, T67)", () => {
       });
     });
 
+    // Clean up any stale temp products from previous failed runs
+    await prisma.product.deleteMany({ where: { sku: { startsWith: "TEMP-" } } });
+
     // Find demo products
     const pcm = await prisma.product.findUnique({ where: { sku: "PCM-02" } });
     const ant = await prisma.product.findUnique({ where: { sku: "ANT-06" } });
@@ -28,6 +31,7 @@ describe("Phase 4: Analysis API (Steps 30 - 32, T64, T65, T67)", () => {
   });
 
   afterAll(async () => {
+    await prisma.product.deleteMany({ where: { sku: { startsWith: "TEMP-" } } }).catch(() => {});
     await new Promise<void>((resolve, reject) => {
       server.close((err) => (err ? reject(err) : resolve()));
     });
@@ -63,9 +67,10 @@ describe("Phase 4: Analysis API (Steps 30 - 32, T64, T65, T67)", () => {
 
     it("T64: returns limitedInformation: true when product history is under 28 days", async () => {
       // Create temporary product with only 14 days of history
+      const tempSku = `TEMP-SHORT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       const tempProd = await prisma.product.create({
         data: {
-          sku: "TEMP-SHORT-01",
+          sku: tempSku,
           name: "Short History Product",
           unitCost: 20,
           orderCost: 100,
@@ -124,9 +129,10 @@ describe("Phase 4: Analysis API (Steps 30 - 32, T64, T65, T67)", () => {
   describe("Step 31: Order status, Days of Cover, and Safety-stock Split", () => {
     it("sets orderNow = true when on-hand is at or below ROP", async () => {
       // Temporary product with onHand = 10, ROP will be > 10
+      const lowStockSku = `TEMP-LOW-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       const tempProd = await prisma.product.create({
         data: {
-          sku: "TEMP-LOW-STOCK",
+          sku: lowStockSku,
           name: "Low Stock Item",
           unitCost: 10,
           orderCost: 50,
@@ -185,9 +191,10 @@ describe("Phase 4: Analysis API (Steps 30 - 32, T64, T65, T67)", () => {
 
   describe("Step 32 & T67: API Guard Against NaN and Infinity", () => {
     it("handles zero demand and single-row products with zero NaN or Infinity", async () => {
+      const zeroSku = `TEMP-ZERO-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       const zeroProd = await prisma.product.create({
         data: {
-          sku: "TEMP-ZERO-DEMAND",
+          sku: zeroSku,
           name: "Zero Demand Item",
           unitCost: 10,
           orderCost: 50,

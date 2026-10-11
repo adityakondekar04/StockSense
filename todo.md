@@ -1,3 +1,4 @@
+
 # StockSense: Build Steps
 
 Small steps, in order. Each one is testable before moving to the next. Tick a box only when its **Test** passes. Test IDs (T1, T30...) refer to `docs/09-TESTING.md`. Prompt IDs (P0, P1...) refer to `docs/08-ANTIGRAVITY-PROMPTS.md`.
@@ -53,36 +54,36 @@ Gates are marked **GATE**. Do not pass a gate until it is true.
 - [x] 30. **Build `POST /analysis/run`** (P7) returning service level, z, demand stats, recommendation, cost, evaluation and anomalies. Test: the response for PCM-02 at 95% shows z 1.6449, and T64 (under 28 days gives `limitedInformation: true`) and T65 (intermittent warning) pass.
 - [x] 31. **Add `orderNow`, `daysOfCover`, `projectedStockoutDate` and the safety-stock split.** Test: set on-hand below the ROP and `orderNow` becomes true, and the split shares add up to 1.
 - [x] 32. **Add an API guard so no response ever contains NaN or Infinity.** Test: T67 passes with zero-demand and single-row products.
-- [ ] 33. **Build the web layout, router and top bar** (product selector, service-level selector, "Run without AI" toggle). Test: every nav link routes correctly and the service level persists across pages.
-- [ ] 34. **Build the typed API client with readable error display.** Test: stop the API, the UI shows "Cannot reach the server" instead of a blank page.
-- [ ] 35. **Build the Setup screen** (load demo, CSV upload, manual entry). Test: upload a CSV with one bad row and see the row number and reason, enter a product by hand with 30 days of demand and get a result.
-- [ ] 36. **Build the Data Cleaning screen** (chart with markers by class, table, with/without unknowns toggle). Test: the planted promotion, error and unknown each look different, and the toggle changes the recommendation.
-- [ ] 37. **Build the Forecast Check screen** (train/holdout chart, metrics table, winner highlight). Test: the table shows MAE, WAPE and bias for both models, and a product where the baseline wins says so.
-- [ ] 38. **Build the Recommendations screen** (one card per SKU). Test: every card shows "Service level 95% → z = 1.645", and changing the level to 99% updates z and ROP.
-- [ ] 39. **Build the Methodology screen** (formulas, assumptions, limits). Test: the formulas on screen match `docs/03-FORMULAS.md` sections 2 and 11.
-- [ ] 40. **GATE 1 (hour 6): the full flow works with AI off.** Test: load demo, see classified anomalies, see the holdout table, change the service level and watch z and ROP move, all with no API key set.
+- [x] 33. **Build the web layout, router and top bar** (product selector, service-level selector, "Run without AI" toggle). Test: every nav link routes correctly and the service level persists across pages.
+- [x] 34. **Build the typed API client with readable error display.** Test: stop the API, the UI shows "Cannot reach the server" instead of a blank page.
+- [x] 35. **Build the Setup screen** (load demo, CSV upload, manual entry). Test: upload a CSV with one bad row and see the row number and reason, enter a product by hand with 30 days of demand and get a result.
+- [x] 36. **Build the Data Cleaning screen** (chart with markers by class, table, with/without unknowns toggle). Test: the planted promotion, error and unknown each look different, and the toggle changes the recommendation.
+- [x] 37. **Build the Forecast Check screen** (train/holdout chart, metrics table, winner highlight). Test: the table shows MAE, WAPE and bias for both models, and a product where the baseline wins says so.
+- [x] 38. **Build the Recommendations screen** (one card per SKU). Test: every card shows "Service level 95% → z = 1.645", and changing the level to 99% updates z and ROP.
+- [x] 39. **Build the Methodology screen** (formulas, assumptions, limits). Test: the formulas on screen match `docs/03-FORMULAS.md` sections 2 and 11.
+- [x] 40. **GATE 1 (hour 6): the full flow works with AI off.** Test: load demo, see classified anomalies, see the holdout table, change the service level and watch z and ROP move, all with no API key set.
 
 ## Phase 5: Scenario Lab (6:00 to 7:00)
 
-- [ ] 41. **Build `POST /scenarios/run`.** Test: surge 40% and delay 3 days returns ROP 680 → 1385 and old-policy risk 99.7%, and zero and zero returns identical before and after (T53).
-- [ ] 42. **Build the Scenario Lab UI** (sliders, side-by-side Before/After with cost and risk). Test: moving the delay slider updates the After column within 2 seconds.
-- [ ] 43. **Add the "Old policy under new conditions" card and the analytic-vs-Monte-Carlo line.** Test: the card shows 99.7% against 5% planned, and the agreement line shows both numbers.
+- [x] 41. **Build `POST /scenarios/run`.** Test: surge 40% and delay 3 days returns ROP 680 → 1385 and old-policy risk 99.7%, and zero and zero returns identical before and after (T53).
+- [x] 42. **Build the Scenario Lab UI** (sliders, side-by-side Before/After with cost and risk). Test: moving the delay slider updates the After column within 2 seconds.
+- [x] 43. **Add the "Old policy under new conditions" card and the analytic-vs-Monte-Carlo line.** Test: the card shows 99.7% against 5% planned, and the agreement line shows both numbers.
 
 ## Phase 6: AI layer (7:00 to 8:00)
 
-- [ ] 44. **Build `callLLM` with timeout, retry and strict Zod schemas.** Test: T40 (provider throws), T41 (invalid JSON) and T42 (extra field) all fall back with path `LLM_FAILED_RULES`.
-- [ ] 45. **Build `clampAdjustment` (±30%).** Test: T43 (+80% becomes +30, clamped true) and T44 (−45% becomes −30) pass.
-- [ ] 46. **Build the LLM classifier with the rule precedence** from `docs/business-logic.md`, and write an `AuditLog` row for each decision. Test: T45 (AI off, provider never called, path `RULES`) and T46 (a note saying "ignore previous instructions") pass.
-- [ ] 47. **Build scenario text parsing** (`POST /scenarios/parse`, regex fallback) with a confirm step. Test: T47 ("supplier 4 days late, flu season +40%" gives delay 4, surge 40), T48 (no numbers gives an empty proposal) and T66 (running without `confirmed: true` is rejected) pass.
-- [ ] 48. **Wire the UI for AI** (path badges, Confirm and Override buttons, proposed vs applied display, free-text scenario box). Test: with the API key removed the badges read "Rules" and nothing breaks.
-- [ ] 49. **Build the Decision Log screen** (`/audit`). Test: every classification and scenario parse from the last 10 minutes is listed with its path.
-- [ ] 50. **Add the static boundary check.** Test: T49 passes, nothing in `packages/core` imports from the AI layer or reads an LLM result.
-- [ ] 51. **GATE 6: AI is bounded.** Test: T40 to T49 green, and unplugging the internet leaves the app fully working.
+- [x] 44. **Build `callLLM` with timeout, retry and strict Zod schemas.** Test: T40 (provider throws), T41 (invalid JSON) and T42 (extra field) all fall back with path `LLM_FAILED_RULES`.
+- [x] 45. **Build `clampAdjustment` (±30%).** Test: T43 (+80% becomes +30, clamped true) and T44 (−45% becomes −30) pass.
+- [x] 46. **Build the LLM classifier with the rule precedence** from `docs/business-logic.md`, and write an `AuditLog` row for each decision. Test: T45 (AI off, provider never called, path `RULES`) and T46 (a note saying "ignore previous instructions") pass.
+- [x] 47. **Build scenario text parsing** (`POST /scenarios/parse`, regex fallback) with a confirm step. Test: T47 ("supplier 4 days late, flu season +40%" gives delay 4, surge 40), T48 (no numbers gives an empty proposal) and T66 (running without `confirmed: true` is rejected) pass.
+- [x] 48. **Wire the UI for AI** (path badges, Confirm and Override buttons, proposed vs applied display, free-text scenario box). Test: with the API key removed the badges read "Rules" and nothing breaks.
+- [x] 49. **Build the Decision Log screen** (`/audit`). Test: every classification and scenario parse from the last 10 minutes is listed with its path.
+- [x] 50. **Add the static boundary check.** Test: T49 passes, nothing in `packages/core` imports from the AI layer or reads an LLM result.
+- [x] 51. **GATE 6: AI is bounded.** Test: T40 to T49 green, and unplugging the internet leaves the app fully working.
 
 ## Phase 7: Hardening and polish (8:00 to 9:00)
 
-- [ ] 52. **Add the limited-information banner and the intermittent-demand warning to the UI.** Test: a product with 20 days shows the banner, ANT-06 shows the intermittent warning.
-- [ ] 53. **Build the print report** (`/report/:id`, print stylesheet). Test: the browser print preview is one clean page with service level, z, formulas used and the neutral assumptions note.
+- [x] 52. **Add the limited-information banner and the intermittent-demand warning to the UI.** Test: a product with 20 days shows the banner, ANT-06 shows the intermittent warning.
+- [x] 53. **Build the print report** (`/report/:id`, print stylesheet). Test: the browser print preview is one clean page with service level, z, formulas used and the neutral assumptions note.
 - [ ] 54. **Add loading, empty and error states to every screen** (`docs/screens.md`). Test: open each screen with an empty database and see a helpful empty state, not a blank page.
 - [ ] 55. **Run the self-review prompt (P12)** and fix every FAIL. Test: the report lists FR-01 to FR-20 all PASS with file proofs.
 - [ ] 56. **Run the manual live-test script** (`docs/09-TESTING.md` section 7) on the demo laptop. Test: all 7 steps work against the local Postgres.

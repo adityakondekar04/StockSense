@@ -1,6 +1,8 @@
 // apps/api/src/http/safeJson.ts
 // Guard to ensure no API response ever contains NaN or Infinity (T67)
 
+import type { Response } from "express";
+
 export function sanitizeNumbers<T>(obj: T): T {
   if (obj === null || obj === undefined) {
     return obj;
@@ -42,4 +44,9 @@ export function hasNonFiniteNumbers(obj: unknown): boolean {
   }
 
   return false;
+}
+
+export function safeJson(res: Response, status: number, data: unknown): void {
+  const sanitized = sanitizeNumbers(data);
+  res.status(status).json(sanitized);
 }

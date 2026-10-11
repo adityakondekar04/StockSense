@@ -184,6 +184,7 @@ export async function executeAnalysis(params: AnalysisRunParams) {
   // Upsert detected anomalies into database for this product
   for (const anom of classifiedAnomalies) {
     const anomDate = new Date(anom.date + "T00:00:00.000Z");
+    const imputed = anom.class === "DATA_ERROR" ? anom.weekdayMedian : null;
     await prisma.anomaly.upsert({
       where: {
         productId_date: {
@@ -197,7 +198,7 @@ export async function executeAnalysis(params: AnalysisRunParams) {
         class: anom.class,
         reason: anom.reason,
         decisionPath: anom.decisionPath,
-        imputedValue: anom.imputedValue ?? null,
+        imputedValue: imputed,
       },
       create: {
         productId: product.id,
@@ -207,7 +208,7 @@ export async function executeAnalysis(params: AnalysisRunParams) {
         class: anom.class,
         reason: anom.reason,
         decisionPath: anom.decisionPath,
-        imputedValue: anom.imputedValue ?? null,
+        imputedValue: imputed,
       },
     });
   }
@@ -281,7 +282,7 @@ export async function executeAnalysis(params: AnalysisRunParams) {
       class: a.class,
       reason: a.reason,
       decisionPath: a.decisionPath,
-      imputedValue: a.imputedValue !== undefined ? Math.round(a.imputedValue) : null,
+      imputedValue: a.class === "DATA_ERROR" ? Math.round(a.weekdayMedian) : null,
     })),
     decisionPaths,
   };
