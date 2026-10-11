@@ -1,7 +1,7 @@
 // apps/web/src/components/landing/Navbar.tsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Boxes, Menu, X, ArrowRight, Activity } from "lucide-react";
+import { Boxes, Menu, X, ArrowRight } from "lucide-react";
 
 export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -66,11 +66,10 @@ export const Navbar: React.FC = () => {
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
             <Link
-              to="/recommendations"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-600 hover:text-slate-900 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors"
+              to="/login"
+              className="text-sm font-semibold text-slate-700 hover:text-indigo-600 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors"
             >
-              <Activity className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Demo Mode</span>
+              Sign In
             </Link>
             <Link
               to="/recommendations"
@@ -118,6 +117,13 @@ export const Navbar: React.FC = () => {
             ))}
           </nav>
           <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
+            <Link
+              to="/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium text-sm transition-colors"
+            >
+              <span>Sign In to Account</span>
+            </Link>
             <Link
               to="/recommendations"
               onClick={() => setMobileMenuOpen(false)}
