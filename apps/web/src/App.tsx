@@ -6,6 +6,8 @@ import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { DashboardLayout } from "./components/dashboard/DashboardLayout";
 import { RecommendationsView } from "./components/dashboard/RecommendationsView";
+import { ProductsDirectoryView } from "./components/dashboard/ProductsDirectoryView";
+import { ProductDetailView } from "./components/dashboard/ProductDetailView";
 import { CleaningView } from "./components/dashboard/CleaningView";
 import { ForecastView } from "./components/dashboard/ForecastView";
 import { ScenarioView } from "./components/dashboard/ScenarioView";
@@ -19,7 +21,7 @@ export function App() {
     <BrowserRouter>
       <InventoryProvider>
         <Routes>
-          {/* Landing Page */}
+          {/* Public Landing Page */}
           <Route path="/" element={<LandingPage />} />
 
           {/* Authentication Routes */}
@@ -44,7 +46,27 @@ export function App() {
             }
           />
 
-          {/* Screen 2: Data Cleaning */}
+          {/* Dedicated Products Catalog Directory */}
+          <Route
+            path="/products"
+            element={
+              <DashboardLayout>
+                <ProductsDirectoryView />
+              </DashboardLayout>
+            }
+          />
+
+          {/* Dedicated 360° Product Detail Page */}
+          <Route
+            path="/products/:id"
+            element={
+              <DashboardLayout>
+                <ProductDetailView />
+              </DashboardLayout>
+            }
+          />
+
+          {/* Screen 2: Data Cleaning & Anomalies */}
           <Route
             path="/products/:id/cleaning"
             element={
@@ -62,7 +84,7 @@ export function App() {
             }
           />
 
-          {/* Screen 3: Forecast Check */}
+          {/* Screen 3: Forecast Check & Validation */}
           <Route
             path="/products/:id/forecast"
             element={
@@ -80,7 +102,7 @@ export function App() {
             }
           />
 
-          {/* Screen 5: Scenario Lab */}
+          {/* Screen 5: Scenario Stress Lab */}
           <Route
             path="/products/:id/scenario"
             element={
@@ -98,7 +120,7 @@ export function App() {
             }
           />
 
-          {/* Screen 1 & 1b: Setup & Manual Form */}
+          {/* Screen 1 & 1b: Setup & Manual Ingestion */}
           <Route
             path="/setup"
             element={
@@ -116,7 +138,7 @@ export function App() {
             }
           />
 
-          {/* Screen 7: Decision Log (Audit) */}
+          {/* Screen 7: Decision Log & Audit Trail */}
           <Route
             path="/audit"
             element={
@@ -126,7 +148,7 @@ export function App() {
             }
           />
 
-          {/* Screen 6: Methodology & Formulas */}
+          {/* Screen 6: Mathematical Methodology & Whitepaper */}
           <Route
             path="/methodology"
             element={
@@ -136,7 +158,7 @@ export function App() {
             }
           />
 
-          {/* Screen 8: Print Report */}
+          {/* Screen 8: Print 1-Page Report */}
           <Route path="/report/:id" element={<PrintReportView />} />
 
           {/* Fallback */}

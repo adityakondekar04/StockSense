@@ -3,9 +3,67 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply antialiased text-slate-900 bg-slate-50 dark:bg-slate-950 dark:text-slate-100 transition-colors;
+  :root {
+    --bg-page: #FAFAF9;
+    --surface-card: #F5F5F4;
+    --surface-raised: #EFEDEB;
+    --text-primary: #1C1917;
+    --text-secondary: #57534E;
+    --text-muted: #A8A29E;
+    --border-subtle: #E7E5E4;
+    --border-medium: #D6D3D1;
+    --border-strong: #A8A29E;
   }
+
+  .dark {
+    --bg-page: #0C0A09;
+    --surface-card: #1C1917;
+    --surface-raised: #292524;
+    --text-primary: #FAFAF9;
+    --text-secondary: #D6D3D1;
+    --text-muted: #78716C;
+    --border-subtle: #292524;
+    --border-medium: #44403C;
+    --border-strong: #78716C;
+  }
+
+  * {
+    border-color: var(--border-subtle);
+  }
+
+  body {
+    @apply antialiased font-sans transition-colors duration-150;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+  }
+
+  h1, h2, h3, .font-serif {
+    font-family: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+  }
+
+  /* Focus ring per ThoughtStream spec */
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--bg-page), 0 0 0 4px #78716C;
+  }
+}
+
+/* Custom scrollbars matching flat minimalist aesthetic */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D6D3D1;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #44403C;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A8A29E;
 }
 
 @keyframes deliverySlide {

@@ -1,199 +1,263 @@
 // apps/web/src/components/dashboard/AuditView.tsx
-// Screen 7: Decision Log - Complete audit trail of all AI and Rule-based decisions
+// Screen 7: Decision Log & Audit Trail adhering to ThoughtStream design system
 
 import React, { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import {
-  History,
+  ShieldCheck,
+  Sparkles,
+  Download,
   ChevronDown,
   ChevronRight,
-  Download,
-  Terminal,
+  ArrowRight,
 } from "lucide-react";
 import { useInventory } from "../../context/InventoryContext";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge, FilterChip } from "../ui/badge";
+import { Input } from "../ui/input";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui/table";
 
 export const AuditView: React.FC = () => {
   const { auditLog } = useInventory();
 
-  const [pathFilter, setPathFilter] = useState<string>("ALL");
-  const [kindFilter, setKindFilter] = useState<string>("ALL");
+  const [filterType, setFilterType] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const filteredLog = useMemo(() => {
+  const filteredLogs = useMemo(() => {
     return auditLog.filter((item) => {
-      if (pathFilter !== "ALL" && item.decisionPath !== pathFilter) return false;
-      if (kindFilter !== "ALL" && item.kind !== kindFilter) return false;
-      return true;
+      const skuText = item.sku ?? "";
+      const matchesSearch =
+        skuText.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.kind.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.summary.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesType =
+        filterType === "ALL" ||
+        (filterType === "AI" && item.decisionPath === "LLM") ||
+        (filterType === "RULES" && item.decisionPath === "RULES") ||
+        (filterType === "OVERRIDE" && item.kind === "override");
+
+      return matchesSearch && matchesType;
     });
-  }, [auditLog, pathFilter, kindFilter]);
+  }, [auditLog, searchQuery, filterType]);
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
   };
 
-  const handleExportJSON = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(auditLog, null, 2));
-    const downloadAnchor = document.createElement("a");
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `stocksense_audit_log_${new Date().toISOString().split("T")[0]}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+  const handleExportCsv = () => {
+    const headers = ["ID", "Timestamp", "SKU", "Kind", "DecisionPath", "Summary"];
+    const rows = filteredLogs.map((log) => [
+      log.id,
+      log.at,
+      log.sku ?? "N/A",
+      log.kind,
+      log.decisionPath,
+      `"${log.summary.replace(/"/g, '""')}"`,
+    ]);
+    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("link") as any;
+    link.href = url;
+    link.setAttribute("download", `stocksense_audit_log_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
-    <div className="space-y-6">
-      {/* 1. Header Banner */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-8 animate-fadeIn">
+      {/* Page Header */}
+      <div className="border-b border-[#E7E5E4] dark:border-[#292524] pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <History className="w-5 h-5 text-indigo-600" />
-            <h2 className="text-xl font-bold text-slate-900">Decision & Audit Log</h2>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Complete traceability trail. Records every anomaly classification, forecast adjustment, and scenario parse alongside its decision path.
+          <span className="font-mono text-[11px] uppercase tracking-widest text-[#78716C] dark:text-[#A8A29E]">
+            Governance &amp; Audit Trail · Step 7
+          </span>
+          <h1 className="font-serif text-3xl font-bold text-[#1C1917] dark:text-[#FAFAF9] tracking-tight mt-1">
+            Decision Log &amp; Audit Trail
+          </h1>
+          <p className="text-[14px] text-[#57534E] dark:text-[#A8A29E] mt-2 max-w-2xl font-sans">
+            Immutable, append-only operational event ledger. Records every recommendation generation, formula parameter recalculation, manual storekeeper override, and AI prompt invocation.
           </p>
         </div>
 
-        <button
-          onClick={handleExportJSON}
-          className="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs transition-colors self-start md:self-auto border border-slate-200"
-        >
-          <Download className="w-3.5 h-3.5" />
-          <span>Export Audit Trail (JSON)</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCsv}
+            className="font-mono text-xs"
+          >
+            <Download className="w-3.5 h-3.5 mr-1.5" /> Export Audit CSV
+          </Button>
+          <Link to="/methodology">
+            <Button variant="primary" size="sm" className="font-mono text-xs">
+              View Methodology <ArrowRight className="w-3 h-3 ml-1" />
+            </Button>
+          </Link>
+        </div>
       </div>
 
-      {/* 2. Filter Toolbar */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Path Filter */}
-          <div className="flex items-center gap-1.5 bg-slate-100 rounded-xl p-1 border border-slate-200">
-            <span className="font-semibold text-slate-500 pl-1.5">Decision Path:</span>
-            <select
-              value={pathFilter}
-              onChange={(e) => setPathFilter(e.target.value)}
-              className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      {/* Filter and Search Bar */}
+      <Card variant="default">
+        <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="relative w-full sm:w-80">
+            <Input
+              placeholder="Search audit trail by SKU or summary..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="text-xs"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <span className="text-[11px] font-mono text-[#78716C] dark:text-[#A8A29E] uppercase mr-1">
+              Filter:
+            </span>
+            <FilterChip
+              selected={filterType === "ALL"}
+              onClick={() => setFilterType("ALL")}
             >
-              <option value="ALL">All Paths</option>
-              <option value="RULES">Rules (Deterministic)</option>
-              <option value="LLM">AI (Suggestion)</option>
-              <option value="LLM_FAILED_RULES">AI Failed (Rules Used)</option>
-              <option value="CONFIRMED">User Confirmed / Overridden</option>
-            </select>
-          </div>
-
-          {/* Kind Filter */}
-          <div className="flex items-center gap-1.5 bg-slate-100 rounded-xl p-1 border border-slate-200">
-            <span className="font-semibold text-slate-500 pl-1.5">Action Kind:</span>
-            <select
-              value={kindFilter}
-              onChange={(e) => setKindFilter(e.target.value)}
-              className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              All Events ({auditLog.length})
+            </FilterChip>
+            <FilterChip
+              selected={filterType === "RULES"}
+              onClick={() => setFilterType("RULES")}
             >
-              <option value="ALL">All Actions</option>
-              <option value="classification">Anomaly Classification</option>
-              <option value="adjustment">Forecast Adjustment</option>
-              <option value="scenario_parse">Scenario Parse</option>
-              <option value="override">User Override</option>
-              <option value="import">Data Ingestion</option>
-            </select>
+              Rules
+            </FilterChip>
+            <FilterChip
+              selected={filterType === "AI"}
+              onClick={() => setFilterType("AI")}
+            >
+              AI Advisory
+            </FilterChip>
+            <FilterChip
+              selected={filterType === "OVERRIDE"}
+              onClick={() => setFilterType("OVERRIDE")}
+            >
+              Overrides
+            </FilterChip>
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        <div className="text-slate-500 font-mono text-[11px]">
-          Showing {filteredLog.length} of {auditLog.length} audit records
-        </div>
-      </div>
+      {/* Audit Log Table */}
+      <Card variant="default">
+        <CardHeader>
+          <CardTitle>Immutable Event Ledger</CardTitle>
+          <CardDescription>
+            Showing {filteredLogs.length} verified operations. Click any row to expand the technical telemetry payload.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10"></TableHead>
+                <TableHead>Timestamp</TableHead>
+                <TableHead>SKU</TableHead>
+                <TableHead>Event Category</TableHead>
+                <TableHead>Decision Path</TableHead>
+                <TableHead>Summary Description</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredLogs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-12 text-[#A8A29E]">
+                    No audit records found matching your filters.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredLogs.map((log) => {
+                  const isExpanded = expandedId === log.id;
+                  const isAi = log.decisionPath === "LLM";
+                  const isFallback = log.decisionPath === "LLM_FAILED_RULES";
 
-      {/* 3. Audit Log Records Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-              <tr>
-                <th className="py-3 px-4 w-10"></th>
-                <th className="py-3 px-4">Timestamp</th>
-                <th className="py-3 px-4">Action Kind</th>
-                <th className="py-3 px-4">Target SKU</th>
-                <th className="py-3 px-4">Decision Path</th>
-                <th className="py-3 px-4">Decision Summary</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredLog.map((log) => {
-                const isExpanded = expandedId === log.id;
-                return (
-                  <React.Fragment key={log.id}>
-                    <tr
-                      onClick={() => toggleExpand(log.id)}
-                      className={`cursor-pointer transition-colors ${
-                        isExpanded ? "bg-indigo-50/40" : "hover:bg-slate-50"
-                      }`}
-                    >
-                      <td className="py-3 px-4 text-slate-400">
-                        {isExpanded ? <ChevronDown className="w-4 h-4 text-indigo-600" /> : <ChevronRight className="w-4 h-4" />}
-                      </td>
-                      <td className="py-3 px-4 font-mono text-slate-500 whitespace-nowrap">
-                        {new Date(log.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-                        <span className="text-[10px] text-slate-400 block">{log.at.split("T")[0]}</span>
-                      </td>
-                      <td className="py-3 px-4 uppercase font-semibold text-[10px] text-slate-600">
-                        {log.kind}
-                      </td>
-                      <td className="py-3 px-4 font-mono font-bold text-slate-800">
-                        {log.sku || "-"}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                          log.decisionPath === "LLM"
-                            ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
-                            : log.decisionPath === "CONFIRMED"
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            : log.decisionPath === "LLM_FAILED_RULES"
-                            ? "bg-amber-50 text-amber-700 border border-amber-200"
-                            : "bg-slate-100 text-slate-700 border border-slate-300"
-                        }`}>
-                          {log.decisionPath === "LLM"
-                            ? "AI (suggestion)"
-                            : log.decisionPath === "CONFIRMED"
-                            ? "Confirmed by you"
-                            : log.decisionPath === "LLM_FAILED_RULES"
-                            ? "AI failed, rules used"
-                            : "Rules"}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-slate-800 font-medium">
-                        {log.summary}
-                      </td>
-                    </tr>
+                  return (
+                    <React.Fragment key={log.id}>
+                      <TableRow
+                        onClick={() => toggleExpand(log.id)}
+                        className="cursor-pointer hover:bg-[#F5F5F4] dark:hover:bg-[#1C1917]/70"
+                      >
+                        <TableCell className="w-10 text-center text-[#78716C]">
+                          {isExpanded ? (
+                            <ChevronDown className="w-3.5 h-3.5 mx-auto" />
+                          ) : (
+                            <ChevronRight className="w-3.5 h-3.5 mx-auto" />
+                          )}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs whitespace-nowrap text-[#57534E] dark:text-[#A8A29E]">
+                          {log.at}
+                        </TableCell>
+                        <TableCell className="font-mono font-bold text-xs text-[#1C1917] dark:text-[#FAFAF9]">
+                          {log.sku ?? "GLOBAL"}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs uppercase text-[#57534E] dark:text-[#A8A29E]">
+                          {log.kind}
+                        </TableCell>
+                        <TableCell>
+                          {isAi && (
+                            <Badge variant="primary" size="sm">
+                              <Sparkles className="w-3 h-3 mr-0.5" /> LLM Advisory
+                            </Badge>
+                          )}
+                          {isFallback && (
+                            <Badge variant="warning" size="sm">
+                              LLM Fallback (Rules)
+                            </Badge>
+                          )}
+                          {!isAi && !isFallback && (
+                            <Badge variant="neutral" size="sm">
+                              <ShieldCheck className="w-3 h-3 mr-0.5" /> Deterministic
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs text-[#57534E] dark:text-[#D6D3D1] max-w-md truncate">
+                          {log.summary}
+                        </TableCell>
+                      </TableRow>
 
-                    {/* Expandable JSON Detail */}
-                    {isExpanded && (
-                      <tr className="bg-slate-900 text-slate-200 text-xs font-mono">
-                        <td colSpan={6} className="p-4 pl-12 space-y-2">
-                          <div className="flex items-center gap-2 text-indigo-400 font-bold text-[11px] uppercase tracking-wider">
-                            <Terminal className="w-3.5 h-3.5" />
-                            <span>Audit Record Technical Payload (Immutable State)</span>
-                          </div>
-                          <pre className="bg-slate-950 p-3 rounded-lg overflow-x-auto text-[11px] text-slate-300 border border-slate-800">
-                            {JSON.stringify(log.details, null, 2)}
-                          </pre>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredLog.length === 0 && (
-          <div className="p-12 text-center text-slate-400 text-xs">
-            No audit records found matching your filters.
-          </div>
-        )}
-      </div>
+                      {isExpanded && (
+                        <TableRow className="bg-[#F5F5F4]/70 dark:bg-[#1C1917]/90">
+                          <TableCell colSpan={6} className="p-4">
+                            <div className="space-y-2 font-mono text-xs">
+                              <div className="flex items-center justify-between text-[#78716C] dark:text-[#A8A29E] border-b border-[#E7E5E4] dark:border-[#292524] pb-2">
+                                <span>Event UUID: {log.id}</span>
+                                <span>Kind: {log.kind} · Decision Path: {log.decisionPath}</span>
+                              </div>
+                              <pre className="p-3 bg-white dark:bg-[#0C0A09] border border-[#E7E5E4] dark:border-[#292524] text-[#1C1917] dark:text-[#FAFAF9] overflow-x-auto text-[11px] leading-relaxed">
+                                {JSON.stringify(
+                                  {
+                                    id: log.id,
+                                    at: log.at,
+                                    sku: log.sku,
+                                    kind: log.kind,
+                                    decisionPath: log.decisionPath,
+                                    summary: log.summary,
+                                    details: log.details,
+                                    engine: "@stocksense/core",
+                                  },
+                                  null,
+                                  2
+                                )}
+                              </pre>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 };

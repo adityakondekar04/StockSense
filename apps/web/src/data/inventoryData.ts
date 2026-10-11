@@ -10,10 +10,13 @@ import {
   monteCarloStockout,
   daysOfCover,
   projectedStockoutDate,
+  formatReorderPoint,
   type InventoryInput,
   type InventoryRecommendation,
   type AnnualCostBreakdown,
 } from "@stocksense/core";
+
+export { formatReorderPoint };
 
 export interface ProductRecord {
   id: string;
@@ -519,6 +522,7 @@ export function calculateProductPolicy(
   rec: InventoryRecommendation;
   cost: AnnualCostBreakdown;
   inventoryPosition: number;
+  operationalRop: number;
   isOrderNow: boolean;
   daysCover: number;
   stockoutDate: string | null;
@@ -545,7 +549,8 @@ export function calculateProductPolicy(
   const rec = recommend(input);
   const cost = annualCost(input, rec);
   const pos = product.onHand + product.onOrder;
-  const isOrderNow = pos < rec.rop;
+  const operationalRop = rec.ropOperational;
+  const isOrderNow = pos <= operationalRop;
   const cover = daysOfCover(pos, product.meanDailyDemand) ?? 0;
   const stockoutDate = isOrderNow ? projectedStockoutDate(new Date(), cover) : null;
 
@@ -557,6 +562,7 @@ export function calculateProductPolicy(
     rec,
     cost,
     inventoryPosition: pos,
+    operationalRop,
     isOrderNow,
     daysCover: Number(cover.toFixed(1)),
     stockoutDate,

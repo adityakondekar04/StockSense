@@ -108,8 +108,12 @@ export const DashboardPreview: React.FC = () => {
                     {getStatusTag(prod.status)}
                   </div>
                   <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-[#f2f2f2] text-[11px] text-[#4d4d4d] w-full font-mono">
-                    <span>Stock: <strong className="text-[#171717]">{prod.currentStock}</strong></span>
-                    <span>ROP: <strong className="text-[#171717]">{prod.rop}</strong></span>
+                    <span>
+                      On Hand: <strong className="text-[#171717]">{prod.currentStock}</strong>
+                    </span>
+                    <span>
+                      ROP: <strong className="text-[#171717]">{prod.rop} units</strong>
+                    </span>
                   </div>
                 </button>
               );
@@ -146,9 +150,9 @@ export const DashboardPreview: React.FC = () => {
               <div className="text-[10px] text-[#8f8f8f]">{activeProduct.unit}</div>
             </div>
             <div className="bg-white p-2 rounded-lg border border-[#ebebeb]">
-              <div className="text-[10px] text-[#8f8f8f] uppercase">Reorder Point</div>
+              <div className="text-[10px] text-[#8f8f8f] uppercase">Reorder Point (ROP)</div>
               <div className="text-base font-semibold text-[#171717] mt-0.5">
-                {activeProduct.rop}
+                {activeProduct.rop.toLocaleString()} units
               </div>
               <div className="text-[10px] text-[#8f8f8f]">trigger</div>
             </div>
