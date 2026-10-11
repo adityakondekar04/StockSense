@@ -20,6 +20,8 @@ import {
   CheckCircle2,
   Menu,
   X,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useInventory } from "../../context/InventoryContext";
 
@@ -42,6 +44,22 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    const saved = localStorage.getItem("stocksense_theme");
+    return saved === "dark" ? "dark" : "light";
+  });
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    if (nextTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    localStorage.setItem("stocksense_theme", nextTheme);
+  };
 
   const navItems = [
     {
@@ -219,6 +237,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                 <Printer className="w-3.5 h-3.5 text-slate-600" />
                 <span className="hidden md:inline">Print</span>
               </Link>
+
+              {/* Theme Toggle (Light / Dark) */}
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="p-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 shadow-sm transition-colors"
+                title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                aria-label="Toggle theme"
+              >
+                {theme === "dark" ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-slate-600" />}
+              </button>
 
               {/* Mobile menu toggle */}
               <button
