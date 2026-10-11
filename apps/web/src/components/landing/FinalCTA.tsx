@@ -5,52 +5,60 @@ import { ArrowRight, Boxes, ShieldCheck, Play } from "lucide-react";
 
 export const FinalCTA: React.FC = () => {
   return (
-    <section className="py-16 sm:py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 rounded-3xl p-8 sm:p-14 text-white shadow-xl relative overflow-hidden text-center sm:text-left">
-          {/* Subtle decorative circles */}
-          <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-80 h-80 bg-indigo-600/10 rounded-full blur-2xl pointer-events-none" />
-
-          <div className="relative z-10 max-w-2xl mx-auto sm:mx-0 space-y-5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-indigo-300 text-xs font-semibold uppercase tracking-wider backdrop-blur-sm border border-white/10">
-              <Boxes className="w-3.5 h-3.5" />
-              <span>Ready for Evaluation</span>
+    <section className="py-16 sm:py-24 bg-[#fafafa] border-t border-[#ebebeb]">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-[#171717] rounded-2xl border border-neutral-800 p-8 sm:p-12 lg:p-14 text-white relative overflow-hidden">
+          <div className="relative z-10 max-w-2xl space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800/80 text-neutral-300 text-xs font-mono font-medium border border-neutral-700">
+              <Boxes className="w-3.5 h-3.5 text-neutral-300" />
+              <span>DETERMINISTIC EVALUATION</span>
             </div>
 
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
-              Make your next replenishment decision with confidence.
+            <h2 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight leading-tight">
+              Make your next replenishment decision with empirical certainty.
             </h2>
 
-            <p className="text-base text-slate-300 leading-relaxed font-normal">
-              Start with sample inventory data, explore the calculations, and see how changing demand or
-              lead time affects your recommendations.
+            <p className="text-sm sm:text-base text-neutral-400 leading-relaxed font-normal">
+              Explore mathematical reorder points, calibrate safety stock against supplier variance,
+              and run what-if stress tests before committing capital to orders.
             </p>
 
-            <div className="pt-3 flex flex-col sm:flex-row items-center gap-3.5">
+            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <Link
                 to="/recommendations"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-6 py-3.5 rounded-xl shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                className="inline-flex items-center justify-center gap-2 bg-white hover:bg-neutral-100 text-[#171717] font-medium px-6 py-3 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#171717]"
               >
                 <span>Explore StockSense</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <a
-                href="#scenario-lab"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-medium px-5 py-3.5 rounded-xl border border-white/10 transition-all"
+                href="#simulation"
+                className="inline-flex items-center justify-center gap-2 bg-transparent hover:bg-neutral-800 text-neutral-200 font-medium px-5 py-3 rounded-full text-sm border border-neutral-700 transition-all"
               >
-                <Play className="w-4 h-4 text-indigo-300 fill-indigo-300" />
-                <span>Try Simulator</span>
+                <Play className="w-3.5 h-3.5 fill-current text-neutral-300" />
+                <span>Watch 7-Day Simulation</span>
               </a>
             </div>
 
-            <p className="text-xs text-slate-400 pt-2 flex items-center justify-center sm:justify-start gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Fully functional with AI disabled · Deterministic fallback by design</span>
-            </p>
+            <div className="pt-4 border-t border-neutral-800/80 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-mono text-neutral-400">
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-neutral-300" />
+                Pure math in @stocksense/core
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-neutral-500" />
+                Deterministic fallback guarantee
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-neutral-500" />
+                Continuous review (s, Q)
+              </span>
+            </div>
           </div>
         </div>
       </div>
     </section>
   );
 };
+
+export default FinalCTA;

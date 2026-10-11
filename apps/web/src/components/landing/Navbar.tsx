@@ -7,7 +7,8 @@ export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { label: "Product", href: "#overview" },
+    { label: "Overview", href: "#overview" },
+    { label: "7-Day Simulation", href: "#simulation" },
     { label: "How It Works", href: "#how-it-works" },
     { label: "Features", href: "#features" },
     { label: "Scenario Lab", href: "#scenario-lab" },
@@ -26,37 +27,33 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo & Brand */}
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2.5 group focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-lg p-1">
-              <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-sm group-hover:bg-indigo-700 transition-colors">
-                <Boxes className="w-5 h-5" />
-              </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-slate-900 tracking-tight">StockSense</span>
-                  <span className="text-[10px] uppercase font-semibold tracking-wider px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100">
-                    S-02
-                  </span>
-                </div>
-                <span className="text-[11px] text-slate-500 hidden sm:inline leading-none font-medium">
-                  Adaptive Inventory Engine
-                </span>
-              </div>
-            </Link>
-          </div>
+    <header className="sticky top-0 z-50 bg-[#fafafa]/90 backdrop-blur-md border-b border-[#ebebeb] transition-colors">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-15">
+          {/* Brand Wordmark */}
+          <Link
+            to="/"
+            className="flex items-center gap-2.5 group focus:outline-none focus:ring-2 focus:ring-[#171717] rounded-md p-0.5"
+          >
+            <div className="w-7 h-7 rounded-md bg-[#171717] flex items-center justify-center text-white">
+              <Boxes className="w-4 h-4 stroke-[2]" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-[#171717] tracking-tight">StockSense</span>
+              <span className="text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#f2f2f2] text-[#4d4d4d] border border-[#ebebeb]">
+                S-02
+              </span>
+            </div>
+          </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-7" aria-label="Main Navigation">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-6" aria-label="Main Navigation">
             {navLinks.map((link) => (
               <a
                 key={link.label}
                 href={link.href}
                 onClick={(e) => handleScrollClick(e, link.href)}
-                className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded px-1 py-0.5"
+                className="text-xs font-medium text-[#4d4d4d] hover:text-[#171717] transition-colors focus:outline-none focus:ring-1 focus:ring-[#171717] rounded px-1 py-0.5"
               >
                 {link.label}
               </a>
@@ -67,16 +64,16 @@ export const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center gap-3">
             <Link
               to="/login"
-              className="text-sm font-semibold text-slate-700 hover:text-indigo-600 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors"
+              className="text-xs font-medium text-[#4d4d4d] hover:text-[#171717] px-3 py-1.5 rounded-full hover:bg-[#f2f2f2] transition-colors"
             >
               Sign In
             </Link>
             <Link
               to="/recommendations"
-              className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-indigo-800"
+              className="inline-flex items-center gap-1.5 bg-[#171717] hover:bg-[#2b2b2b] text-white text-xs font-medium px-4 py-2 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-[#171717] focus:ring-offset-2 active:bg-[#000000]"
             >
               <span>Open Dashboard</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
@@ -84,18 +81,18 @@ export const Navbar: React.FC = () => {
           <div className="flex md:hidden items-center gap-2">
             <Link
               to="/recommendations"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-3 py-1.5 rounded-md"
+              className="bg-[#171717] text-white text-xs font-medium px-3 py-1.5 rounded-full"
             >
               Dashboard
             </Link>
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="p-1.5 rounded-md text-[#4d4d4d] hover:text-[#171717] hover:bg-[#f2f2f2] focus:outline-none focus:ring-1 focus:ring-[#171717]"
               aria-expanded={mobileMenuOpen}
               aria-label="Toggle navigation menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
@@ -103,34 +100,34 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-slate-200 bg-white px-4 pt-3 pb-6 space-y-3 shadow-lg">
-          <nav className="flex flex-col space-y-2">
+        <div className="md:hidden border-b border-[#ebebeb] bg-[#fafafa] px-4 pt-3 pb-6 space-y-3 shadow-sm">
+          <nav className="flex flex-col space-y-1">
             {navLinks.map((link) => (
               <a
                 key={link.label}
                 href={link.href}
                 onClick={(e) => handleScrollClick(e, link.href)}
-                className="px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+                className="px-3 py-2 text-sm font-medium text-[#4d4d4d] hover:text-[#171717] hover:bg-[#f2f2f2] rounded-md transition-colors"
               >
                 {link.label}
               </a>
             ))}
           </nav>
-          <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
+          <div className="pt-2 border-t border-[#ebebeb] flex flex-col gap-2">
             <Link
               to="/login"
               onClick={() => setMobileMenuOpen(false)}
-              className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium text-sm transition-colors"
+              className="w-full text-center py-2 text-xs font-medium text-[#171717] bg-white border border-[#ebebeb] rounded-full"
             >
-              <span>Sign In to Account</span>
+              Sign In
             </Link>
             <Link
               to="/recommendations"
               onClick={() => setMobileMenuOpen(false)}
-              className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg font-medium text-sm shadow-sm"
+              className="w-full flex items-center justify-center gap-2 bg-[#171717] text-white py-2 rounded-full text-xs font-medium"
             >
               <span>Open Full Dashboard</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
@@ -138,3 +135,5 @@ export const Navbar: React.FC = () => {
     </header>
   );
 };
+
+export default Navbar;

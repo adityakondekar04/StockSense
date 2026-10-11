@@ -232,9 +232,11 @@ export const InventorySimulation: React.FC = () => {
   const activeStock = currentStep.stock;
 
   return (
-    <div className="w-full bg-white rounded-3xl border border-[#ebebeb] p-6 sm:p-10 lg:p-12 shadow-sm">
-      {/* 1. Header & Mode Switcher Grid */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-8 border-b border-[#ebebeb]">
+    <section id="simulation" className="py-16 sm:py-24 bg-[#fafafa] border-b border-[#ebebeb] scroll-mt-12">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full bg-white rounded-2xl border border-[#ebebeb] p-6 sm:p-10 lg:p-12 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          {/* 1. Header & Mode Switcher Grid */}
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-8 border-b border-[#ebebeb]">
         {/* Left Heading & Supporting Copy */}
         <div className="space-y-4 max-w-xl text-left">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f2f2f2] text-[#4d4d4d] text-xs font-mono font-medium">
@@ -476,7 +478,7 @@ export const InventorySimulation: React.FC = () => {
           </div>
 
           {/* Right Column: Explanatory Narrative Sentence */}
-          <div className="md:col-span-5 bg-[#fafafa] border border-[#ebebeb] rounded-2xl p-4 min-h-[4rem] flex items-center">
+          <div className="md:col-span-5 bg-[#fafafa] border border-[#ebebeb] rounded-xl p-4 min-h-[4rem] flex items-center">
             <p className="text-xs sm:text-sm text-[#171717] font-medium leading-relaxed transition-opacity duration-200">
               {currentStep.explanation}
             </p>
@@ -484,6 +486,8 @@ export const InventorySimulation: React.FC = () => {
         </div>
       </div>
     </div>
+  </div>
+</section>
   );
 };
 

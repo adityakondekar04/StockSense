@@ -1,14 +1,5 @@
 // apps/web/src/components/landing/DashboardPreview.tsx
 import React, { useState } from "react";
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
-  TrendingUp,
-  Layers,
-  Sparkles,
-  Info,
-} from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from "recharts";
 import { PREVIEW_PRODUCTS, PreviewProduct } from "../../data/landingData";
 
@@ -18,26 +9,26 @@ export const DashboardPreview: React.FC = () => {
   const activeProduct: PreviewProduct =
     PREVIEW_PRODUCTS.find((p) => p.sku === selectedSku) || PREVIEW_PRODUCTS[0];
 
-  const getStatusBadge = (status: PreviewProduct["status"]) => {
+  const getStatusTag = (status: PreviewProduct["status"]) => {
     switch (status) {
       case "Order now":
         return (
-          <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200">
-            <AlertTriangle className="w-3 h-3 text-red-600" />
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-mono font-medium text-[#ee0000] bg-red-50/80 border border-red-200/80 px-2 py-0.5 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#ee0000]" />
             Order now
           </span>
         );
       case "Reorder soon":
         return (
-          <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-            <Clock className="w-3 h-3 text-amber-600" />
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-mono font-medium text-[#ab570a] bg-amber-50/80 border border-amber-200/80 px-2 py-0.5 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#f5a623]" />
             Reorder soon
           </span>
         );
       case "Healthy":
         return (
-          <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-mono font-medium text-[#0070f3] bg-blue-50/80 border border-blue-200/80 px-2 py-0.5 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3]" />
             Healthy
           </span>
         );
@@ -45,65 +36,52 @@ export const DashboardPreview: React.FC = () => {
   };
 
   return (
-    <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden text-slate-800">
-      {/* Top chrome bar */}
-      <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+    <div className="w-full bg-white rounded-2xl border border-[#ebebeb] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden text-[#171717]">
+      {/* Top Console Bar */}
+      <div className="bg-[#fafafa] border-b border-[#ebebeb] px-4 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="flex gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
-            <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
-            <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#e2e2e2]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#e2e2e2]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#e2e2e2]" />
           </div>
-          <span className="text-xs font-medium text-slate-500 pl-2 border-l border-slate-200">
-            StockSense Replenishment Console
+          <span className="text-xs font-mono text-[#8f8f8f] pl-2 border-l border-[#ebebeb]">
+            replenishment-console (s, Q)
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
-            <Sparkles className="w-3 h-3" />
-            SL 95% → z = 1.645
-          </span>
-          <span className="text-[10px] uppercase font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-            Live Preview
+          <span className="text-[11px] font-mono text-[#4d4d4d] bg-white border border-[#ebebeb] px-2 py-0.5 rounded">
+            Service level 95% · z = 1.645
           </span>
         </div>
       </div>
 
-      {/* Main preview container */}
+      {/* Main Container */}
       <div className="p-4 sm:p-5 space-y-4">
-        {/* Quick Health Summary Metrics */}
-        <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
-          <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 sm:p-3">
-            <div className="text-[11px] font-medium text-slate-500">Tracked Items</div>
-            <div className="text-lg sm:text-xl font-bold text-slate-900 mt-0.5">4 SKUs</div>
-            <div className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1">
-              <Layers className="w-2.5 h-2.5 text-indigo-500" />
-              Continuous review
-            </div>
+        {/* KPI Strip */}
+        <div className="grid grid-cols-3 gap-2.5 border-b border-[#f2f2f2] pb-4">
+          <div className="p-2.5 rounded-lg bg-[#fafafa] border border-[#ebebeb]">
+            <div className="text-[11px] font-mono text-[#8f8f8f]">Tracked SKUs</div>
+            <div className="text-lg font-semibold text-[#171717] mt-0.5">4 Products</div>
+            <div className="text-[10px] text-[#4d4d4d] mt-0.5 font-mono">Continuous review</div>
           </div>
-          <div className="bg-red-50/60 border border-red-200/70 rounded-xl p-2.5 sm:p-3">
-            <div className="text-[11px] font-medium text-red-800">Action Required</div>
-            <div className="text-lg sm:text-xl font-bold text-red-700 mt-0.5">1 SKU</div>
-            <div className="text-[10px] text-red-700 font-medium mt-0.5 flex items-center gap-1">
-              <AlertTriangle className="w-2.5 h-2.5 text-red-600" />
-              Stock below ROP
-            </div>
+          <div className="p-2.5 rounded-lg bg-[#fafafa] border border-[#ebebeb]">
+            <div className="text-[11px] font-mono text-[#8f8f8f]">Action Required</div>
+            <div className="text-lg font-semibold text-[#ee0000] mt-0.5">1 SKU below ROP</div>
+            <div className="text-[10px] text-[#8f8f8f] mt-0.5 font-mono">Immediate reorder</div>
           </div>
-          <div className="bg-emerald-50/60 border border-emerald-200/70 rounded-xl p-2.5 sm:p-3">
-            <div className="text-[11px] font-medium text-emerald-800">Expected Fill Rate</div>
-            <div className="text-lg sm:text-xl font-bold text-emerald-700 mt-0.5">99.8%</div>
-            <div className="text-[10px] text-emerald-700 font-medium mt-0.5 flex items-center gap-1">
-              <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
-              Optimal cycle level
-            </div>
+          <div className="p-2.5 rounded-lg bg-[#fafafa] border border-[#ebebeb]">
+            <div className="text-[11px] font-mono text-[#8f8f8f]">Cycle Fill Rate</div>
+            <div className="text-lg font-semibold text-[#171717] mt-0.5">99.8%</div>
+            <div className="text-[10px] text-[#8f8f8f] mt-0.5 font-mono">Target calibrated</div>
           </div>
         </div>
 
-        {/* Interactive SKU selector list */}
+        {/* Interactive SKU Grid */}
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 px-1">
-            <span>Items Needing Attention & Monitored</span>
-            <span className="text-[11px] text-indigo-600 font-medium">Click to inspect</span>
+          <div className="flex items-center justify-between text-xs text-[#8f8f8f] px-0.5">
+            <span className="font-mono text-[11px] uppercase tracking-wider">Inventory Status</span>
+            <span className="text-[11px] text-[#8f8f8f]">Select SKU to inspect</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -114,28 +92,24 @@ export const DashboardPreview: React.FC = () => {
                   key={prod.sku}
                   type="button"
                   onClick={() => setSelectedSku(prod.sku)}
-                  className={`text-left p-2.5 rounded-xl border transition-all text-xs flex flex-col justify-between ${
+                  className={`text-left p-3 rounded-xl border transition-all text-xs flex flex-col justify-between ${
                     isSelected
-                      ? "border-indigo-600 bg-indigo-50/40 shadow-sm ring-1 ring-indigo-500"
-                      : "border-slate-200 hover:border-slate-300 bg-white"
+                      ? "border-[#171717] bg-[#fafafa] ring-1 ring-[#171717]"
+                      : "border-[#ebebeb] hover:border-slate-300 bg-white"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-1 w-full">
                     <div>
-                      <span className="font-mono text-[10px] font-semibold text-slate-500">
+                      <span className="font-mono text-[10px] text-[#8f8f8f] block">
                         {prod.sku}
                       </span>
-                      <h4 className="font-semibold text-slate-900 line-clamp-1">{prod.name}</h4>
+                      <h4 className="font-semibold text-[#171717] line-clamp-1">{prod.name}</h4>
                     </div>
-                    {getStatusBadge(prod.status)}
+                    {getStatusTag(prod.status)}
                   </div>
-                  <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-100 text-[11px] text-slate-600 w-full">
-                    <span>
-                      On Hand: <strong className="text-slate-900">{prod.currentStock}</strong>
-                    </span>
-                    <span>
-                      ROP: <strong className="text-slate-900">{prod.rop}</strong>
-                    </span>
+                  <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-[#f2f2f2] text-[11px] text-[#4d4d4d] w-full font-mono">
+                    <span>Stock: <strong className="text-[#171717]">{prod.currentStock}</strong></span>
+                    <span>ROP: <strong className="text-[#171717]">{prod.rop}</strong></span>
                   </div>
                 </button>
               );
@@ -143,101 +117,104 @@ export const DashboardPreview: React.FC = () => {
           </div>
         </div>
 
-        {/* Selected Product Detailed Card */}
-        <div className="bg-slate-50/90 border border-slate-200 rounded-xl p-3.5 space-y-3">
-          <div className="flex items-center justify-between">
+        {/* Selected Product Detail Panel */}
+        <div className="bg-[#fafafa] border border-[#ebebeb] rounded-xl p-4 space-y-3">
+          <div className="flex items-start justify-between gap-2">
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-bold text-slate-600">{activeProduct.sku}</span>
-                <span className="text-sm font-semibold text-slate-900">{activeProduct.name}</span>
+                <span className="font-mono text-xs font-semibold text-[#171717]">
+                  {activeProduct.sku}
+                </span>
+                <span className="text-sm font-semibold text-[#171717]">
+                  {activeProduct.name}
+                </span>
               </div>
-              <p className="text-[11px] text-slate-500 mt-0.5">{activeProduct.statusReason}</p>
+              <p className="text-xs text-[#4d4d4d] mt-1">
+                {activeProduct.statusReason}
+              </p>
             </div>
-            {getStatusBadge(activeProduct.status)}
+            {getStatusTag(activeProduct.status)}
           </div>
 
-          {/* Key replenishment metrics */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-slate-200/70 text-center">
-            <div className="bg-white rounded-lg p-2 border border-slate-200/80">
-              <span className="text-[10px] uppercase font-medium text-slate-500">Current Stock</span>
-              <div className="text-base font-bold text-slate-900 mt-0.5">
-                {activeProduct.currentStock.toLocaleString()}
+          {/* Core Numbers */}
+          <div className="grid grid-cols-4 gap-2 pt-2 border-t border-[#ebebeb] text-center font-mono">
+            <div className="bg-white p-2 rounded-lg border border-[#ebebeb]">
+              <div className="text-[10px] text-[#8f8f8f] uppercase">On Hand</div>
+              <div className="text-base font-semibold text-[#171717] mt-0.5">
+                {activeProduct.currentStock}
               </div>
-              <span className="text-[10px] text-slate-500">{activeProduct.unit}</span>
+              <div className="text-[10px] text-[#8f8f8f]">{activeProduct.unit}</div>
             </div>
-            <div className="bg-white rounded-lg p-2 border border-slate-200/80">
-              <span className="text-[10px] uppercase font-medium text-slate-500">Reorder Point (ROP)</span>
-              <div className="text-base font-bold text-indigo-700 mt-0.5">
-                {activeProduct.rop.toLocaleString()}
+            <div className="bg-white p-2 rounded-lg border border-[#ebebeb]">
+              <div className="text-[10px] text-[#8f8f8f] uppercase">Reorder Point</div>
+              <div className="text-base font-semibold text-[#171717] mt-0.5">
+                {activeProduct.rop}
               </div>
-              <span className="text-[10px] text-indigo-600">Trigger level</span>
+              <div className="text-[10px] text-[#8f8f8f]">trigger</div>
             </div>
-            <div className="bg-white rounded-lg p-2 border border-slate-200/80">
-              <span className="text-[10px] uppercase font-medium text-slate-500">Safety Stock (SS)</span>
-              <div className="text-base font-bold text-slate-900 mt-0.5">
-                {activeProduct.safetyStock.toLocaleString()}
+            <div className="bg-white p-2 rounded-lg border border-[#ebebeb]">
+              <div className="text-[10px] text-[#8f8f8f] uppercase">Safety Stock</div>
+              <div className="text-base font-semibold text-[#171717] mt-0.5">
+                {activeProduct.safetyStock}
               </div>
-              <span className="text-[10px] text-slate-500">Demand buffer</span>
+              <div className="text-[10px] text-[#8f8f8f]">buffer</div>
             </div>
-            <div className="bg-white rounded-lg p-2 border border-slate-200/80">
-              <span className="text-[10px] uppercase font-medium text-slate-500">Order Qty (EOQ)</span>
-              <div className="text-base font-bold text-slate-900 mt-0.5">
-                {activeProduct.orderQty.toLocaleString()}
+            <div className="bg-white p-2 rounded-lg border border-[#ebebeb]">
+              <div className="text-[10px] text-[#8f8f8f] uppercase">Order Qty (Q)</div>
+              <div className="text-base font-semibold text-[#171717] mt-0.5">
+                {activeProduct.orderQty}
               </div>
-              <span className="text-[10px] text-slate-500">Batch size</span>
+              <div className="text-[10px] text-[#8f8f8f]">pack size 50</div>
             </div>
           </div>
 
-          {/* Mini Demand Sparkline Chart */}
-          <div className="bg-white rounded-lg p-2.5 border border-slate-200/80 space-y-1.5">
-            <div className="flex items-center justify-between text-[11px] text-slate-600">
-              <div className="flex items-center gap-1 font-medium">
-                <TrendingUp className="w-3.5 h-3.5 text-indigo-600" />
-                <span>14-Day Demand Trend ({activeProduct.unit}/day)</span>
-              </div>
-              <span className="text-[10px] text-slate-400">Mean: {activeProduct.avgDailyDemand}/day</span>
+          {/* Mini Recharts Trend Chart */}
+          <div className="bg-white p-3 rounded-lg border border-[#ebebeb] space-y-1">
+            <div className="flex items-center justify-between text-xs text-[#8f8f8f] font-mono">
+              <span>14-Day Demand Pattern ({activeProduct.unit}/day)</span>
+              <span>D̄ = {activeProduct.avgDailyDemand}/d</span>
             </div>
-            <div className="h-24 w-full">
+            <div className="h-20 w-full pt-1">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={activeProduct.history}
-                  margin={{ top: 4, right: 4, left: -24, bottom: 0 }}
+                  margin={{ top: 2, right: 2, left: -28, bottom: 0 }}
                 >
                   <defs>
-                    <linearGradient id="demandGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#4f46e5" stopOpacity={0.0} />
+                    <linearGradient id="consoleDemand" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#171717" stopOpacity={0.12} />
+                      <stop offset="95%" stopColor="#171717" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
                   <XAxis
                     dataKey="day"
-                    tick={{ fontSize: 9, fill: "#94a3b8" }}
+                    tick={{ fontSize: 9, fill: "#8f8f8f" }}
                     tickLine={false}
-                    axisLine={{ stroke: "#e2e8f0" }}
+                    axisLine={{ stroke: "#ebebeb" }}
                   />
                   <YAxis
-                    tick={{ fontSize: 9, fill: "#94a3b8" }}
+                    tick={{ fontSize: 9, fill: "#8f8f8f" }}
                     tickLine={false}
                     axisLine={false}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#1e293b",
-                      borderRadius: "8px",
+                      backgroundColor: "#171717",
+                      borderRadius: "6px",
                       color: "#fff",
                       fontSize: "11px",
                       padding: "4px 8px",
                       border: "none",
                     }}
-                    labelStyle={{ color: "#cbd5e1" }}
+                    labelStyle={{ color: "#a1a1a1" }}
                   />
                   <Area
                     type="monotone"
                     dataKey="demand"
-                    stroke="#4f46e5"
-                    strokeWidth={2}
+                    stroke="#171717"
+                    strokeWidth={1.5}
                     fillOpacity={1}
-                    fill="url(#demandGradient)"
+                    fill="url(#consoleDemand)"
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -245,17 +222,14 @@ export const DashboardPreview: React.FC = () => {
           </div>
         </div>
 
-        {/* Demo caveat footer */}
-        <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
-          <span className="flex items-center gap-1">
-            <Info className="w-3 h-3 text-slate-400" />
-            Fictional demo data · Decision support only
-          </span>
-          <span className="font-medium text-indigo-600">
-            Rules Decide · AI Advises
-          </span>
+        {/* Footer info note */}
+        <div className="flex items-center justify-between text-[11px] text-[#8f8f8f] font-mono pt-1">
+          <span>Deterministic replenishment policy</span>
+          <span>Fictional demonstration data</span>
         </div>
       </div>
     </div>
   );
 };
+
+export default DashboardPreview;
