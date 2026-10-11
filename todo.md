@@ -19,13 +19,13 @@ Gates are marked **GATE**. Do not pass a gate until it is true.
 
 ## Phase 1: Math foundation (0:45 to 2:30)
 
-- [ ] 9. **Write the inventory tests by hand, before any code** (P1: worked example, scenario, edge cases). Test: tests run and fail because the functions don't exist yet.
-- [ ] 10. **Implement `normal.ts`** (`inverseNormalCDF`, `pdf`, `cdf`, `lossFn`). Test: T1 (z at 0.80/0.90/0.95/0.975/0.99/0.999) and T6 (G(1.6449) = 0.0209) pass.
-- [ ] 11. **Implement `sigmaLT` and `recommend()`** in `inventory.ts`. Test: T2 to T5, T7 to T10 pass (SS 180.2, ROP 680.2, EOQ 1208.3, Q 1250 with pack 50).
-- [ ] 12. **Handle edge cases** (service level 1.0, zero demand, zero sigma, `L̄ = 0`, `H = 0`). Test: T13, T14 pass, no NaN or Infinity anywhere.
-- [ ] 13. **Implement `applyScenario()` and `oldPolicyRisk()`.** Test: T11 (ROP 1384.6, SS 264.6) and T12 (z −2.73, probability 0.997) pass.
-- [ ] 14. **Implement seeded Monte Carlo** (`mulberry32`, Box-Muller, `monteCarloStockout`). Test: T50 to T53 pass, same seed gives identical output, analytic and simulated within 3 points.
-- [ ] 15. **GATE 0: core math is done.** Test: all of T1 to T14 and T50 to T53 are green, and `packages/core` has no imports from `express`, `prisma` or `react`.
+- [x] 9. **Write the inventory tests by hand, before any code** (P1: worked example, scenario, edge cases). Test: tests run and fail because the functions don't exist yet.
+- [x] 10. **Implement `normal.ts`** (`inverseNormalCDF`, `pdf`, `cdf`, `lossFn`). Test: T1 (z at 0.80/0.90/0.95/0.975/0.99/0.999) and T6 (G(1.6449) = 0.0209) pass.
+- [x] 11. **Implement `sigmaLT` and `recommend()`** in `inventory.ts`. Test: T2 to T5, T7 to T10 pass (SS 180.2, ROP 680.2, EOQ 1208.3, Q 1250 with pack 50).
+- [x] 12. **Handle edge cases** (service level 1.0, zero demand, zero sigma, `L̄ = 0`, `H = 0`). Test: T13, T14 pass, no NaN or Infinity anywhere.
+- [x] 13. **Implement `applyScenario()` and `oldPolicyRisk()`.** Test: T11 (ROP 1384.6, SS 264.6) and T12 (z −2.73, probability 0.997) pass.
+- [x] 14. **Implement seeded Monte Carlo** (`mulberry32`, Box-Muller, `monteCarloStockout`). Test: T50 to T53 pass, same seed gives identical output, analytic and simulated within 3 points.
+- [x] 15. **GATE 0: core math is done.** Test: all of T1 to T14 and T50 to T53 are green, and `packages/core` has no imports from `express`, `prisma` or `react`.
 
 ## Phase 2: Data layer (1:00 to 3:00, parallel with Phase 1)
 
