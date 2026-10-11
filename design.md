@@ -406,6 +406,5 @@ Before shipping a page or component, verify:
 - [ ] Focus states, contrast, keyboard access, and responsive layouts are tested.
 - [ ] No page-level horizontal scrolling occurs at 375px.
 - [ ] No new visual language has been introduced without a deliberate system-wide decision.
-
 **Final rule:** StockSense must look and feel like it belongs to the same product family as DealFlow. The domain changes; the design language does not.
 

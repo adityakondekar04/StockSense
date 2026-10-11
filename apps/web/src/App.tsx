@@ -2,6 +2,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { InventoryProvider } from "./context/InventoryContext";
 import { LandingPage } from "./pages/LandingPage";
+import { LoginPage } from "./pages/LoginPage";
+import { SignupPage } from "./pages/SignupPage";
 import { DashboardLayout } from "./components/dashboard/DashboardLayout";
 import { RecommendationsView } from "./components/dashboard/RecommendationsView";
 import { ProductsDirectoryView } from "./components/dashboard/ProductsDirectoryView";
@@ -21,6 +23,10 @@ export function App() {
         <Routes>
           {/* Public Landing Page */}
           <Route path="/" element={<LandingPage />} />
+
+          {/* Authentication Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
 
           {/* Primary Replenishment Recommendations Screen */}
           <Route
