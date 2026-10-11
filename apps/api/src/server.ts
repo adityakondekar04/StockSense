@@ -4,6 +4,12 @@ import dotenv from "dotenv";
 import { prisma } from "./db.js";
 import { importRouter } from "./import/routes.js";
 import { productsRouter } from "./products/routes.js";
+import {
+  analysisRouter,
+  salesRouter,
+  anomaliesRouter,
+  anomalyActionsRouter,
+} from "./analysis/routes.js";
 
 
 dotenv.config();
@@ -39,6 +45,18 @@ app.use("/import", importRouter);
 // Products CRUD endpoints
 app.use("/api/products", productsRouter);
 app.use("/products", productsRouter);
+
+// Analysis endpoints
+app.use("/api/analysis", analysisRouter);
+app.use("/analysis", analysisRouter);
+
+// Sales & Anomalies endpoints on products
+app.use("/api/products", salesRouter);
+app.use("/products", salesRouter);
+app.use("/api/products", anomaliesRouter);
+app.use("/products", anomaliesRouter);
+app.use("/api/anomalies", anomalyActionsRouter);
+app.use("/anomalies", anomalyActionsRouter);
 
 if (process.env.NODE_ENV !== "test") {
   app.listen(port, () => {

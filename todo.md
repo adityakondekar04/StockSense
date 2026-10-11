@@ -50,9 +50,9 @@ Gates are marked **GATE**. Do not pass a gate until it is true.
 
 ## Phase 4: Analysis API and core screens (3:00 to 6:00)
 
-- [ ] 30. **Build `POST /analysis/run`** (P7) returning service level, z, demand stats, recommendation, cost, evaluation and anomalies. Test: the response for PCM-02 at 95% shows z 1.6449, and T64 (under 28 days gives `limitedInformation: true`) and T65 (intermittent warning) pass.
-- [ ] 31. **Add `orderNow`, `daysOfCover`, `projectedStockoutDate` and the safety-stock split.** Test: set on-hand below the ROP and `orderNow` becomes true, and the split shares add up to 1.
-- [ ] 32. **Add an API guard so no response ever contains NaN or Infinity.** Test: T67 passes with zero-demand and single-row products.
+- [x] 30. **Build `POST /analysis/run`** (P7) returning service level, z, demand stats, recommendation, cost, evaluation and anomalies. Test: the response for PCM-02 at 95% shows z 1.6449, and T64 (under 28 days gives `limitedInformation: true`) and T65 (intermittent warning) pass.
+- [x] 31. **Add `orderNow`, `daysOfCover`, `projectedStockoutDate` and the safety-stock split.** Test: set on-hand below the ROP and `orderNow` becomes true, and the split shares add up to 1.
+- [x] 32. **Add an API guard so no response ever contains NaN or Infinity.** Test: T67 passes with zero-demand and single-row products.
 - [ ] 33. **Build the web layout, router and top bar** (product selector, service-level selector, "Run without AI" toggle). Test: every nav link routes correctly and the service level persists across pages.
 - [ ] 34. **Build the typed API client with readable error display.** Test: stop the API, the UI shows "Cannot reach the server" instead of a blank page.
 - [ ] 35. **Build the Setup screen** (load demo, CSV upload, manual entry). Test: upload a CSV with one bad row and see the row number and reason, enter a product by hand with 30 days of demand and get a result.
