@@ -17,6 +17,8 @@ import { calculateProductPolicy } from "../../data/inventoryData";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
+import { EmptyState } from "../ui/empty-state";
+import { Skeleton } from "../ui/skeleton";
 
 function getProductCategory(sku: string): string {
   if (sku.startsWith("ORS")) return "Electrolytes";
@@ -37,28 +39,74 @@ export const ProductDetailView: React.FC = () => {
     serviceLevel,
     zValue,
     includeUnknowns,
+    isLoading,
+    loadDemoData,
   } = useInventory();
 
   // Find product by SKU or ID from route param
   const activeProduct = useMemo(() => {
     if (!id) return selectedProduct;
     const found = products.find((p) => p.sku === id || p.id === id);
-    return found || selectedProduct;
+    return found || selectedProduct || null;
   }, [id, products, selectedProduct]);
 
   // Sync selectedProductId with context
   useEffect(() => {
-    if (activeProduct && activeProduct.id !== selectedProduct.id) {
+    if (activeProduct && selectedProduct && activeProduct.id !== selectedProduct.id) {
       setSelectedProductId(activeProduct.id);
     }
-  }, [activeProduct, selectedProduct.id, setSelectedProductId]);
+  }, [activeProduct, selectedProduct, setSelectedProductId]);
 
-  const isUnknownIncluded = includeUnknowns[activeProduct.sku] ?? true;
+  const isUnknownIncluded = activeProduct ? (includeUnknowns[activeProduct.sku] ?? true) : true;
   const policy = useMemo(() => {
+    if (!activeProduct) return null;
     return calculateProductPolicy(activeProduct, serviceLevel, isUnknownIncluded);
   }, [activeProduct, serviceLevel, isUnknownIncluded]);
 
-  const category = getProductCategory(activeProduct.sku);
+  const category = activeProduct ? getProductCategory(activeProduct.sku) : "General";
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-fadeIn">
+        <Skeleton className="h-8 w-48" />
+        <div className="p-8 border border-[#E7E5E4] dark:border-[#292524] bg-white dark:bg-[#1C1917] space-y-4">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-4 w-64" />
+          <div className="grid grid-cols-4 gap-4 pt-4">
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!activeProduct || !policy) {
+    return (
+      <div className="space-y-6 animate-fadeIn">
+        <Link
+          to="/products"
+          className="inline-flex items-center gap-2 text-xs font-mono text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#FAFAF9] transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Products Directory
+        </Link>
+        <EmptyState
+          title="Product Not Found"
+          description={`The requested SKU or product identifier "${id || 'N/A'}" does not exist in the active catalog.`}
+          action={{
+            label: "Return to Products Directory",
+            to: "/products",
+          }}
+          secondaryAction={{
+            label: "Load Demo Products",
+            onClick: () => loadDemoData(),
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fadeIn">

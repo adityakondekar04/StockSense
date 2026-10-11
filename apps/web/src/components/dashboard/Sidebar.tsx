@@ -41,6 +41,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { selectedProduct } = useInventory();
   const location = useLocation();
 
+  const productSku = selectedProduct?.sku;
+
   const navSections: NavSection[] = [
     {
       label: "INVENTORY CORE",
@@ -63,13 +65,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       items: [
         {
           label: "Data Cleaning",
-          path: `/products/${selectedProduct.sku}/cleaning`,
+          path: productSku ? `/products/${productSku}/cleaning` : "/cleaning",
           altPath: "/cleaning",
           icon: BarChart3,
         },
         {
           label: "Forecast Check",
-          path: `/products/${selectedProduct.sku}/forecast`,
+          path: productSku ? `/products/${productSku}/forecast` : "/forecast",
           altPath: "/forecast",
           icon: LineChart,
         },
@@ -80,7 +82,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       items: [
         {
           label: "Scenario Lab",
-          path: `/products/${selectedProduct.sku}/scenario`,
+          path: productSku ? `/products/${productSku}/scenario` : "/scenario",
           altPath: "/scenario",
           icon: Sliders,
         },
@@ -92,7 +94,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         },
         {
           label: "Print Report",
-          path: `/report/${selectedProduct.sku}`,
+          path: productSku ? `/report/${productSku}` : "/products",
           icon: Printer,
         },
       ],
@@ -230,19 +232,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </nav>
 
         {/* Active Product Quick Info */}
-        <div className="p-4 mx-4 mb-3 bg-[#F5F5F4] dark:bg-[#1C1917] border border-[#E7E5E4] dark:border-[#292524] rounded-none">
-          <div className="flex items-center justify-between text-[11px] font-mono text-[#57534E] dark:text-[#A8A29E] mb-1">
-            <span>SELECTED SKU</span>
-            <span className="font-semibold text-[#1C1917] dark:text-[#FAFAF9]">{selectedProduct.sku}</span>
+        {selectedProduct ? (
+          <div className="p-4 mx-4 mb-3 bg-[#F5F5F4] dark:bg-[#1C1917] border border-[#E7E5E4] dark:border-[#292524] rounded-none">
+            <div className="flex items-center justify-between text-[11px] font-mono text-[#57534E] dark:text-[#A8A29E] mb-1">
+              <span>SELECTED SKU</span>
+              <span className="font-semibold text-[#1C1917] dark:text-[#FAFAF9]">{selectedProduct.sku}</span>
+            </div>
+            <div className="text-[12px] font-sans font-medium text-[#1C1917] dark:text-[#FAFAF9] truncate">
+              {selectedProduct.name}
+            </div>
+            <div className="mt-2 flex items-center justify-between text-[11px] text-[#78716C] dark:text-[#A8A29E] border-t border-[#E7E5E4] dark:border-[#292524] pt-1.5">
+              <span>Stock on hand</span>
+              <span className="font-mono font-semibold text-[#1C1917] dark:text-[#FAFAF9]">{selectedProduct.onHand} units</span>
+            </div>
           </div>
-          <div className="text-[12px] font-sans font-medium text-[#1C1917] dark:text-[#FAFAF9] truncate">
-            {selectedProduct.name}
+        ) : (
+          <div className="p-3 mx-4 mb-3 bg-[#F5F5F4] dark:bg-[#1C1917] border border-[#E7E5E4] dark:border-[#292524] text-[11px] text-[#78716C] dark:text-[#A8A29E] text-center font-mono">
+            No products loaded
           </div>
-          <div className="mt-2 flex items-center justify-between text-[11px] text-[#78716C] dark:text-[#A8A29E] border-t border-[#E7E5E4] dark:border-[#292524] pt-1.5">
-            <span>Stock on hand</span>
-            <span className="font-mono font-semibold text-[#1C1917] dark:text-[#FAFAF9]">{selectedProduct.onHand} units</span>
-          </div>
-        </div>
+        )}
 
         {/* Sidebar Footer */}
         <div className="px-5 py-4 border-t border-[#E7E5E4] dark:border-[#292524] bg-[#FAFAF9] dark:bg-[#12100E] flex items-center justify-between text-[11px] text-[#78716C] dark:text-[#78716C]">

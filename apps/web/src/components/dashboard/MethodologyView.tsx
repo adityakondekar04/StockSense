@@ -39,8 +39,32 @@ export const MethodologyView: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Table of Contents Anchors */}
+      <div className="flex flex-wrap gap-2 pt-2 border-b border-[#E7E5E4] dark:border-[#292524] pb-4">
+        {[
+          { id: "safety-stock", label: "Safety Stock" },
+          { id: "reorder-point", label: "Reorder Point" },
+          { id: "service-level", label: "Service Level & z" },
+          { id: "eoq", label: "EOQ & Costs" },
+          { id: "simulation", label: "Monte Carlo" },
+          { id: "anomalies", label: "Anomalies" },
+          { id: "forecast", label: "Forecast Models" },
+          { id: "holdout", label: "Holdout Check" },
+          { id: "ai", label: "AI Boundaries" },
+          { id: "limits", label: "Limitations" },
+        ].map((item) => (
+          <a
+            key={item.id}
+            href={`#${item.id}`}
+            className="px-2.5 py-1 text-xs font-mono bg-white dark:bg-[#1C1917] border border-[#E7E5E4] dark:border-[#292524] text-[#57534E] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#FAFAF9]"
+          >
+            #{item.label}
+          </a>
+        ))}
+      </div>
+
       {/* Section 1: Dual-Variance Safety Stock */}
-      <section className="space-y-4">
+      <section id="safety-stock" className="space-y-4 scroll-mt-20">
         <h2 className="font-serif text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
           1. Dual-Variance Safety Stock Derivation
         </h2>
@@ -71,7 +95,7 @@ export const MethodologyView: React.FC = () => {
       </section>
 
       {/* Section 2: Reorder Point (ROP) */}
-      <section className="space-y-4">
+      <section id="reorder-point" className="space-y-4 scroll-mt-20">
         <h2 className="font-serif text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
           2. Reorder Point (ROP)
         </h2>
@@ -92,7 +116,7 @@ export const MethodologyView: React.FC = () => {
       </section>
 
       {/* Section 3: Cycle Service Level & Z Factor Table */}
-      <section className="space-y-4">
+      <section id="service-level" className="space-y-4 scroll-mt-20">
         <h2 className="font-serif text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
           3. Cycle Service Level &amp; Z-Table Values
         </h2>
@@ -134,7 +158,7 @@ export const MethodologyView: React.FC = () => {
       </section>
 
       {/* Section 4: Economic Order Quantity (EOQ) */}
-      <section className="space-y-4">
+      <section id="eoq" className="space-y-4 scroll-mt-20">
         <h2 className="font-serif text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
           4. Economic Order Quantity (EOQ) &amp; Total Cost
         </h2>
@@ -160,7 +184,7 @@ export const MethodologyView: React.FC = () => {
       </section>
 
       {/* Section 5: Monte Carlo Simulation */}
-      <section className="space-y-4">
+      <section id="simulation" className="space-y-4 scroll-mt-20">
         <h2 className="font-serif text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
           5. Deterministic Monte Carlo Verification
         </h2>
@@ -173,6 +197,80 @@ export const MethodologyView: React.FC = () => {
             <span>Deterministic Seed: <code>20261011</code></span>
             <span>Trials: <code>10,000</code></span>
             <span>Engine: <code>@stocksense/core/simulate.ts</code></span>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Section 6: Anomalies Detection */}
+      <section id="anomalies" className="space-y-4 scroll-mt-20">
+        <h2 className="font-serif text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
+          6. Anomaly Detection &amp; Treatment
+        </h2>
+        <p className="text-[14px] text-[#57534E] dark:text-[#A8A29E] leading-relaxed font-sans">
+          Anomalies are detected using Boris Iglewicz and David Hoaglin's modified z-score test based on the median and Median Absolute Deviation (MAD):
+        </p>
+        <Card variant="default">
+          <CardContent className="p-6 font-mono text-sm space-y-3 bg-[#F5F5F4] dark:bg-[#1C1917]/50">
+            <div className="p-3 bg-white dark:bg-[#0C0A09] border border-[#E7E5E4] dark:border-[#292524] text-sm font-bold text-[#1C1917] dark:text-[#FAFAF9]">
+              M_i = 0.6745 · (x_i - x̃) / MAD
+            </div>
+            <p className="text-xs text-[#57534E] dark:text-[#D6D3D1]">
+              Observations with |M_i| &gt; 3.5 are flagged as potential outliers. Classes (Promotion, Stockout, Data Error, Unknown) receive specific mathematical treatments without silent deletion.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Section 7: Forecast Models */}
+      <section id="forecast" className="space-y-4 scroll-mt-20">
+        <h2 className="font-serif text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
+          7. Forecast Architectures &amp; Selection
+        </h2>
+        <p className="text-[14px] text-[#57534E] dark:text-[#A8A29E] leading-relaxed font-sans">
+          StockSense compares a Seasonal Day-of-Week multiplicative smoothing model against a 7-day rolling moving average baseline. The champion is selected strictly by minimizing out-of-sample WAPE:
+        </p>
+        <Card variant="default">
+          <CardContent className="p-6 font-mono text-sm space-y-3 bg-[#F5F5F4] dark:bg-[#1C1917]/50">
+            <div className="p-3 bg-white dark:bg-[#0C0A09] border border-[#E7E5E4] dark:border-[#292524] text-sm font-bold text-[#1C1917] dark:text-[#FAFAF9]">
+              WAPE = ( ∑ |actual_t - forecast_t| ) / ( ∑ actual_t )
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Section 8: Holdout Validation */}
+      <section id="holdout" className="space-y-4 scroll-mt-20">
+        <h2 className="font-serif text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
+          8. Holdout Window &amp; Leakage Prevention
+        </h2>
+        <p className="text-[14px] text-[#57534E] dark:text-[#A8A29E] leading-relaxed font-sans">
+          The dataset is split chronologically into an 80% training window and a 20% holdout window (minimum 14 days required). All medians, seasonal indices, and baseline estimators are computed exclusively on the training window.
+        </p>
+      </section>
+
+      {/* Section 9: AI Capabilities & Boundaries */}
+      <section id="ai" className="space-y-4 scroll-mt-20">
+        <h2 className="font-serif text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
+          9. AI Boundaries: What AI Can and Cannot Do
+        </h2>
+        <Card variant="flat">
+          <CardContent className="p-6 space-y-3 text-xs leading-relaxed text-[#57534E] dark:text-[#A8A29E]">
+            <p><strong>What AI CAN do:</strong> Synthesize contextual explanations, parse unstructured natural-language scenario prompts into bounded parameters, and suggest plausible hypotheses for demand spikes.</p>
+            <p><strong>What AI CANNOT do:</strong> Compute safety stocks, override reorder points directly, or alter core math parameters without deterministic validation and explicit human confirmation.</p>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Section 10: Limitations & Assumptions */}
+      <section id="limits" className="space-y-4 scroll-mt-20">
+        <h2 className="font-serif text-2xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
+          10. Assumptions &amp; Operational Limitations
+        </h2>
+        <Card variant="default">
+          <CardContent className="p-6 space-y-2 text-xs leading-relaxed text-[#57534E] dark:text-[#A8A29E]">
+            <p>· <strong>Stationarity:</strong> Lead-time demand variance assumes underlying normal approximations during replenishment cycles.</p>
+            <p>· <strong>Fill Rate vs Cycle Service Level:</strong> Cycle Service Level (CSL) guarantees the probability of zero stockouts per cycle, whereas Fill Rate measures the fraction of demand met directly from stock.</p>
+            <p>· <strong>Decision Support Only:</strong> StockSense is an advisory intelligence platform. Physical orders must always be reviewed by authorized clinical storekeepers.</p>
           </CardContent>
         </Card>
       </section>

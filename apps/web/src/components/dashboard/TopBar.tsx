@@ -66,7 +66,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
       return { section: "Core", title: "Products Directory" };
     }
     if (path.startsWith("/products/") && !path.includes("/cleaning") && !path.includes("/forecast") && !path.includes("/scenario")) {
-      return { section: "Products", title: `${selectedProduct.sku} Details` };
+      return { section: "Products", title: selectedProduct ? `${selectedProduct.sku} Details` : "Product Details" };
     }
     if (path.includes("/cleaning")) {
       return { section: "Intelligence", title: "Data Cleaning & Anomalies" };
@@ -147,16 +147,23 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
               SKU:
             </span>
             <select
-              value={selectedProduct.sku}
+              value={selectedProduct?.sku || ""}
               onChange={(e) => handleProductChange(e.target.value)}
               className="bg-transparent font-mono font-semibold text-[#1C1917] dark:text-[#FAFAF9] text-xs focus:outline-none cursor-pointer"
               aria-label="Active Product SKU"
+              disabled={products.length === 0}
             >
-              {products.map((p) => (
-                <option key={p.sku} value={p.sku} className="bg-white dark:bg-[#1C1917] text-[#1C1917] dark:text-[#FAFAF9]">
-                  {p.sku} · {p.name.length > 15 ? p.name.substring(0, 15) + "…" : p.name}
+              {products.length === 0 ? (
+                <option value="" className="bg-white dark:bg-[#1C1917] text-[#1C1917] dark:text-[#FAFAF9]">
+                  No products
                 </option>
-              ))}
+              ) : (
+                products.map((p) => (
+                  <option key={p.sku} value={p.sku} className="bg-white dark:bg-[#1C1917] text-[#1C1917] dark:text-[#FAFAF9]">
+                    {p.sku} · {p.name.length > 15 ? p.name.substring(0, 15) + "…" : p.name}
+                  </option>
+                ))
+              )}
             </select>
           </div>
 
@@ -226,13 +233,15 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuToggle }) => {
           </button>
 
           {/* Quick Print Report shortcut */}
-          <Link
-            to={`/report/${selectedProduct.sku}`}
-            className="hidden sm:inline-flex p-1.5 border border-[#D6D3D1] dark:border-[#44403C] bg-white dark:bg-[#1C1917] text-[#57534E] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#FAFAF9] transition-colors"
-            title="Print 1-Page Report"
-          >
-            <Printer className="w-4 h-4" />
-          </Link>
+          {selectedProduct && (
+            <Link
+              to={`/report/${selectedProduct.sku}`}
+              className="hidden sm:inline-flex p-1.5 border border-[#D6D3D1] dark:border-[#44403C] bg-white dark:bg-[#1C1917] text-[#57534E] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#FAFAF9] transition-colors"
+              title="Print 1-Page Report"
+            >
+              <Printer className="w-4 h-4" />
+            </Link>
+          )}
         </div>
       </div>
     </header>

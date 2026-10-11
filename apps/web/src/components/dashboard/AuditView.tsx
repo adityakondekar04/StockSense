@@ -17,6 +17,7 @@ import { Button } from "../ui/button";
 import { Badge, FilterChip } from "../ui/badge";
 import { Input } from "../ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui/table";
+import { EmptyState } from "../ui/empty-state";
 
 export const AuditView: React.FC = () => {
   const { auditLog } = useInventory();
@@ -146,33 +147,43 @@ export const AuditView: React.FC = () => {
       </Card>
 
       {/* Audit Log Table */}
-      <Card variant="default">
-        <CardHeader>
-          <CardTitle>Immutable Event Ledger</CardTitle>
-          <CardDescription>
-            Showing {filteredLogs.length} verified operations. Click any row to expand the technical telemetry payload.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10"></TableHead>
-                <TableHead>Timestamp</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Event Category</TableHead>
-                <TableHead>Decision Path</TableHead>
-                <TableHead>Summary Description</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredLogs.length === 0 ? (
+      {auditLog.length === 0 ? (
+        <EmptyState
+          title="No decisions yet"
+          description="Every calculation, anomaly classification, AI recommendation, and manual override is recorded here in an immutable audit ledger."
+          action={{
+            label: "Go to Recommendations",
+            to: "/recommendations",
+          }}
+        />
+      ) : (
+        <Card variant="default">
+          <CardHeader>
+            <CardTitle>Immutable Event Ledger</CardTitle>
+            <CardDescription>
+              Showing {filteredLogs.length} verified operations. Click any row to expand the technical telemetry payload.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-[#A8A29E]">
-                    No audit records found matching your filters.
-                  </TableCell>
+                  <TableHead className="w-10"></TableHead>
+                  <TableHead>Timestamp</TableHead>
+                  <TableHead>SKU</TableHead>
+                  <TableHead>Event Category</TableHead>
+                  <TableHead>Decision Path</TableHead>
+                  <TableHead>Summary Description</TableHead>
                 </TableRow>
-              ) : (
+              </TableHeader>
+              <TableBody>
+                {filteredLogs.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-12 text-[#A8A29E]">
+                      No audit records found matching your filters.
+                    </TableCell>
+                  </TableRow>
+                ) : (
                 filteredLogs.map((log) => {
                   const isExpanded = expandedId === log.id;
                   const isAi = log.decisionPath === "LLM";
@@ -258,6 +269,7 @@ export const AuditView: React.FC = () => {
           </Table>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 };

@@ -9,6 +9,8 @@ import { calculateProductPolicy } from "../../data/inventoryData";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui/table";
+import { EmptyState } from "../ui/empty-state";
+import { Skeleton } from "../ui/skeleton";
 
 function getProductCategory(sku: string): string {
   if (sku.startsWith("ORS")) return "Electrolytes";
@@ -22,15 +24,16 @@ function getProductCategory(sku: string): string {
 
 export const PrintReportView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { products, selectedProduct, serviceLevel, zValue, includeUnknowns } = useInventory();
+  const { products, selectedProduct, serviceLevel, zValue, includeUnknowns, isLoading } = useInventory();
 
   const product = useMemo(() => {
     if (!id) return selectedProduct;
-    return products.find((p) => p.sku === id) || selectedProduct;
+    return products.find((p) => p.sku === id) || null;
   }, [id, products, selectedProduct]);
 
-  const isUnknownIncluded = includeUnknowns[product.sku] ?? true;
+  const isUnknownIncluded = product ? (includeUnknowns[product.sku] ?? true) : true;
   const policy = useMemo(() => {
+    if (!product) return null;
     return calculateProductPolicy(product, serviceLevel, isUnknownIncluded);
   }, [product, serviceLevel, isUnknownIncluded]);
 
@@ -43,6 +46,43 @@ export const PrintReportView: React.FC = () => {
     month: "long",
     day: "numeric",
   });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#FAFAF9] dark:bg-[#0C0A09] p-6 sm:p-12">
+        <div className="max-w-4xl mx-auto space-y-8">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-80 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!product || !policy) {
+    return (
+      <div className="min-h-screen bg-[#FAFAF9] dark:bg-[#0C0A09] p-6 sm:p-12">
+        <div className="max-w-4xl mx-auto">
+          <EmptyState
+            title="Product Not Found"
+            description={
+              id
+                ? `No inventory product was found with identifier "${id}".`
+                : "No product is currently selected and the database contains no inventory records."
+            }
+            action={{
+              label: "Return to Products Directory",
+              to: "/products",
+            }}
+            secondaryAction={{
+              label: "Onboard Products in Setup",
+              to: "/setup",
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   const category = getProductCategory(product.sku);
 

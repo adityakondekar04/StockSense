@@ -50,7 +50,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
               )}
 
               {/* Limited history warning (<28 days) */}
-              {selectedProduct.historyDays < 28 && (
+              {selectedProduct && selectedProduct.historyDays < 28 && (
                 <div className="bg-[#FEFCE8] dark:bg-[#713F12]/20 border border-[#FEF08A] dark:border-[#A16207]/40 p-3.5 flex items-start gap-3 text-xs text-[#CA8A04] dark:text-[#FDE047]">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <div>
@@ -61,7 +61,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
               )}
 
               {/* Intermittent demand alert */}
-              {selectedProduct.isIntermittent && (
+              {selectedProduct && selectedProduct.isIntermittent && (
                 <div className="bg-[#FEFCE8] dark:bg-[#713F12]/20 border border-[#FEF08A] dark:border-[#A16207]/40 p-3.5 flex items-start gap-3 text-xs text-[#CA8A04] dark:text-[#FDE047]">
                   <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
                   <div>

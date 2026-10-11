@@ -21,6 +21,8 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Badge, FilterChip } from "../ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui/table";
+import { EmptyState } from "../ui/empty-state";
+import { Skeleton } from "../ui/skeleton";
 
 function getProductCategory(sku: string): string {
   if (sku.startsWith("ORS")) return "Electrolytes";
@@ -38,6 +40,8 @@ export const ProductsDirectoryView: React.FC = () => {
     serviceLevel,
     includeUnknowns,
     setSelectedProductId,
+    isLoading,
+    loadDemoData,
   } = useInventory();
 
   const navigate = useNavigate();
@@ -276,10 +280,51 @@ export const ProductsDirectoryView: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredRows.length === 0 ? (
+              {isLoading ? (
+                [1, 2, 3, 4, 5].map((i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-4 w-12 ml-auto" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-4 w-10 ml-auto" /></TableCell>
+                    <TableCell className="text-center"><Skeleton className="h-5 w-20 mx-auto" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-7 w-20 ml-auto" /></TableCell>
+                  </TableRow>
+                ))
+              ) : products.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12 text-[#A8A29E]">
-                    No matching products found. Try adjusting your search query or filters.
+                  <TableCell colSpan={8} className="p-8">
+                    <EmptyState
+                      title="Inventory Catalog is Empty"
+                      description="No products exist in your catalog. Ingest sample clinical benchmark data or add products manually to start managing inventory replenishment."
+                      action={{
+                        label: "Load Demo Products",
+                        onClick: () => loadDemoData(),
+                      }}
+                      secondaryAction={{
+                        label: "Add Product Manually",
+                        to: "/setup/manual",
+                      }}
+                    />
+                  </TableCell>
+                </TableRow>
+              ) : filteredRows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="p-8">
+                    <EmptyState
+                      title="No Matching Products Found"
+                      description="No catalog items matched your filter or search query. Try clearing filters or searching by a different SKU."
+                      action={{
+                        label: "Reset Search & Filters",
+                        onClick: () => {
+                          setSearchQuery("");
+                          setCategoryFilter("ALL");
+                          setStatusFilter("ALL");
+                        },
+                      }}
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

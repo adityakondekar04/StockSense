@@ -17,6 +17,7 @@ import {
   Award,
   ArrowRight,
   Info,
+  AlertTriangle,
 } from "lucide-react";
 import { useInventory } from "../../context/InventoryContext";
 import { generateForecastData } from "../../data/inventoryData";
@@ -24,14 +25,28 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui/table";
+import { EmptyState } from "../ui/empty-state";
+import { Skeleton } from "../ui/skeleton";
 
 export const ForecastView: React.FC = () => {
-  const { selectedProduct, salesHistory } = useInventory();
+  const { selectedProduct, salesHistory, isLoading, loadDemoData } = useInventory();
 
   // Generate real forecast data using data/inventoryData
-  const { points, metrics } = useMemo(() => {
+  const forecastData = useMemo(() => {
+    if (!selectedProduct) return null;
     return generateForecastData(selectedProduct, salesHistory);
   }, [selectedProduct, salesHistory]);
+
+  const points = forecastData?.points ?? [];
+  const metrics = forecastData?.metrics ?? {
+    maeBaseline: 0,
+    maeModel: 0,
+    wapeBaseline: 0,
+    wapeModel: 0,
+    biasBaseline: 0,
+    biasModel: 0,
+    winner: "baseline" as const,
+  };
 
   // Extract only holdout window for the holdout evaluation chart
   const holdoutChartData = useMemo(() => {
@@ -45,7 +60,57 @@ export const ForecastView: React.FC = () => {
       }));
   }, [points]);
 
+  const holdoutDaysCount = holdoutChartData.length;
+  const holdoutActualsSum = holdoutChartData.reduce((sum, p) => sum + p.actual, 0);
+  const isHoldoutTooShort = holdoutDaysCount < 14;
+  const isActualsSumZero = holdoutActualsSum === 0;
+
+  const displayModelWape = isActualsSumZero ? "n/a" : `${metrics.wapeModel}%`;
+  const displayBaselineWape = isActualsSumZero ? "n/a" : `${metrics.wapeBaseline}%`;
+
   const seasonalWins = metrics.winner === "model";
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8 animate-fadeIn">
+        <div className="border-b border-[#E7E5E4] dark:border-[#292524] pb-6 space-y-2">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-8 w-80" />
+          <Skeleton className="h-4 w-full max-w-xl" />
+        </div>
+        <Skeleton className="h-28 w-full" />
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-80 w-full" />
+      </div>
+    );
+  }
+
+  if (!selectedProduct || !forecastData) {
+    return (
+      <div className="space-y-8 animate-fadeIn">
+        <div className="border-b border-[#E7E5E4] dark:border-[#292524] pb-6">
+          <span className="font-mono text-[11px] uppercase tracking-widest text-[#78716C] dark:text-[#A8A29E]">
+            Data Intelligence · Step 3
+          </span>
+          <h1 className="font-serif text-3xl font-bold text-[#1C1917] dark:text-[#FAFAF9] tracking-tight mt-1">
+            Out-of-Sample Forecast Evaluation
+          </h1>
+        </div>
+        <EmptyState
+          title="No Product Selected"
+          description="Select an inventory item from the top bar or load benchmark datasets to inspect out-of-sample forecast validation."
+          action={{
+            label: "Onboard Products in Setup",
+            to: "/setup",
+          }}
+          secondaryAction={{
+            label: "Reset Official Demo Data",
+            onClick: () => { void loadDemoData(); },
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -72,6 +137,14 @@ export const ForecastView: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {/* Short Holdout Alert */}
+      {isHoldoutTooShort && (
+        <div className="p-4 bg-[#FEF3C7] dark:bg-[#78350F]/30 border border-[#F59E0B] text-xs font-mono text-[#92400E] dark:text-[#FDE68A] flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>Holdout window is under 14 days ({holdoutDaysCount} days available) — too short to judge model superiority reliably.</span>
+        </div>
+      )}
 
       {/* Honest Model Champion Strip */}
       <Card variant="elevated">
@@ -103,7 +176,7 @@ export const ForecastView: React.FC = () => {
                 Winning Model WAPE
               </div>
               <div className="font-mono text-3xl font-bold text-[#1C1917] dark:text-[#FAFAF9]">
-                {seasonalWins ? metrics.wapeModel : metrics.wapeBaseline}%
+                {seasonalWins ? displayModelWape : displayBaselineWape}
               </div>
               <div className="text-[11px] font-mono text-[#78716C] dark:text-[#A8A29E]">
                 MAE: {seasonalWins ? metrics.maeModel : metrics.maeBaseline} units
@@ -145,7 +218,7 @@ export const ForecastView: React.FC = () => {
                   </div>
                 </TableCell>
                 <TableCell className="text-right font-mono font-bold">
-                  {metrics.wapeModel}%
+                  {displayModelWape}
                 </TableCell>
                 <TableCell className="text-right font-mono">
                   {metrics.maeModel}
@@ -178,7 +251,7 @@ export const ForecastView: React.FC = () => {
                   </div>
                 </TableCell>
                 <TableCell className="text-right font-mono font-bold">
-                  {metrics.wapeBaseline}%
+                  {displayBaselineWape}
                 </TableCell>
                 <TableCell className="text-right font-mono">
                   {metrics.maeBaseline}
@@ -290,15 +363,25 @@ export const ForecastView: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Methodological Transparency Note */}
-      <Card variant="flat">
-        <CardContent className="p-4 flex items-start gap-3 text-xs text-[#57534E] dark:text-[#A8A29E]">
-          <Info className="w-4 h-4 text-[#78716C] shrink-0 mt-0.5" />
-          <div>
-            <strong className="font-semibold text-[#1C1917] dark:text-[#FAFAF9]">Zero Data Leakage Guarantee:</strong> All anomaly treatment medians, weekday indices, and variance estimators were calculated strictly from days 1 to 120. At test time, predictions for day $t$ only utilize observations from days $\le t-1$.
-          </div>
-        </CardContent>
-      </Card>
+      {/* Methodological Transparency Notes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card variant="flat">
+          <CardContent className="p-4 flex items-start gap-3 text-xs text-[#57534E] dark:text-[#A8A29E]">
+            <Info className="w-4 h-4 text-[#78716C] shrink-0 mt-0.5" />
+            <div>
+              <strong className="font-semibold text-[#1C1917] dark:text-[#FAFAF9]">Honesty Note:</strong> Selecting on the same holdout slightly flatters the winner. Holdout is {holdoutDaysCount} days.
+            </div>
+          </CardContent>
+        </Card>
+        <Card variant="flat">
+          <CardContent className="p-4 flex items-start gap-3 text-xs text-[#57534E] dark:text-[#A8A29E]">
+            <Info className="w-4 h-4 text-[#78716C] shrink-0 mt-0.5" />
+            <div>
+              <strong className="font-semibold text-[#1C1917] dark:text-[#FAFAF9]">Zero Leakage Guarantee:</strong> All thresholds and parameters were fitted on the training window only.
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

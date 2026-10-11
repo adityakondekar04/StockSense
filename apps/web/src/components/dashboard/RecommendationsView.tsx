@@ -20,6 +20,8 @@ import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Badge, FilterChip } from "../ui/badge";
+import { EmptyState } from "../ui/empty-state";
+import { Skeleton } from "../ui/skeleton";
 
 function getProductCategory(sku: string): string {
   if (sku.startsWith("ORS")) return "Electrolytes";
@@ -39,6 +41,10 @@ export const RecommendationsView: React.FC = () => {
     aiEnabled,
     includeUnknowns,
     setSelectedProductId,
+    isLoading,
+    loadDemoData,
+    serverError,
+    refreshProducts,
   } = useInventory();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -152,6 +158,64 @@ export const RecommendationsView: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {serverError && (
+        <div className="p-4 bg-[#FEF2F2] dark:bg-[#7F1D1D]/30 border border-[#F87171] dark:border-[#DC2626] text-xs font-mono text-[#991B1B] dark:text-[#FCA5A5] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>Connection error: {serverError}. Operating in local cache fallback mode.</span>
+          </div>
+          <Button variant="secondary" size="sm" onClick={() => void refreshProducts()} className="font-mono text-xs">
+            Retry Connection
+          </Button>
+        </div>
+      )}
+
+      {/* Loading Skeletons */}
+      {isLoading && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="p-5 border border-[#E7E5E4] dark:border-[#292524] bg-white dark:bg-[#1C1917] space-y-2">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-8 w-14" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="p-6 border border-[#E7E5E4] dark:border-[#292524] bg-white dark:bg-[#1C1917] space-y-4">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-48" />
+                <div className="grid grid-cols-2 gap-2 pt-4">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Empty Database State */}
+      {!isLoading && products.length === 0 && (
+        <EmptyState
+          icon={Package}
+          title="Inventory Catalog is Empty"
+          description="No products exist in your database. Load the official benchmark dataset or ingest CSV files to begin computing replenishment policies."
+          action={{
+            label: "Load Official Demo Dataset",
+            onClick: () => loadDemoData(),
+            icon: Plus,
+          }}
+          secondaryAction={{
+            label: "Go to Setup & Upload CSV",
+            to: "/setup",
+          }}
+          className="my-8"
+        />
+      )}
 
       {/* KPI Overview Strip - Large ink numbers, flat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -285,9 +349,19 @@ export const RecommendationsView: React.FC = () => {
       {/* Recommendations Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCards.length === 0 ? (
-          <div className="col-span-full text-center py-16 border border-[#E7E5E4] dark:border-[#292524] bg-white dark:bg-[#1C1917]">
-            <p className="font-serif text-lg text-[#1C1917] dark:text-[#FAFAF9]">No products match current criteria</p>
-            <p className="text-sm text-[#78716C] dark:text-[#A8A29E] mt-1">Try resetting search or status filters.</p>
+          <div className="col-span-full">
+            <EmptyState
+              icon={Search}
+              title="No Products Match Current Criteria"
+              description={`No catalog items match your search "${searchQuery || statusFilter}". Try adjusting your keywords or clearing the status filter.`}
+              action={{
+                label: "Clear All Filters",
+                onClick: () => {
+                  setSearchQuery("");
+                  setStatusFilter("ALL");
+                },
+              }}
+            />
           </div>
         ) : (
           filteredCards.map((card) => {

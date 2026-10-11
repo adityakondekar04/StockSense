@@ -16,12 +16,16 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui/table";
 import { Input } from "../ui/input";
+import { EmptyState } from "../ui/empty-state";
+import { Skeleton } from "../ui/skeleton";
 
 export const ScenarioView: React.FC = () => {
   const {
     selectedProduct,
     serviceLevel,
     aiEnabled,
+    isLoading,
+    loadDemoData,
   } = useInventory();
 
   // Stress sliders state
@@ -35,6 +39,7 @@ export const ScenarioView: React.FC = () => {
 
   // Run simulation using core pure math
   const sim = useMemo(() => {
+    if (!selectedProduct) return null;
     return simulateProductScenario(
       selectedProduct,
       serviceLevel,
@@ -42,8 +47,6 @@ export const ScenarioView: React.FC = () => {
       leadDelayDays
     );
   }, [selectedProduct, serviceLevel, demandSurgePct, leadDelayDays]);
-
-  const { baseRec, baseCost, scenarioInput, scenarioRec, scenarioCost, oldRisk, mcSim } = sim;
 
   // Handle Natural Language scenario parsing (deterministic fallback if AI disabled)
   const handleParseScenario = () => {
@@ -85,6 +88,49 @@ export const ScenarioView: React.FC = () => {
     setNaturalLanguageInput("");
     setNlpFeedback(null);
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8 animate-fadeIn">
+        <div className="border-b border-[#E7E5E4] dark:border-[#292524] pb-6 space-y-2">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-8 w-80" />
+          <Skeleton className="h-4 w-full max-w-xl" />
+        </div>
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-72 w-full" />
+      </div>
+    );
+  }
+
+  if (!selectedProduct || !sim) {
+    return (
+      <div className="space-y-8 animate-fadeIn">
+        <div className="border-b border-[#E7E5E4] dark:border-[#292524] pb-6">
+          <span className="font-mono text-[11px] uppercase tracking-widest text-[#78716C] dark:text-[#A8A29E]">
+            Operations &amp; Stress Testing · Step 5
+          </span>
+          <h1 className="font-serif text-3xl font-bold text-[#1C1917] dark:text-[#FAFAF9] tracking-tight mt-1">
+            Scenario Stress Simulation Lab
+          </h1>
+        </div>
+        <EmptyState
+          title="No Product Selected"
+          description="Select an inventory item from the top bar or load benchmark datasets to test stress scenarios and what-if simulations."
+          action={{
+            label: "Onboard Products in Setup",
+            to: "/setup",
+          }}
+          secondaryAction={{
+            label: "Reset Official Demo Data",
+            onClick: () => { void loadDemoData(); },
+          }}
+        />
+      </div>
+    );
+  }
+
+  const { baseRec, baseCost, scenarioInput, scenarioRec, scenarioCost, oldRisk, mcSim } = sim;
 
   return (
     <div className="space-y-8 animate-fadeIn">

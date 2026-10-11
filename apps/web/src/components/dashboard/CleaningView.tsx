@@ -25,6 +25,8 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui/table";
 import { Input } from "../ui/input";
+import { EmptyState } from "../ui/empty-state";
+import { Skeleton } from "../ui/skeleton";
 
 export const CleaningView: React.FC = () => {
   const {
@@ -37,27 +39,32 @@ export const CleaningView: React.FC = () => {
     confirmAnomaly,
     overrideAnomaly,
     addAnomalyNote,
+    isLoading,
+    loadDemoData,
   } = useInventory();
 
   const [showTable, setShowTable] = useState(false);
   const [selectedAnomalyId, setSelectedAnomalyId] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState("");
 
-  const isUnknownsIncluded = includeUnknowns[selectedProduct.sku] ?? true;
+  const isUnknownsIncluded = selectedProduct ? (includeUnknowns[selectedProduct.sku] ?? true) : true;
 
   // Compute ROP with and without unknowns
   const withUnknownsPolicy = useMemo(() => {
+    if (!selectedProduct) return null;
     return calculateProductPolicy(selectedProduct, serviceLevel, true);
   }, [selectedProduct, serviceLevel]);
 
   const withoutUnknownsPolicy = useMemo(() => {
+    if (!selectedProduct) return null;
     return calculateProductPolicy(selectedProduct, serviceLevel, false);
   }, [selectedProduct, serviceLevel]);
 
   // Product specific anomalies
   const productAnomalies = useMemo(() => {
+    if (!selectedProduct) return [];
     return anomalies.filter((a) => a.sku === selectedProduct.sku);
-  }, [anomalies, selectedProduct.sku]);
+  }, [anomalies, selectedProduct]);
 
   // Chart data formatting
   const chartData = useMemo(() => {
@@ -90,6 +97,48 @@ export const CleaningView: React.FC = () => {
       setNoteInput("");
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8 animate-fadeIn">
+        <div className="border-b border-[#E7E5E4] dark:border-[#292524] pb-6 space-y-2">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-8 w-80" />
+          <Skeleton className="h-4 w-full max-w-xl" />
+        </div>
+        <Skeleton className="h-28 w-full" />
+        <Skeleton className="h-80 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  if (!selectedProduct || !withUnknownsPolicy || !withoutUnknownsPolicy) {
+    return (
+      <div className="space-y-8 animate-fadeIn">
+        <div className="border-b border-[#E7E5E4] dark:border-[#292524] pb-6">
+          <span className="font-mono text-[11px] uppercase tracking-widest text-[#78716C] dark:text-[#A8A29E]">
+            Data Intelligence · Step 2
+          </span>
+          <h1 className="font-serif text-3xl font-bold text-[#1C1917] dark:text-[#FAFAF9] tracking-tight mt-1">
+            Data Cleaning &amp; Anomaly Review
+          </h1>
+        </div>
+        <EmptyState
+          title="No Product Selected"
+          description="Select an inventory item from the top bar or load benchmark datasets to inspect historical sales and anomalies."
+          action={{
+            label: "Onboard Products in Setup",
+            to: "/setup",
+          }}
+          secondaryAction={{
+            label: "Reset Official Demo Data",
+            onClick: () => { void loadDemoData(); },
+          }}
+        />
+      </div>
+    );
+  }
 
   const deltaRop = withUnknownsPolicy.rec.ropOperational - withoutUnknownsPolicy.rec.ropOperational;
 
@@ -327,8 +376,18 @@ export const CleaningView: React.FC = () => {
             <TableBody>
               {productAnomalies.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-[#A8A29E]">
-                    No outliers detected in the observation history for this SKU.
+                  <TableCell colSpan={8} className="text-center py-12 text-[#A8A29E]">
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <div className="w-8 h-8 rounded-none bg-[#DCFCE7] dark:bg-[#166534]/50 text-[#15803D] dark:text-[#86EFAC] flex items-center justify-center">
+                        <CheckCircle2 className="w-4 h-4" />
+                      </div>
+                      <span className="font-serif font-bold text-sm text-[#1C1917] dark:text-[#FAFAF9]">
+                        Zero Outliers Detected
+                      </span>
+                      <span className="text-xs text-[#78716C] dark:text-[#A8A29E] max-w-sm">
+                        All observed daily sales fall safely within normal statistical variance (|z| ≤ 3.5). No adjustments required.
+                      </span>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (

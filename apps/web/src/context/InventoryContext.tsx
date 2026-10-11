@@ -17,7 +17,7 @@ import {
 
 interface InventoryContextType {
   products: ProductRecord[];
-  selectedProduct: ProductRecord;
+  selectedProduct: ProductRecord | null;
   selectedProductId: string;
   setSelectedProductId: (id: string) => void;
   serviceLevel: number;
@@ -39,6 +39,8 @@ interface InventoryContextType {
   addProduct: (product: Omit<ProductRecord, "id" | "historyDays">, dailyDemands?: number[]) => ProductRecord;
   serverOnline: boolean;
   serverError: string | null;
+  isLoading: boolean;
+  refreshProducts: () => Promise<void>;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -88,14 +90,14 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [auditLog, setAuditLog] = useState<AuditRecord[]>(INITIAL_AUDIT_LOG);
   const [serverOnline, setServerOnline] = useState<boolean>(true);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Sync products with API on mount, with graceful fallback
-  useEffect(() => {
-    let cancelled = false;
-    async function init() {
-      try {
-        const remoteProds = await apiClient.getProducts();
-        if (!cancelled && Array.isArray(remoteProds) && remoteProds.length > 0) {
+  const fetchRemoteProducts = async () => {
+    setIsLoading(true);
+    try {
+      const remoteProds = await apiClient.getProducts();
+      if (Array.isArray(remoteProds)) {
+        if (remoteProds.length > 0) {
           setProducts((prev) => {
             return remoteProds.map((rp: any) => {
               const local = prev.find((p) => p.sku === rp.sku);
@@ -121,20 +123,24 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
               };
             });
           });
-          setServerOnline(true);
-          setServerError(null);
+          if (!remoteProds.some((p: any) => p.id === selectedProductId)) {
+            setSelectedProductIdState(remoteProds[0].id);
+          }
         }
-      } catch (err: any) {
-        if (!cancelled) {
-          setServerOnline(false);
-          setServerError(err?.message || "Cannot reach the server.");
-        }
+        setServerOnline(true);
+        setServerError(null);
       }
+    } catch (err: any) {
+      setServerOnline(false);
+      setServerError(err?.message || "Cannot reach the server.");
+    } finally {
+      setIsLoading(false);
     }
-    init();
-    return () => {
-      cancelled = true;
-    };
+  };
+
+  // Sync products with API on mount, with graceful fallback
+  useEffect(() => {
+    fetchRemoteProducts();
   }, []);
 
   // Compute z from packages/core
@@ -193,8 +199,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     });
   };
 
-  const selectedProduct = useMemo(() => {
-    return products.find((p) => p.id === selectedProductId) || products[0] || OFFICIAL_DEMO_PRODUCTS[0];
+  const selectedProduct = useMemo<ProductRecord | null>(() => {
+    if (products.length === 0) return null;
+    return products.find((p) => p.id === selectedProductId) || products[0] || null;
   }, [products, selectedProductId]);
 
   const getSalesForProduct = (productId: string) => {
@@ -202,8 +209,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
   };
 
   const salesHistory = useMemo(() => {
+    if (!selectedProduct) return [];
     return getSalesForProduct(selectedProduct.id);
-  }, [selectedProduct.id, salesMap]);
+  }, [selectedProduct, salesMap]);
 
   // Actions for Anomaly Review
   const confirmAnomaly = (id: string) => {
@@ -374,6 +382,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
         addProduct,
         serverOnline,
         serverError,
+        isLoading,
+        refreshProducts: fetchRemoteProducts,
       }}
     >
       {children}
