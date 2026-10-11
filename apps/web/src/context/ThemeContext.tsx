@@ -16,7 +16,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 function getInitialTheme(): ThemeMode {
   if (typeof window !== "undefined") {
     try {
-      const saved = localStorage.getItem("stocksense_theme");
+      const saved = localStorage.getItem("stocksense_theme_v3");
       if (saved === "dark") {
         return "dark";
       }
@@ -38,11 +38,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const root = document.documentElement;
     if (theme === "dark") {
       root.classList.add("dark");
+      root.classList.remove("light");
     } else {
       root.classList.remove("dark");
+      root.classList.add("light");
     }
     try {
-      localStorage.setItem("stocksense_theme", theme);
+      localStorage.setItem("stocksense_theme_v3", theme);
     } catch {
       // ignore storage errors
     }

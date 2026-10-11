@@ -10,7 +10,7 @@ export interface ApiError {
 export class StockSenseApiClient {
   private baseUrl: string;
 
-  constructor(baseUrl = import.meta.env.VITE_API_BASE_URL || "/api") {
+  constructor(baseUrl = (import.meta as any).env?.VITE_API_BASE_URL || "/api") {
     this.baseUrl = baseUrl;
   }
 
