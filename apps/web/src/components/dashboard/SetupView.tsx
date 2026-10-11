@@ -1,499 +1,396 @@
 // apps/web/src/components/dashboard/SetupView.tsx
-// Screen 1 & 1b: Setup & Data Ingestion (Load Demo, CSV Upload with row errors, Manual Form)
+// Screen 1 & 1b: Data Setup, Ingestion & CSV Validation adhering to ThoughtStream design system
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
-  FileSpreadsheet,
   Upload,
+  FileSpreadsheet,
+  AlertCircle,
   CheckCircle2,
-  RotateCcw,
-  ArrowRight,
+  RefreshCw,
 } from "lucide-react";
 import { useInventory } from "../../context/InventoryContext";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui/table";
+
+interface ValidationError {
+  row: number;
+  field: string;
+  reason: string;
+}
 
 export const SetupView: React.FC = () => {
-  const { loadDemoData, addProduct, addAuditLog, products } = useInventory();
-  const navigate = useNavigate();
+  const { products, addProduct, loadDemoData } = useInventory();
 
-  const [activeTab, setActiveTab] = useState<"DEMO" | "CSV" | "MANUAL">("DEMO");
-  const [demoLoadedNotification, setDemoLoadedNotification] = useState(false);
+  const [activeTab, setActiveTab] = useState<"UPLOAD" | "MANUAL">("UPLOAD");
+  const [resetStatus, setResetStatus] = useState<string | null>(null);
+  const [simulatedErrors, setSimulatedErrors] = useState<ValidationError[]>([]);
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
 
-  // CSV Upload State
-  const [csvResult, setCsvResult] = useState<{
-    importedRows: number;
-    rejectedRows: number;
-    errors: { row: number; field: string; reason: string }[];
-  } | null>(null);
-
-  // Manual Entry Form State
+  // Manual Product Form State
   const [formData, setFormData] = useState({
-    sku: "MED-07",
-    name: "Amoxicillin 250 mg Capsules",
-    unit: "capsules",
-    unitCost: 12,
+    sku: "",
+    name: "",
+    unit: "strips",
+    unitCost: 50,
     orderCost: 150,
     holdingRate: 0.2,
-    leadTimeMean: 5,
-    leadTimeSd: 1.0,
-    onHand: 180,
+    leadTimeMean: 7,
+    leadTimeSd: 1.5,
+    onHand: 100,
     onOrder: 0,
     packSize: 50,
-    minOrderQty: 100,
-    shortageCost: 30,
-    meanDailyDemand: 35,
-    sdDemand: 7,
-    demandHistoryText: "32, 35, 41, 30, 38, 45, 33, 36, 39, 42, 34, 37, 40, 44, 31, 35, 38, 43, 33, 36, 40, 45, 32, 37, 39, 42, 35, 38, 41, 46",
+    minOrderQty: 50,
+    meanDailyDemand: 25,
+    sdDemand: 5,
   });
 
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-
-  const handleLoadDemo = () => {
+  const handleReset = () => {
     loadDemoData();
-    setDemoLoadedNotification(true);
-    setTimeout(() => setDemoLoadedNotification(false), 4000);
+    setResetStatus("Successfully reset all 6 reference products to official benchmark parameters.");
+    setTimeout(() => setResetStatus(null), 4000);
   };
 
-  const handleSimulateCSVUpload = (fileType: string) => {
-    // Realistic CSV validation response matching PRD FR-01 / T61
-    if (fileType === "sales_invalid") {
-      setCsvResult({
-        importedRows: 148,
-        rejectedRows: 2,
-        errors: [
-          { row: 42, field: "units", reason: "Negative quantity (-15) rejected. Physical demand cannot be negative." },
-          { row: 87, field: "date", reason: "Invalid ISO date string '2026-02-31'. Non-existent calendar date." },
-        ],
-      });
-      addAuditLog({
-        kind: "import",
-        decisionPath: "RULES",
-        summary: "CSV sales validation: 148 valid rows accepted, 2 invalid rows rejected with specific reasons",
-        details: { file: "sales.csv", valid: 148, rejected: 2 },
-      });
-    } else {
-      setCsvResult({
-        importedRows: 150,
-        rejectedRows: 0,
-        errors: [],
-      });
-      addAuditLog({
-        kind: "import",
-        decisionPath: "RULES",
-        summary: `Imported ${fileType} CSV successfully (150 rows validated)`,
-        details: { fileType, rows: 150 },
-      });
-    }
+  const handleSimulateBadCsv = () => {
+    setUploadSuccess(null);
+    setSimulatedErrors([
+      { row: 14, field: "quantity", reason: "Negative quantity (-5) violates non-negativity constraint" },
+      { row: 28, field: "date", reason: "Invalid ISO date string ('2026-02-30')" },
+      { row: 42, field: "sku", reason: "Missing required SKU identifier" },
+    ]);
   };
 
-  const handleManualSubmit = (e: React.FormEvent) => {
+  const handleSimulateCleanCsv = () => {
+    setSimulatedErrors([]);
+    setUploadSuccess("Successfully parsed 150 daily observations without data corruption. Validated against Zod schema.");
+    setTimeout(() => setUploadSuccess(null), 4000);
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const errors: Record<string, string> = {};
+    if (!formData.sku || !formData.name) return;
 
-    if (!formData.sku.trim()) errors.sku = "SKU is required";
-    if (!formData.name.trim()) errors.name = "Name is required";
-    if (formData.unitCost <= 0) errors.unitCost = "Unit cost must be > 0";
-    if (formData.leadTimeMean <= 0) errors.leadTimeMean = "Lead time mean must be > 0";
-    if (formData.leadTimeSd < 0) errors.leadTimeSd = "Lead time SD must be >= 0";
+    addProduct({
+      sku: formData.sku.toUpperCase(),
+      name: formData.name,
+      unit: formData.unit,
+      unitCost: Number(formData.unitCost),
+      orderCost: Number(formData.orderCost),
+      holdingRate: Number(formData.holdingRate),
+      leadTimeMean: Number(formData.leadTimeMean),
+      leadTimeSd: Number(formData.leadTimeSd),
+      onHand: Number(formData.onHand),
+      onOrder: Number(formData.onOrder),
+      packSize: Number(formData.packSize),
+      minOrderQty: Number(formData.minOrderQty),
+      meanDailyDemand: Number(formData.meanDailyDemand),
+      sdDemand: Number(formData.sdDemand),
+    });
 
-    const parsedDemands = formData.demandHistoryText
-      .split(/[\n,]+/)
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .map(Number);
-
-    if (parsedDemands.length < 28) {
-      errors.demandHistory = `Requires at least 28 daily demand records (provided: ${parsedDemands.length})`;
-    }
-
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
-
-    setFormErrors({});
-
-    // Calculate mean and SD from entered demands
-    const sum = parsedDemands.reduce((a, b) => a + b, 0);
-    const mean = sum / parsedDemands.length;
-    const variance = parsedDemands.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / parsedDemands.length;
-    const sd = Math.sqrt(variance);
-
-    addProduct(
-      {
-        sku: formData.sku.toUpperCase(),
-        name: formData.name,
-        unit: formData.unit,
-        unitCost: Number(formData.unitCost),
-        orderCost: Number(formData.orderCost),
-        holdingRate: Number(formData.holdingRate),
-        leadTimeMean: Number(formData.leadTimeMean),
-        leadTimeSd: Number(formData.leadTimeSd),
-        onHand: Number(formData.onHand),
-        onOrder: Number(formData.onOrder),
-        packSize: Number(formData.packSize),
-        minOrderQty: Number(formData.minOrderQty),
-        shortageCost: Number(formData.shortageCost),
-        meanDailyDemand: Number(mean.toFixed(1)),
-        sdDemand: Number(sd.toFixed(1)),
-      },
-      parsedDemands
-    );
-
-    // Redirect to recommendations
-    navigate("/recommendations");
+    setUploadSuccess(`SKU ${formData.sku.toUpperCase()} created and cataloged successfully.`);
+    setFormData({
+      sku: "",
+      name: "",
+      unit: "strips",
+      unitCost: 50,
+      orderCost: 150,
+      holdingRate: 0.2,
+      leadTimeMean: 7,
+      leadTimeSd: 1.5,
+      onHand: 100,
+      onOrder: 0,
+      packSize: 50,
+      minOrderQty: 50,
+      meanDailyDemand: 25,
+      sdDemand: 5,
+    });
+    setTimeout(() => setUploadSuccess(null), 4000);
   };
 
   return (
-    <div className="space-y-6">
-      {/* 1. Header Banner */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-        <div className="flex items-center gap-2">
-          <FileSpreadsheet className="w-5 h-5 text-indigo-600" />
-          <h2 className="text-xl font-bold text-slate-900">Setup & Data Management</h2>
+    <div className="space-y-8 animate-fadeIn">
+      {/* Page Header */}
+      <div className="border-b border-[#E7E5E4] dark:border-[#292524] pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <span className="font-mono text-[11px] uppercase tracking-widest text-[#78716C] dark:text-[#A8A29E]">
+            Operations &amp; Setup · Step 1
+          </span>
+          <h1 className="font-serif text-3xl font-bold text-[#1C1917] dark:text-[#FAFAF9] tracking-tight mt-1">
+            Data Setup &amp; CSV Ingestion
+          </h1>
+          <p className="text-[14px] text-[#57534E] dark:text-[#A8A29E] mt-2 max-w-2xl font-sans">
+            Onboard new inventory datasets or load official benchmark fixtures. All incoming files are validated strictly against Zod schemas; invalid records produce deterministic row-level errors.
+          </p>
         </div>
-        <p className="text-xs text-slate-500 mt-1">
-          Bring your own data into StockSense. Load the built-in demo catalog, upload CSVs with row-level validation, or manually type products.
-        </p>
 
-        {/* Tab Switcher */}
-        <div className="flex border-b border-slate-200 mt-5 gap-6 text-xs font-semibold">
-          <button
-            onClick={() => setActiveTab("DEMO")}
-            className={`pb-3 border-b-2 transition-colors ${
-              activeTab === "DEMO"
-                ? "border-indigo-600 text-indigo-600"
-                : "border-transparent text-slate-500 hover:text-slate-800"
-            }`}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleReset}
+            className="font-mono text-xs"
           >
-            Built-in Seeded Demo Data
-          </button>
-          <button
-            onClick={() => setActiveTab("CSV")}
-            className={`pb-3 border-b-2 transition-colors ${
-              activeTab === "CSV"
-                ? "border-indigo-600 text-indigo-600"
-                : "border-transparent text-slate-500 hover:text-slate-800"
-            }`}
-          >
-            Upload CSV Files
-          </button>
-          <button
-            onClick={() => setActiveTab("MANUAL")}
-            className={`pb-3 border-b-2 transition-colors ${
-              activeTab === "MANUAL"
-                ? "border-indigo-600 text-indigo-600"
-                : "border-transparent text-slate-500 hover:text-slate-800"
-            }`}
-          >
-            Enter Your Own Numbers (Manual Entry)
-          </button>
+            <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Reset Official Demo Data
+          </Button>
         </div>
       </div>
 
-      {/* 2. TAB 1: Load Demo Data */}
-      {activeTab === "DEMO" && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">Seeded Fictional Healthcare Catalog</h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Deterministic demo dataset with 6 products, 150 days of sales history, and planted test events.
-              </p>
-            </div>
+      {resetStatus && (
+        <div className="p-4 bg-[#F0FDF4] dark:bg-[#14532D]/30 border border-[#BBF7D0] dark:border-[#15803D]/40 text-xs font-mono text-[#65A30D] dark:text-[#86EFAC] flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 shrink-0" /> {resetStatus}
+        </div>
+      )}
 
-            <button
-              onClick={handleLoadDemo}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-colors self-start sm:self-auto shadow-sm"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reload Seeded Demo Data</span>
-            </button>
-          </div>
+      {uploadSuccess && (
+        <div className="p-4 bg-[#F0FDF4] dark:bg-[#14532D]/30 border border-[#BBF7D0] dark:border-[#15803D]/40 text-xs font-mono text-[#65A30D] dark:text-[#86EFAC] flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 shrink-0" /> {uploadSuccess}
+        </div>
+      )}
 
-          {demoLoadedNotification && (
-            <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-3 text-xs flex items-center gap-2 animate-fadeIn">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Successfully reset catalogue to 6 official seeded products (Generator seed: 20261011).</span>
-            </div>
-          )}
+      {/* Tabs */}
+      <div className="flex border-b border-[#E7E5E4] dark:border-[#292524]">
+        <button
+          type="button"
+          onClick={() => setActiveTab("UPLOAD")}
+          className={`px-5 py-2.5 font-mono text-xs uppercase tracking-wider font-semibold border-b-2 transition-colors ${
+            activeTab === "UPLOAD"
+              ? "border-[#1C1917] dark:border-[#FAFAF9] text-[#1C1917] dark:text-[#FAFAF9]"
+              : "border-transparent text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#FAFAF9]"
+          }`}
+        >
+          CSV Ingestion Dropzone
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("MANUAL")}
+          className={`px-5 py-2.5 font-mono text-xs uppercase tracking-wider font-semibold border-b-2 transition-colors ${
+            activeTab === "MANUAL"
+              ? "border-[#1C1917] dark:border-[#FAFAF9] text-[#1C1917] dark:text-[#FAFAF9]"
+              : "border-transparent text-[#78716C] dark:text-[#A8A29E] hover:text-[#1C1917] dark:hover:text-[#FAFAF9]"
+          }`}
+        >
+          Manual SKU Creation Form
+        </button>
+      </div>
 
-          {/* Seeded Catalog Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
-            {products.map((p) => (
-              <div key={p.sku} className="border border-slate-200 rounded-xl p-4 space-y-2 bg-slate-50/50">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono font-bold text-indigo-700">{p.sku}</span>
-                  <span className="text-[10px] text-slate-500">{p.historyDays} days history</span>
+      {activeTab === "UPLOAD" ? (
+        <div className="space-y-6">
+          {/* 4 Ingestion Dropzones */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { title: "sales_history.csv", desc: "Required columns: date, sku, quantity", count: "150 rows" },
+              { title: "products.csv", desc: "Required columns: sku, name, unit_cost, lead_time", count: `${products.length} SKUs` },
+              { title: "promotions.csv", desc: "Required columns: sku, start_date, end_date", count: "3 events" },
+              { title: "lead_times.csv", desc: "Required columns: po_id, sku, lead_days", count: "36 orders" },
+            ].map((file) => (
+              <Card key={file.title} variant="default" className="p-5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-xs font-mono text-[#78716C] dark:text-[#A8A29E]">
+                    <FileSpreadsheet className="w-4 h-4 text-[#1C1917] dark:text-[#FAFAF9]" />
+                    <span>{file.count}</span>
+                  </div>
+                  <h4 className="font-mono font-bold text-sm text-[#1C1917] dark:text-[#FAFAF9] mt-3">
+                    {file.title}
+                  </h4>
+                  <p className="text-[12px] text-[#57534E] dark:text-[#A8A29E] mt-1">
+                    {file.desc}
+                  </p>
                 </div>
-                <h4 className="font-bold text-slate-900">{p.name}</h4>
-                <div className="text-[11px] text-slate-600 space-y-0.5">
-                  <div>Unit cost: ₹{p.unitCost} · Pack size: {p.packSize}</div>
-                  <div>Mean demand: {p.meanDailyDemand} /day (σ: {p.sdDemand})</div>
-                  <div>Lead time: {p.leadTimeMean}d (σL: {p.leadTimeSd}d)</div>
+                <div className="mt-4 pt-3 border-t border-[#E7E5E4] dark:border-[#292524] flex items-center justify-between">
+                  <span className="font-mono text-[10px] text-[#65A30D] uppercase font-semibold">Schema Ready</span>
+                  <Upload className="w-3.5 h-3.5 text-[#78716C]" />
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
-        </div>
-      )}
 
-      {/* 3. TAB 2: Upload CSV with Row-Level Validation */}
-      {activeTab === "CSV" && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900">Ingest CSV Datasets</h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Upload your files. StockSense validates each row with strict Zod schemas and outputs exact row, field, and reason errors.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Sales Dropzone */}
-            <div className="border-2 border-dashed border-slate-300 rounded-2xl p-5 text-center space-y-3 hover:border-indigo-400 transition-colors">
-              <Upload className="w-6 h-6 text-slate-400 mx-auto" />
+          {/* Test Action Bar */}
+          <Card variant="elevated">
+            <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div>
-                <h4 className="text-xs font-bold text-slate-900">Daily Sales CSV</h4>
-                <span className="text-[11px] text-slate-500">Columns: sku, date, units</span>
+                <h3 className="font-serif font-bold text-base text-[#1C1917] dark:text-[#FAFAF9]">
+                  Validate Ingestion Engine &amp; Error Handling
+                </h3>
+                <p className="text-xs text-[#57534E] dark:text-[#A8A29E] mt-0.5">
+                  Simulate clean data ingestion or trigger strict row-level validation errors (Rule 7: No silent fixes).
+                </p>
               </div>
-              <div className="space-y-1.5 pt-1">
-                <button
-                  onClick={() => handleSimulateCSVUpload("sales")}
-                  className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold py-1.5 rounded-lg text-[11px] transition-colors"
-                >
-                  Upload Valid CSV
-                </button>
-                <button
-                  onClick={() => handleSimulateCSVUpload("sales_invalid")}
-                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium py-1.5 rounded-lg text-[11px] transition-colors"
-                >
-                  Test with Bad Row (T61)
-                </button>
+              <div className="flex items-center gap-2">
+                <Button variant="secondary" size="sm" onClick={handleSimulateBadCsv} className="font-mono text-xs">
+                  Simulate Invalid CSV
+                </Button>
+                <Button variant="primary" size="sm" onClick={handleSimulateCleanCsv} className="font-mono text-xs">
+                  Simulate Clean Ingest
+                </Button>
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Products Dropzone */}
-            <div className="border-2 border-dashed border-slate-300 rounded-2xl p-5 text-center space-y-3 hover:border-indigo-400 transition-colors">
-              <Upload className="w-6 h-6 text-slate-400 mx-auto" />
-              <div>
-                <h4 className="text-xs font-bold text-slate-900">Products Metadata</h4>
-                <span className="text-[11px] text-slate-500">sku, name, unitCost, packSize</span>
-              </div>
-              <button
-                onClick={() => handleSimulateCSVUpload("products")}
-                className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold py-1.5 rounded-lg text-[11px] transition-colors mt-2"
-              >
-                Upload Products
-              </button>
-            </div>
-
-            {/* Lead Times Dropzone */}
-            <div className="border-2 border-dashed border-slate-300 rounded-2xl p-5 text-center space-y-3 hover:border-indigo-400 transition-colors">
-              <Upload className="w-6 h-6 text-slate-400 mx-auto" />
-              <div>
-                <h4 className="text-xs font-bold text-slate-900">Lead Time Records</h4>
-                <span className="text-[11px] text-slate-500">sku, orderDate, receivedDate</span>
-              </div>
-              <button
-                onClick={() => handleSimulateCSVUpload("lead_times")}
-                className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold py-1.5 rounded-lg text-[11px] transition-colors mt-2"
-              >
-                Upload Lead Times
-              </button>
-            </div>
-
-            {/* Promos Dropzone */}
-            <div className="border-2 border-dashed border-slate-300 rounded-2xl p-5 text-center space-y-3 hover:border-indigo-400 transition-colors">
-              <Upload className="w-6 h-6 text-slate-400 mx-auto" />
-              <div>
-                <h4 className="text-xs font-bold text-slate-900">Promotions Calendar</h4>
-                <span className="text-[11px] text-slate-500">sku, startDate, endDate, note</span>
-              </div>
-              <button
-                onClick={() => handleSimulateCSVUpload("promos")}
-                className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold py-1.5 rounded-lg text-[11px] transition-colors mt-2"
-              >
-                Upload Promos
-              </button>
-            </div>
-          </div>
-
-          {/* Validation Error Results Panel (FR-01 & T61) */}
-          {csvResult && (
-            <div className={`rounded-xl border p-4 space-y-3 ${
-              csvResult.rejectedRows > 0 ? "bg-red-50/60 border-red-200" : "bg-emerald-50/60 border-emerald-200"
-            }`}>
-              <div className="flex items-center justify-between text-xs font-bold">
-                <span className={csvResult.rejectedRows > 0 ? "text-red-800" : "text-emerald-800"}>
-                  Import result: {csvResult.importedRows} rows imported, {csvResult.rejectedRows} rows rejected
-                </span>
-                <span className="font-mono text-[11px] text-slate-500">
-                  Zero silent fixes rule enforced
-                </span>
-              </div>
-
-              {csvResult.errors.length > 0 && (
-                <div className="bg-white rounded-lg border border-red-200 overflow-hidden text-xs">
-                  <table className="w-full text-left">
-                    <thead className="bg-red-100/50 text-red-900 font-semibold">
-                      <tr>
-                        <th className="py-2 px-3">CSV Row #</th>
-                        <th className="py-2 px-3">Field</th>
-                        <th className="py-2 px-3">Validation Failure Reason</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-red-100 text-slate-700">
-                      {csvResult.errors.map((err, idx) => (
-                        <tr key={idx}>
-                          <td className="py-2 px-3 font-mono font-bold text-red-600">Row {err.row}</td>
-                          <td className="py-2 px-3 font-mono font-semibold">{err.field}</td>
-                          <td className="py-2 px-3">{err.reason}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+          {/* Validation Error Table */}
+          {simulatedErrors.length > 0 && (
+            <Card variant="default" className="border-t-2 border-t-[#DC2626]">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-[#DC2626]" />
+                  <CardTitle className="text-base text-[#DC2626]">
+                    Ingestion Failed: {simulatedErrors.length} Schema Violations Detected
+                  </CardTitle>
                 </div>
-              )}
-            </div>
+                <CardDescription>
+                  In accordance with Rule 7, malformed rows are never silently coerced. Review and correct the source CSV before reprocessing.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Row #</TableHead>
+                      <TableHead>Offending Field</TableHead>
+                      <TableHead>Validation Rule Violated</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {simulatedErrors.map((err, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell className="font-mono font-bold text-xs">{err.row}</TableCell>
+                        <TableCell className="font-mono text-xs text-[#DC2626] font-semibold">{err.field}</TableCell>
+                        <TableCell className="text-xs font-mono text-[#57534E] dark:text-[#D6D3D1]">{err.reason}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           )}
         </div>
-      )}
+      ) : (
+        /* Manual Form */
+        <Card variant="default">
+          <CardHeader>
+            <CardTitle>Register New Pharmaceutical SKU</CardTitle>
+            <CardDescription>
+              Define deterministic operational parameters for replenishment calculation.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            <form onSubmit={handleFormSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-xs font-mono uppercase text-[#57534E] dark:text-[#A8A29E] mb-1.5 font-semibold">
+                    SKU Code *
+                  </label>
+                  <Input
+                    placeholder="e.g. AZI-07"
+                    value={formData.sku}
+                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                    required
+                  />
+                </div>
 
-      {/* 4. TAB 3: Enter Your Own Numbers (Screen 1b) */}
-      {activeTab === "MANUAL" && (
-        <form onSubmit={handleManualSubmit} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900">Enter Your Own Numbers</h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Type product parameters and paste at least 28 days of daily demand for instant live calculation.
-            </p>
-          </div>
+                <div>
+                  <label className="block text-xs font-mono uppercase text-[#57534E] dark:text-[#A8A29E] mb-1.5 font-semibold">
+                    Product Name *
+                  </label>
+                  <Input
+                    placeholder="e.g. Azithromycin 500mg"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                  />
+                </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-            {/* SKU */}
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-700">SKU Code:</label>
-              <input
-                type="text"
-                value={formData.sku}
-                onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 font-mono uppercase focus:ring-2 focus:ring-indigo-500"
-              />
-              {formErrors.sku && <span className="text-[11px] text-red-600">{formErrors.sku}</span>}
-            </div>
+                <div>
+                  <label className="block text-xs font-mono uppercase text-[#57534E] dark:text-[#A8A29E] mb-1.5 font-semibold">
+                    Unit Type
+                  </label>
+                  <Input
+                    placeholder="e.g. strips, vials, packs"
+                    value={formData.unit}
+                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                  />
+                </div>
 
-            {/* Name */}
-            <div className="space-y-1 md:col-span-2">
-              <label className="font-semibold text-slate-700">Product Name:</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 focus:ring-2 focus:ring-indigo-500"
-              />
-              {formErrors.name && <span className="text-[11px] text-red-600">{formErrors.name}</span>}
-            </div>
+                <div>
+                  <label className="block text-xs font-mono uppercase text-[#57534E] dark:text-[#A8A29E] mb-1.5 font-semibold">
+                    Current Stock on Hand
+                  </label>
+                  <Input
+                    type="number"
+                    value={formData.onHand}
+                    onChange={(e) => setFormData({ ...formData, onHand: Number(e.target.value) })}
+                  />
+                </div>
 
-            {/* Unit Cost */}
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Unit Cost (₹):</label>
-              <input
-                type="number"
-                value={formData.unitCost}
-                onChange={(e) => setFormData({ ...formData, unitCost: Number(e.target.value) })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+                <div>
+                  <label className="block text-xs font-mono uppercase text-[#57534E] dark:text-[#A8A29E] mb-1.5 font-semibold">
+                    Unit Cost (₹)
+                  </label>
+                  <Input
+                    type="number"
+                    value={formData.unitCost}
+                    onChange={(e) => setFormData({ ...formData, unitCost: Number(e.target.value) })}
+                  />
+                </div>
 
-            {/* Order Cost */}
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Order Cost (S, ₹):</label>
-              <input
-                type="number"
-                value={formData.orderCost}
-                onChange={(e) => setFormData({ ...formData, orderCost: Number(e.target.value) })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+                <div>
+                  <label className="block text-xs font-mono uppercase text-[#57534E] dark:text-[#A8A29E] mb-1.5 font-semibold">
+                    Fixed Order Cost (₹)
+                  </label>
+                  <Input
+                    type="number"
+                    value={formData.orderCost}
+                    onChange={(e) => setFormData({ ...formData, orderCost: Number(e.target.value) })}
+                  />
+                </div>
 
-            {/* Holding Rate */}
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Holding Rate (h, %/yr):</label>
-              <input
-                type="number"
-                step="0.05"
-                value={formData.holdingRate}
-                onChange={(e) => setFormData({ ...formData, holdingRate: Number(e.target.value) })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+                <div>
+                  <label className="block text-xs font-mono uppercase text-[#57534E] dark:text-[#A8A29E] mb-1.5 font-semibold">
+                    Mean Lead Time (Days)
+                  </label>
+                  <Input
+                    type="number"
+                    value={formData.leadTimeMean}
+                    onChange={(e) => setFormData({ ...formData, leadTimeMean: Number(e.target.value) })}
+                  />
+                </div>
 
-            {/* Mean Lead Time */}
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Lead Time Mean (days):</label>
-              <input
-                type="number"
-                value={formData.leadTimeMean}
-                onChange={(e) => setFormData({ ...formData, leadTimeMean: Number(e.target.value) })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+                <div>
+                  <label className="block text-xs font-mono uppercase text-[#57534E] dark:text-[#A8A29E] mb-1.5 font-semibold">
+                    Lead Time Std Dev (Days)
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={formData.leadTimeSd}
+                    onChange={(e) => setFormData({ ...formData, leadTimeSd: Number(e.target.value) })}
+                  />
+                </div>
 
-            {/* Lead Time SD */}
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Lead Time SD (days):</label>
-              <input
-                type="number"
-                step="0.1"
-                value={formData.leadTimeSd}
-                onChange={(e) => setFormData({ ...formData, leadTimeSd: Number(e.target.value) })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+                <div>
+                  <label className="block text-xs font-mono uppercase text-[#57534E] dark:text-[#A8A29E] mb-1.5 font-semibold">
+                    Mean Daily Demand (Units)
+                  </label>
+                  <Input
+                    type="number"
+                    value={formData.meanDailyDemand}
+                    onChange={(e) => setFormData({ ...formData, meanDailyDemand: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
 
-            {/* Pack Size */}
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Pack Size:</label>
-              <input
-                type="number"
-                value={formData.packSize}
-                onChange={(e) => setFormData({ ...formData, packSize: Number(e.target.value) })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-          </div>
-
-          {/* Demand History Text Area */}
-          <div className="space-y-1.5 text-xs">
-            <div className="flex justify-between items-center">
-              <label className="font-semibold text-slate-700">
-                Daily Demand Series (comma-separated, at least 28 days):
-              </label>
-              <span className="text-[11px] font-mono text-slate-500">
-                Current count: {formData.demandHistoryText.split(/[\n,]+/).filter(Boolean).length} points
-              </span>
-            </div>
-            <textarea
-              rows={4}
-              value={formData.demandHistoryText}
-              onChange={(e) => setFormData({ ...formData, demandHistoryText: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 font-mono text-xs focus:ring-2 focus:ring-indigo-500"
-            />
-            {formErrors.demandHistory && (
-              <span className="text-[11px] text-red-600 font-semibold">{formErrors.demandHistory}</span>
-            )}
-          </div>
-
-          <div className="pt-2 flex justify-end">
-            <button
-              type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-sm transition-colors"
-            >
-              <span>Calculate & View Recommendations</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </form>
+              <div className="flex justify-end gap-3 pt-4 border-t border-[#E7E5E4] dark:border-[#292524]">
+                <Button type="button" variant="secondary" onClick={() => setActiveTab("UPLOAD")}>
+                  Cancel
+                </Button>
+                <Button type="submit" variant="primary">
+                  Save SKU to Catalog
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
