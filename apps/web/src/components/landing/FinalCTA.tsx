@@ -15,9 +15,9 @@ export const FinalCTA: React.FC = () => {
   };
 
   return (
-    <section className="py-14 sm:py-20 border-b border-[#ebebeb] dark:border-[#262626]">
+    <section className="py-14 sm:py-20 border-b border-[#ebebeb]">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="rounded-xl border border-[#ebebeb] dark:border-[#262626] bg-[#171717] dark:bg-[#141414] p-8 sm:p-12 lg:p-14 text-white relative overflow-hidden">
+        <div className="rounded-xl border border-[#ebebeb] bg-[#171717] p-8 sm:p-12 lg:p-14 text-white relative overflow-hidden">
           <div className="relative z-10 max-w-2xl space-y-5">
             {/* Tag */}
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-[#262626] text-[#d4d4d4] text-[11px] font-mono tracking-wider uppercase border border-[#383838]">
@@ -71,10 +71,6 @@ export const FinalCTA: React.FC = () => {
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-white" />
                 Deterministic fallbacks
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-white" />
-                VORTEXA 3.0 · S-02
               </span>
             </div>
           </div>

@@ -1,53 +1,16 @@
 // apps/web/src/components/landing/Hero3DBackground.tsx
-// Interactive 3D Isometric Voxel & Perspective Canvas Background for the Hero Section
-// Visualizes real-time inventory stock depletion ("stock finishing"), ROP threshold breaches,
-// and automated EOQ replenishment drops in 3D space with interactive mouse parallax.
+// Minimalist, calm 3D isometric stock depletion & replenishment background animation
 
 import React, { useEffect, useRef } from "react";
 
-interface StockTower {
+interface SimpleStockColumn {
   gx: number;
   gz: number;
-  sku: string;
   maxBlocks: number;
   currentBlocks: number;
-  ropLevel: number;
-  depleteTimer: number;
-  depleteSpeed: number;
-  state: "DEPLETING" | "CRITICAL" | "REPLENISHING";
-  criticalTimer: number;
-  fallingBlocks: {
-    targetIndex: number;
-    y: number;
-    vy: number;
-  }[];
-  pulseRing: number;
+  phaseOffset: number;
+  speed: number;
 }
-
-interface FloatingParticle {
-  x: number;
-  y: number;
-  z: number;
-  vy: number;
-  alpha: number;
-  label?: string;
-  color: string;
-}
-
-const SKU_LABELS = [
-  "ORS-01",
-  "PCM-500",
-  "AMX-250",
-  "INS-GLG",
-  "AZI-500",
-  "BND-04",
-  "MET-850",
-  "IBU-400",
-  "CET-10",
-  "VIT-C",
-  "OMO-20",
-  "SAL-100",
-];
 
 export const Hero3DBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -63,39 +26,29 @@ export const Hero3DBackground: React.FC = () => {
     let height = 0;
     let dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-    // Mouse parallax state
     let targetMouseX = 0;
     let targetMouseY = 0;
     let smoothMouseX = 0;
     let smoothMouseY = 0;
 
-    // 3D Grid Setup (7x7 matrix of inventory towers)
-    const GRID_SIZE = 6;
-    const SPACING = 58;
-    const BLOCK_SIZE = 19;
-    const BLOCK_HEIGHT = 11;
+    // Clean 5x5 isometric matrix of stock columns
+    const GRID_SIZE = 5;
+    const SPACING = 56;
+    const BLOCK_SIZE = 18;
+    const BLOCK_HEIGHT = 10;
 
-    const towers: StockTower[] = [];
-    const particles: FloatingParticle[] = [];
-
-    let skuCounter = 0;
-    for (let gx = -GRID_SIZE / 2; gx < GRID_SIZE / 2; gx++) {
-      for (let gz = -GRID_SIZE / 2; gz < GRID_SIZE / 2; gz++) {
-        const maxBlocks = 7 + ((Math.abs(gx * 3 + gz * 5)) % 4);
-        const startBlocks = 2 + ((Math.abs(gx * 7 + gz * 2)) % (maxBlocks - 1));
-        towers.push({
+    const columns: SimpleStockColumn[] = [];
+    for (let gx = -2; gx <= 2; gx++) {
+      for (let gz = -2; gz <= 2; gz++) {
+        const dist = Math.hypot(gx, gz);
+        const maxBlocks = 6;
+        columns.push({
           gx,
           gz,
-          sku: SKU_LABELS[skuCounter++ % SKU_LABELS.length],
           maxBlocks,
-          currentBlocks: startBlocks,
-          ropLevel: 2,
-          depleteTimer: Math.random() * 60,
-          depleteSpeed: 0.55 + Math.random() * 0.9,
-          state: startBlocks <= 2 ? "CRITICAL" : "DEPLETING",
-          criticalTimer: 0,
-          fallingBlocks: [],
-          pulseRing: 0,
+          currentBlocks: 3,
+          phaseOffset: dist * 0.85 + (gx + gz) * 0.35,
+          speed: 0.012,
         });
       }
     }
@@ -122,62 +75,49 @@ export const Hero3DBackground: React.FC = () => {
     window.addEventListener("resize", handleResize);
     window.addEventListener("mousemove", handleMouseMove);
 
-    // 3D Isometric + Perspective Projection helper
     let time = 0;
+
     const project = (x: number, y: number, z: number) => {
-      // Slow orbital drift + mouse tilt
-      const angleY = 0.68 + Math.sin(time * 0.004) * 0.08 + smoothMouseX * 0.22;
-      const angleX = 0.52 + Math.cos(time * 0.003) * 0.04 + smoothMouseY * 0.12;
+      const angleY = 0.72 + smoothMouseX * 0.12;
+      const angleX = 0.52 + smoothMouseY * 0.08;
 
       const cosY = Math.cos(angleY);
       const sinY = Math.sin(angleY);
       const cosX = Math.cos(angleX);
       const sinX = Math.sin(angleX);
 
-      // Rotate around Y axis
       const rx = x * cosY - z * sinY;
       const rz = x * sinY + z * cosY;
 
-      // Rotate around X axis
       const ry = y * cosX - rz * sinX;
       const rz2 = y * sinX + rz * cosX;
 
-      // Perspective scale
       const fov = 900;
-      const viewerDist = 750;
+      const viewerDist = 760;
       const scale = fov / Math.max(200, viewerDist + rz2);
 
-      // Position center shifted slightly right on wide screens so hero copy on left is super legible,
-      // while still spanning the entire hero background
-      const centerX = width > 900 ? width * 0.64 : width * 0.5;
-      const centerY = height * 0.58;
+      const centerX = width > 900 ? width * 0.67 : width * 0.5;
+      const centerY = height * 0.56;
 
       return {
         x: centerX + rx * scale,
         y: centerY - ry * scale,
         depth: rz2,
-        scale,
       };
     };
 
-    // Draw a 3D shaded voxel box centered at (cx, bottomY, cz)
-    const drawVoxelBox = (
+    const drawBox = (
       cx: number,
       bottomY: number,
       cz: number,
       halfW: number,
       boxH: number,
-      palette: {
-        top: string;
-        left: string;
-        right: string;
-        stroke: string;
-      }
+      alpha: number,
+      isTopBlock: boolean
     ) => {
       const y0 = bottomY;
       const y1 = bottomY + boxH;
 
-      // Visible vertices of the 3D box
       const p100 = project(cx + halfW, y0, cz - halfW);
       const p101 = project(cx + halfW, y0, cz + halfW);
       const p001 = project(cx - halfW, y0, cz + halfW);
@@ -187,357 +127,105 @@ export const Hero3DBackground: React.FC = () => {
       const p111 = project(cx + halfW, y1, cz + halfW);
       const p011 = project(cx - halfW, y1, cz + halfW);
 
-      ctx.lineWidth = 0.8;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = 0.75;
       ctx.lineJoin = "round";
+      ctx.strokeStyle = "rgba(23, 23, 23, 0.16)";
 
-      // Front-Left Face (x - halfW to x + halfW at z + halfW, or z-facing)
+      // Left face
       ctx.beginPath();
       ctx.moveTo(p011.x, p011.y);
       ctx.lineTo(p111.x, p111.y);
       ctx.lineTo(p101.x, p101.y);
       ctx.lineTo(p001.x, p001.y);
       ctx.closePath();
-      ctx.fillStyle = palette.left;
+      ctx.fillStyle = isTopBlock ? "#262626" : "#e5e5e5";
       ctx.fill();
-      ctx.strokeStyle = palette.stroke;
       ctx.stroke();
 
-      // Front-Right Face (x + halfW, z - halfW to z + halfW)
+      // Right face
       ctx.beginPath();
       ctx.moveTo(p110.x, p110.y);
       ctx.lineTo(p111.x, p111.y);
       ctx.lineTo(p101.x, p101.y);
       ctx.lineTo(p100.x, p100.y);
       ctx.closePath();
-      ctx.fillStyle = palette.right;
+      ctx.fillStyle = isTopBlock ? "#171717" : "#d4d4d4";
       ctx.fill();
-      ctx.strokeStyle = palette.stroke;
       ctx.stroke();
 
-      // Top Face (y = y1)
+      // Top face
       ctx.beginPath();
       ctx.moveTo(p010.x, p010.y);
       ctx.lineTo(p110.x, p110.y);
       ctx.lineTo(p111.x, p111.y);
       ctx.lineTo(p011.x, p011.y);
       ctx.closePath();
-      ctx.fillStyle = palette.top;
+      ctx.fillStyle = isTopBlock ? "#404040" : "#f5f5f5";
       ctx.fill();
-      ctx.strokeStyle = palette.stroke;
       ctx.stroke();
+
+      ctx.restore();
     };
 
     const render = () => {
       time += 1;
-      smoothMouseX += (targetMouseX - smoothMouseX) * 0.06;
-      smoothMouseY += (targetMouseY - smoothMouseY) * 0.06;
-
-      const isDark = document.documentElement.classList.contains("dark");
+      smoothMouseX += (targetMouseX - smoothMouseX) * 0.05;
+      smoothMouseY += (targetMouseY - smoothMouseY) * 0.05;
 
       ctx.clearRect(0, 0, width, height);
 
-      // 1. Draw 3D Warehouse Floor Grid
-      const gridExtent = (GRID_SIZE / 2 + 1.2) * SPACING;
-      const step = SPACING / 2;
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = isDark ? "rgba(255,255,255,0.05)" : "rgba(23,23,23,0.055)";
+      // Subtle isometric floor grid
+      const gridExtent = (GRID_SIZE / 2 + 0.8) * SPACING;
+      ctx.lineWidth = 0.8;
+      ctx.strokeStyle = "rgba(23, 23, 23, 0.05)";
 
-      for (let x = -gridExtent; x <= gridExtent; x += step) {
-        const pStart = project(x, 0, -gridExtent);
-        const pEnd = project(x, 0, gridExtent);
+      for (let i = -3; i <= 3; i++) {
+        const pos = i * SPACING;
+        const pStartX = project(pos, 0, -gridExtent);
+        const pEndX = project(pos, 0, gridExtent);
         ctx.beginPath();
-        ctx.moveTo(pStart.x, pStart.y);
-        ctx.lineTo(pEnd.x, pEnd.y);
+        ctx.moveTo(pStartX.x, pStartX.y);
+        ctx.lineTo(pEndX.x, pEndX.y);
+        ctx.stroke();
+
+        const pStartZ = project(-gridExtent, 0, pos);
+        const pEndZ = project(gridExtent, 0, pos);
+        ctx.beginPath();
+        ctx.moveTo(pStartZ.x, pStartZ.y);
+        ctx.lineTo(pEndZ.x, pEndZ.y);
         ctx.stroke();
       }
-      for (let z = -gridExtent; z <= gridExtent; z += step) {
-        const pStart = project(-gridExtent, 0, z);
-        const pEnd = project(gridExtent, 0, z);
-        ctx.beginPath();
-        ctx.moveTo(pStart.x, pStart.y);
-        ctx.lineTo(pEnd.x, pEnd.y);
-        ctx.stroke();
-      }
 
-      // 2. Update Tower Physics (Stock Depleting -> Stockout Warning -> Automated EOQ Restock)
-      for (const t of towers) {
-        const worldX = (t.gx + 0.5) * SPACING;
-        const worldZ = (t.gz + 0.5) * SPACING;
-
-        if (t.state === "DEPLETING") {
-          t.depleteTimer += t.depleteSpeed;
-          if (t.depleteTimer >= 72) {
-            t.depleteTimer = 0;
-            if (t.currentBlocks > 0) {
-              const removedTopY = t.currentBlocks * (BLOCK_HEIGHT + 2);
-              t.currentBlocks -= 1;
-
-              // Spawn a rising consumption particle ("-1" unit consumed)
-              particles.push({
-                x: worldX,
-                y: removedTopY + 8,
-                z: worldZ,
-                vy: 0.75,
-                alpha: 1,
-                label: t.currentBlocks <= t.ropLevel ? "LOW STOCK" : "-1",
-                color:
-                  t.currentBlocks <= t.ropLevel
-                    ? "#e11d48"
-                    : isDark
-                    ? "#a3a3a3"
-                    : "#525252",
-              });
-            }
-
-            // Check if stock crossed Reorder Point or hit 0 (stock finishing!)
-            if (t.currentBlocks <= 1) {
-              t.state = "CRITICAL";
-              t.criticalTimer = 0;
-              t.pulseRing = 0.05;
-            }
-          }
-        } else if (t.state === "CRITICAL") {
-          t.criticalTimer += 1;
-          t.pulseRing = Math.min(1, t.pulseRing + 0.025);
-
-          // Drain the very last block to 0 briefly so user sees stock completely finishing
-          if (t.criticalTimer === 35 && t.currentBlocks > 0) {
-            t.currentBlocks = 0;
-            particles.push({
-              x: worldX,
-              y: 14,
-              z: worldZ,
-              vy: 0.9,
-              alpha: 1,
-              label: "STOCKOUT RISK · ROP TRIGGERED",
-              color: "#e11d48",
-            });
-          }
-
-          // Trigger EOQ replenishment drop from sky
-          if (t.criticalTimer >= 80) {
-            t.state = "REPLENISHING";
-            t.fallingBlocks = [];
-            const blocksToOrder = t.maxBlocks - t.currentBlocks;
-            for (let b = 0; b < blocksToOrder; b++) {
-              t.fallingBlocks.push({
-                targetIndex: t.currentBlocks + b,
-                y: 165 + b * 28,
-                vy: 0,
-              });
-            }
-            particles.push({
-              x: worldX,
-              y: 95,
-              z: worldZ,
-              vy: 0.5,
-              alpha: 1,
-              label: `+${blocksToOrder * 40} EOQ`,
-              color: "#15803d",
-            });
-          }
-        } else if (t.state === "REPLENISHING") {
-          let allLanded = true;
-          for (const fb of t.fallingBlocks) {
-            const targetY = fb.targetIndex * (BLOCK_HEIGHT + 2);
-            if (fb.y > targetY) {
-              fb.vy += 0.48; // gravity
-              fb.y = Math.max(targetY, fb.y - fb.vy);
-              allLanded = false;
-            }
-          }
-          if (allLanded) {
-            t.currentBlocks = t.maxBlocks;
-            t.fallingBlocks = [];
-            t.state = "DEPLETING";
-            t.depleteTimer = 0;
-            t.pulseRing = 0;
-          }
-        }
-      }
-
-      // 3. Sort towers back-to-front (Painter's Algorithm by 3D depth)
-      const sortedTowers = [...towers].sort((a, b) => {
-        const pa = project((a.gx + 0.5) * SPACING, 0, (a.gz + 0.5) * SPACING);
-        const pb = project((b.gx + 0.5) * SPACING, 0, (b.gz + 0.5) * SPACING);
+      // Depth-sort columns back-to-front
+      const sorted = [...columns].sort((a, b) => {
+        const pa = project(a.gx * SPACING, 0, a.gz * SPACING);
+        const pb = project(b.gx * SPACING, 0, b.gz * SPACING);
         return pb.depth - pa.depth;
       });
 
-      // 4. Draw each 3D Stock Tower
-      for (const t of sortedTowers) {
-        const wx = (t.gx + 0.5) * SPACING;
-        const wz = (t.gz + 0.5) * SPACING;
-        const isLow = t.currentBlocks <= t.ropLevel || t.state === "CRITICAL";
-        const isRestocking = t.state === "REPLENISHING";
+      for (const col of sorted) {
+        const wx = col.gx * SPACING;
+        const wz = col.gz * SPACING;
 
-        // Base slot pad on warehouse floor
-        const padHalf = BLOCK_SIZE + 4;
-        const b0 = project(wx - padHalf, 0, wz - padHalf);
-        const b1 = project(wx + padHalf, 0, wz - padHalf);
-        const b2 = project(wx + padHalf, 0, wz + padHalf);
-        const b3 = project(wx - padHalf, 0, wz + padHalf);
+        // Smooth sawtooth-like stock cycle: depletes down to 1 block, then refills smoothly
+        const wave = (Math.sin(time * col.speed + col.phaseOffset) + 1) * 0.5;
+        const exactHeight = 1 + wave * (col.maxBlocks - 1);
+        const fullBlocks = Math.floor(exactHeight);
+        const partial = exactHeight - fullBlocks;
 
-        ctx.beginPath();
-        ctx.moveTo(b0.x, b0.y);
-        ctx.lineTo(b1.x, b1.y);
-        ctx.lineTo(b2.x, b2.y);
-        ctx.lineTo(b3.x, b3.y);
-        ctx.closePath();
-
-        if (t.state === "CRITICAL") {
-          ctx.fillStyle = isDark ? "rgba(225, 29, 72, 0.28)" : "rgba(225, 29, 72, 0.16)";
-          ctx.strokeStyle = "rgba(225, 29, 72, 0.75)";
-        } else if (isRestocking) {
-          ctx.fillStyle = isDark ? "rgba(21, 128, 61, 0.25)" : "rgba(21, 128, 61, 0.14)";
-          ctx.strokeStyle = "rgba(21, 128, 61, 0.65)";
-        } else {
-          ctx.fillStyle = isDark ? "rgba(255,255,255,0.03)" : "rgba(23,23,23,0.03)";
-          ctx.strokeStyle = isDark ? "rgba(255,255,255,0.1)" : "rgba(23,23,23,0.1)";
-        }
-        ctx.fill();
-        ctx.stroke();
-
-        // Expanding 3D shockwave ring when stock is critical / empty
-        if (t.state === "CRITICAL" && t.pulseRing > 0) {
-          const ringHalf = padHalf + t.pulseRing * 16;
-          const r0 = project(wx - ringHalf, 0, wz - ringHalf);
-          const r1 = project(wx + ringHalf, 0, wz - ringHalf);
-          const r2 = project(wx + ringHalf, 0, wz + ringHalf);
-          const r3 = project(wx - ringHalf, 0, wz + ringHalf);
-          ctx.beginPath();
-          ctx.moveTo(r0.x, r0.y);
-          ctx.lineTo(r1.x, r1.y);
-          ctx.lineTo(r2.x, r2.y);
-          ctx.lineTo(r3.x, r3.y);
-          ctx.closePath();
-          ctx.strokeStyle = `rgba(225, 29, 72, ${1 - t.pulseRing})`;
-          ctx.lineWidth = 1.2;
-          ctx.stroke();
+        for (let b = 0; b < fullBlocks; b++) {
+          const bottomY = b * (BLOCK_HEIGHT + 2.5);
+          const isTop = b === fullBlocks - 1 && partial < 0.15;
+          drawBox(wx, bottomY, wz, BLOCK_SIZE, BLOCK_HEIGHT, 1, isTop);
         }
 
-        // Draw Ghost Wireframe of Maximum Capacity when stock is depleted
-        const maxTopY = t.maxBlocks * (BLOCK_HEIGHT + 2);
-        const g0 = project(wx - BLOCK_SIZE, maxTopY, wz - BLOCK_SIZE);
-        const g1 = project(wx + BLOCK_SIZE, maxTopY, wz - BLOCK_SIZE);
-        const g2 = project(wx + BLOCK_SIZE, maxTopY, wz + BLOCK_SIZE);
-        const g3 = project(wx - BLOCK_SIZE, maxTopY, wz + BLOCK_SIZE);
-        ctx.beginPath();
-        ctx.moveTo(g0.x, g0.y);
-        ctx.lineTo(g1.x, g1.y);
-        ctx.lineTo(g2.x, g2.y);
-        ctx.lineTo(g3.x, g3.y);
-        ctx.closePath();
-        ctx.strokeStyle = isDark ? "rgba(255,255,255,0.06)" : "rgba(23,23,23,0.06)";
-        ctx.lineWidth = 0.7;
-        ctx.stroke();
-
-        // Draw standing stock blocks
-        for (let b = 0; b < t.currentBlocks; b++) {
-          const bottomY = b * (BLOCK_HEIGHT + 2);
-          let palette;
-
-          if (isLow) {
-            // Critical / Depleting stock palette (Crimson alert)
-            palette = {
-              top: isDark ? "#fb7185" : "#f43f5e",
-              left: isDark ? "#e11d48" : "#e11d48",
-              right: isDark ? "#9f1239" : "#be123c",
-              stroke: isDark ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.6)",
-            };
-          } else {
-            // Monochrome architectural blocks (graduated lightness by height)
-            const ratio = b / t.maxBlocks;
-            if (isDark) {
-              const lTop = Math.round(42 + ratio * 45);
-              const lLeft = Math.round(28 + ratio * 35);
-              const lRight = Math.round(18 + ratio * 25);
-              palette = {
-                top: `rgb(${lTop}, ${lTop}, ${lTop})`,
-                left: `rgb(${lLeft}, ${lLeft}, ${lLeft})`,
-                right: `rgb(${lRight}, ${lRight}, ${lRight})`,
-                stroke: "rgba(255,255,255,0.14)",
-              };
-            } else {
-              const lTop = Math.round(252 - ratio * 35);
-              const lLeft = Math.round(232 - ratio * 45);
-              const lRight = Math.round(205 - ratio * 55);
-              palette = {
-                top: `rgb(${lTop}, ${lTop}, ${lTop})`,
-                left: `rgb(${lLeft}, ${lLeft}, ${lLeft})`,
-                right: `rgb(${lRight}, ${lRight}, ${lRight})`,
-                stroke: "rgba(23,23,23,0.18)",
-              };
-            }
-          }
-
-          drawVoxelBox(wx, bottomY, wz, BLOCK_SIZE, BLOCK_HEIGHT, palette);
+        // Top block smoothly depleting / appearing
+        if (partial >= 0.15) {
+          const topY = fullBlocks * (BLOCK_HEIGHT + 2.5) + (1 - partial) * 6;
+          drawBox(wx, topY, wz, BLOCK_SIZE, BLOCK_HEIGHT, partial, true);
         }
-
-        // Draw falling EOQ replenishment blocks
-        for (const fb of t.fallingBlocks) {
-          const palette = isDark
-            ? {
-                top: "#f5f5f5",
-                left: "#d4d4d4",
-                right: "#a3a3a3",
-                stroke: "rgba(10,10,10,0.4)",
-              }
-            : {
-                top: "#404040",
-                left: "#262626",
-                right: "#171717",
-                stroke: "rgba(255,255,255,0.35)",
-              };
-          drawVoxelBox(wx, fb.y, wz, BLOCK_SIZE, BLOCK_HEIGHT, palette);
-        }
-      }
-
-      // 5. Draw Translucent 3D Reorder Point (ROP) Laser Plane slicing across the grid
-      const ropY = 2 * (BLOCK_HEIGHT + 2) + 2;
-      const planeExtent = (GRID_SIZE / 2 + 0.35) * SPACING;
-      const rp0 = project(-planeExtent, ropY, -planeExtent);
-      const rp1 = project(planeExtent, ropY, -planeExtent);
-      const rp2 = project(planeExtent, ropY, planeExtent);
-      const rp3 = project(-planeExtent, ropY, planeExtent);
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(rp0.x, rp0.y);
-      ctx.lineTo(rp1.x, rp1.y);
-      ctx.lineTo(rp2.x, rp2.y);
-      ctx.lineTo(rp3.x, rp3.y);
-      ctx.closePath();
-      ctx.fillStyle = isDark ? "rgba(225, 29, 72, 0.035)" : "rgba(225, 29, 72, 0.025)";
-      ctx.fill();
-      ctx.setLineDash([5, 5]);
-      ctx.strokeStyle = isDark ? "rgba(244, 63, 94, 0.45)" : "rgba(225, 29, 72, 0.4)";
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-      ctx.restore();
-
-      // Label on the 3D ROP Plane edge
-      ctx.font = "600 10px 'JetBrains Mono', monospace";
-      ctx.fillStyle = isDark ? "rgba(251, 113, 133, 0.9)" : "rgba(225, 29, 72, 0.85)";
-      ctx.fillText("REORDER POINT (ROP) THRESHOLD PLANE", rp3.x + 8, rp3.y - 6);
-
-      // 6. Update and draw floating 3D telemetry particles
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const pt = particles[i];
-        pt.y += pt.vy;
-        pt.alpha -= 0.014;
-        if (pt.alpha <= 0) {
-          particles.splice(i, 1);
-          continue;
-        }
-        const proj = project(pt.x, pt.y, pt.z);
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, pt.alpha);
-        ctx.font = "600 10px 'JetBrains Mono', monospace";
-        ctx.fillStyle = pt.color;
-        if (pt.label) {
-          ctx.fillText(pt.label, proj.x - 12, proj.y);
-        }
-        ctx.restore();
       }
 
       animationFrameId = requestAnimationFrame(render);
@@ -557,28 +245,15 @@ export const Hero3DBackground: React.FC = () => {
       className="absolute inset-0 overflow-hidden pointer-events-none select-none"
       aria-hidden="true"
     >
-      {/* 3D Interactive Canvas */}
-      <canvas
-        ref={canvasRef}
-        className="w-full h-full block opacity-90 dark:opacity-85"
-      />
-
-      {/* Soft Radial & Linear Vignette so Hero Typography stays razor-sharp */}
+      <canvas ref={canvasRef} className="w-full h-full block opacity-85" />
       <div
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(90deg, rgba(250,250,250,0.96) 0%, rgba(250,250,250,0.82) 38%, rgba(250,250,250,0.22) 72%, rgba(250,250,250,0.6) 100%)",
+            "linear-gradient(90deg, rgba(250,250,250,0.97) 0%, rgba(250,250,250,0.85) 42%, rgba(250,250,250,0.2) 75%, rgba(250,250,250,0.65) 100%)",
         }}
       />
-      <div
-        className="absolute inset-0 hidden dark:block"
-        style={{
-          background:
-            "linear-gradient(90deg, rgba(10,10,10,0.96) 0%, rgba(10,10,10,0.82) 38%, rgba(10,10,10,0.25) 72%, rgba(10,10,10,0.65) 100%)",
-        }}
-      />
-      <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#fafafa] dark:from-[#0a0a0a] to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#fafafa] to-transparent" />
     </div>
   );
 };

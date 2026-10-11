@@ -4,7 +4,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Boxes,
   Mail,
   Lock,
   User,
@@ -14,18 +13,14 @@ import {
   ArrowRight,
   ArrowLeft,
   ShieldCheck,
-  Sun,
-  Moon,
   Sparkles,
   AlertCircle,
 } from "lucide-react";
 import { useAuth, UserRole } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeContext";
 
 export const SignupPage: React.FC = () => {
   const navigate = useNavigate();
   const { signup } = useAuth();
-  const { theme, toggleTheme } = useTheme();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -93,36 +88,25 @@ export const SignupPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] flex flex-col justify-between text-[#171717] dark:text-[#f5f5f5] selection:bg-[#171717] selection:text-white dark:selection:bg-[#f5f5f5] dark:selection:text-[#0a0a0a] transition-colors duration-150">
+    <div className="min-h-screen bg-[#fafafa] flex flex-col justify-between text-[#171717] selection:bg-[#171717] selection:text-white transition-colors duration-150">
       {/* Top Header */}
-      <header className="px-4 sm:px-8 py-4 flex items-center justify-between max-w-5xl w-full mx-auto border-b border-[#ebebeb] dark:border-[#262626]">
+      <header className="px-4 sm:px-8 py-4 flex items-center justify-between max-w-5xl w-full mx-auto border-b border-[#ebebeb]">
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5] transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#525252] hover:text-[#171717] transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to Home</span>
         </Link>
 
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="p-1.5 rounded-full text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#f5f5f5] hover:bg-[#f0f0f0] dark:hover:bg-[#1f1f1f] transition-colors"
-            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            aria-label="Toggle theme"
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-[#737373]">Already registered?</span>
+          <Link
+            to="/login"
+            className="font-medium text-[#171717] hover:underline"
           >
-            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-[#737373] dark:text-[#8e8e8e]">Already registered?</span>
-            <Link
-              to="/login"
-              className="font-medium text-[#171717] dark:text-[#f5f5f5] hover:underline"
-            >
-              Sign in
-            </Link>
-          </div>
+            Sign in
+          </Link>
         </div>
       </header>
 
@@ -130,38 +114,33 @@ export const SignupPage: React.FC = () => {
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-6">
         <div className="w-full max-w-lg">
           {/* Main Card */}
-          <div className="bg-white dark:bg-[#141414] rounded-xl border border-[#ebebeb] dark:border-[#262626] p-7 sm:p-9 space-y-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+          <div className="bg-white rounded-xl border border-[#ebebeb] p-7 sm:p-9 space-y-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
             {/* Brand Header */}
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 mb-1">
-                <div className="w-6 h-6 rounded bg-[#171717] dark:bg-[#f5f5f5] flex items-center justify-center text-white dark:text-[#0a0a0a]">
-                  <Boxes className="w-3.5 h-3.5 stroke-[2.2]" />
-                </div>
-                <span className="font-heading text-sm font-semibold tracking-tight text-[#171717] dark:text-[#f5f5f5]">
+              <div className="inline-flex items-center gap-2.5 mb-1">
+                <img src="/logo.svg" alt="StockSense" className="w-6 h-6 rounded" />
+                <span className="font-heading text-sm font-semibold tracking-tight text-[#171717]">
                   StockSense
                 </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#f5f5f5] dark:bg-[#1a1a1a] text-[#737373] dark:text-[#a3a3a3] border border-[#ebebeb] dark:border-[#262626]">
-                  S-02
-                </span>
               </div>
-              <h1 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-[#171717] dark:text-[#f5f5f5]">
+              <h1 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-[#171717]">
                 Create account
               </h1>
-              <p className="text-xs text-[#525252] dark:text-[#a3a3a3] leading-relaxed">
+              <p className="text-xs text-[#525252] leading-relaxed">
                 Provision adaptive replenishment intelligence and configure role permissions.
               </p>
             </div>
 
             {/* Quick Demo Fill Banner */}
-            <div className="bg-[#f5f5f5] dark:bg-[#1a1a1a] border border-[#ebebeb] dark:border-[#262626] rounded-lg p-3 flex items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2 text-[#525252] dark:text-[#a3a3a3]">
-                <Sparkles className="w-4 h-4 text-[#171717] dark:text-[#f5f5f5] shrink-0" />
+            <div className="bg-[#f5f5f5] border border-[#ebebeb] rounded-lg p-3 flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2 text-[#525252]">
+                <Sparkles className="w-4 h-4 text-[#171717] shrink-0" />
                 <span className="leading-snug">Evaluating live? Pre-fill sample profile in one click.</span>
               </div>
               <button
                 type="button"
                 onClick={handleQuickDemoFill}
-                className="shrink-0 text-xs font-mono font-medium text-[#171717] dark:text-[#f5f5f5] bg-white dark:bg-[#141414] hover:bg-[#fafafa] dark:hover:bg-[#202020] border border-[#ebebeb] dark:border-[#262626] px-2.5 py-1 rounded transition-colors"
+                className="shrink-0 text-xs font-mono font-medium text-[#171717] bg-white hover:bg-[#fafafa] border border-[#ebebeb] px-2.5 py-1 rounded transition-colors"
               >
                 Auto-fill
               </button>
@@ -169,7 +148,7 @@ export const SignupPage: React.FC = () => {
 
             {/* Error Alert */}
             {error && (
-              <div className="bg-[#fff1f2] dark:bg-[#2b1114] border border-[#fecdd3] dark:border-[#52171f] rounded p-2.5 text-xs text-[#9f1239] dark:text-[#fca5a5] flex items-center gap-2">
+              <div className="bg-[#fff1f2] border border-[#fecdd3] rounded p-2.5 text-xs text-[#9f1239] flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
               </div>
@@ -182,12 +161,12 @@ export const SignupPage: React.FC = () => {
                 <div className="space-y-1.5">
                   <label
                     htmlFor="fullName"
-                    className="block text-xs font-medium text-[#171717] dark:text-[#f5f5f5]"
+                    className="block text-xs font-medium text-[#171717]"
                   >
                     Full Name
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373] dark:text-[#a3a3a3]">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373]">
                       <User className="w-3.5 h-3.5" />
                     </div>
                     <input
@@ -197,7 +176,7 @@ export const SignupPage: React.FC = () => {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Dr. Aditi Sharma"
-                      className="w-full pl-9 pr-3 py-2 bg-white dark:bg-[#141414] border border-[#ebebeb] dark:border-[#262626] rounded text-xs sm:text-sm text-[#171717] dark:text-[#f5f5f5] placeholder:text-[#a3a3a3] focus:outline-none focus:ring-1 focus:ring-[#171717] dark:focus:ring-[#f5f5f5] transition-colors"
+                      className="w-full pl-9 pr-3 py-2 bg-white border border-[#ebebeb] rounded text-xs sm:text-sm text-[#171717] placeholder:text-[#a3a3a3] focus:outline-none focus:ring-1 focus:ring-[#171717] transition-colors"
                     />
                   </div>
                 </div>
@@ -205,12 +184,12 @@ export const SignupPage: React.FC = () => {
                 <div className="space-y-1.5">
                   <label
                     htmlFor="email"
-                    className="block text-xs font-medium text-[#171717] dark:text-[#f5f5f5]"
+                    className="block text-xs font-medium text-[#171717]"
                   >
                     Work Email
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373] dark:text-[#a3a3a3]">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373]">
                       <Mail className="w-3.5 h-3.5" />
                     </div>
                     <input
@@ -220,7 +199,7 @@ export const SignupPage: React.FC = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="aditi@pharmacy.in"
-                      className="w-full pl-9 pr-3 py-2 bg-white dark:bg-[#141414] border border-[#ebebeb] dark:border-[#262626] rounded text-xs sm:text-sm text-[#171717] dark:text-[#f5f5f5] placeholder:text-[#a3a3a3] focus:outline-none focus:ring-1 focus:ring-[#171717] dark:focus:ring-[#f5f5f5] transition-colors"
+                      className="w-full pl-9 pr-3 py-2 bg-white border border-[#ebebeb] rounded text-xs sm:text-sm text-[#171717] placeholder:text-[#a3a3a3] focus:outline-none focus:ring-1 focus:ring-[#171717] transition-colors"
                     />
                   </div>
                 </div>
@@ -228,7 +207,7 @@ export const SignupPage: React.FC = () => {
 
               {/* Operational Role Selection (RBAC) */}
               <div className="space-y-1.5">
-                <label className="block text-xs font-medium text-[#171717] dark:text-[#f5f5f5]">
+                <label className="block text-xs font-medium text-[#171717]">
                   Operational Role (RBAC)
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -244,16 +223,14 @@ export const SignupPage: React.FC = () => {
                       onClick={() => setRole(r.id)}
                       className={`p-2 rounded text-left border text-xs transition-all flex flex-col justify-between ${
                         role === r.id
-                          ? "bg-[#171717] text-white dark:bg-[#f5f5f5] dark:text-[#0a0a0a] border-[#171717] dark:border-[#f5f5f5] font-semibold"
-                          : "bg-white dark:bg-[#141414] text-[#525252] dark:text-[#a3a3a3] border-[#ebebeb] dark:border-[#262626] hover:border-[#d4d4d4]"
+                          ? "bg-[#171717] text-white border-[#171717] font-semibold"
+                          : "bg-white text-[#525252] border-[#ebebeb] hover:border-[#d4d4d4]"
                       }`}
                     >
                       <span className="font-medium text-[11px]">{r.label}</span>
                       <span
                         className={`text-[9px] line-clamp-1 mt-0.5 ${
-                          role === r.id
-                            ? "text-[#d4d4d4] dark:text-[#525252]"
-                            : "text-[#737373] dark:text-[#8e8e8e]"
+                          role === r.id ? "text-[#d4d4d4]" : "text-[#737373]"
                         }`}
                       >
                         {r.sub}
@@ -268,12 +245,12 @@ export const SignupPage: React.FC = () => {
                 <div className="space-y-1.5">
                   <label
                     htmlFor="facilityName"
-                    className="block text-xs font-medium text-[#171717] dark:text-[#f5f5f5]"
+                    className="block text-xs font-medium text-[#171717]"
                   >
                     Facility / Store Name
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373] dark:text-[#a3a3a3]">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373]">
                       <Building2 className="w-3.5 h-3.5" />
                     </div>
                     <input
@@ -283,7 +260,7 @@ export const SignupPage: React.FC = () => {
                       value={facilityName}
                       onChange={(e) => setFacilityName(e.target.value)}
                       placeholder="City Community Pharmacy"
-                      className="w-full pl-9 pr-3 py-2 bg-white dark:bg-[#141414] border border-[#ebebeb] dark:border-[#262626] rounded text-xs sm:text-sm text-[#171717] dark:text-[#f5f5f5] placeholder:text-[#a3a3a3] focus:outline-none focus:ring-1 focus:ring-[#171717] dark:focus:ring-[#f5f5f5] transition-colors"
+                      className="w-full pl-9 pr-3 py-2 bg-white border border-[#ebebeb] rounded text-xs sm:text-sm text-[#171717] placeholder:text-[#a3a3a3] focus:outline-none focus:ring-1 focus:ring-[#171717] transition-colors"
                     />
                   </div>
                 </div>
@@ -291,7 +268,7 @@ export const SignupPage: React.FC = () => {
                 <div className="space-y-1.5">
                   <label
                     htmlFor="facilityType"
-                    className="block text-xs font-medium text-[#171717] dark:text-[#f5f5f5]"
+                    className="block text-xs font-medium text-[#171717]"
                   >
                     Facility Category
                   </label>
@@ -299,7 +276,7 @@ export const SignupPage: React.FC = () => {
                     id="facilityType"
                     value={facilityType}
                     onChange={(e) => setFacilityType(e.target.value)}
-                    className="w-full py-2 px-3 bg-white dark:bg-[#141414] border border-[#ebebeb] dark:border-[#262626] rounded text-xs sm:text-sm text-[#171717] dark:text-[#f5f5f5] focus:outline-none focus:ring-1 focus:ring-[#171717] dark:focus:ring-[#f5f5f5] transition-colors"
+                    className="w-full py-2 px-3 bg-white border border-[#ebebeb] rounded text-xs sm:text-sm text-[#171717] focus:outline-none focus:ring-1 focus:ring-[#171717] transition-colors"
                   >
                     <option value="Community Pharmacy">Community Pharmacy</option>
                     <option value="Primary Health Centre">Primary Health Centre (PHC)</option>
@@ -314,12 +291,12 @@ export const SignupPage: React.FC = () => {
                 <div className="space-y-1.5">
                   <label
                     htmlFor="password"
-                    className="block text-xs font-medium text-[#171717] dark:text-[#f5f5f5]"
+                    className="block text-xs font-medium text-[#171717]"
                   >
                     Password
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373] dark:text-[#a3a3a3]">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373]">
                       <Lock className="w-3.5 h-3.5" />
                     </div>
                     <input
@@ -329,13 +306,13 @@ export const SignupPage: React.FC = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••••••"
-                      className="w-full pl-9 pr-9 py-2 bg-white dark:bg-[#141414] border border-[#ebebeb] dark:border-[#262626] rounded text-xs sm:text-sm text-[#171717] dark:text-[#f5f5f5] placeholder:text-[#a3a3a3] focus:outline-none focus:ring-1 focus:ring-[#171717] dark:focus:ring-[#f5f5f5] transition-colors"
+                      className="w-full pl-9 pr-9 py-2 bg-white border border-[#ebebeb] rounded text-xs sm:text-sm text-[#171717] placeholder:text-[#a3a3a3] focus:outline-none focus:ring-1 focus:ring-[#171717] transition-colors"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       aria-label={showPassword ? "Hide password" : "Show password"}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#737373] hover:text-[#171717] dark:hover:text-[#f5f5f5]"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#737373] hover:text-[#171717]"
                     >
                       {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
@@ -345,12 +322,12 @@ export const SignupPage: React.FC = () => {
                 <div className="space-y-1.5">
                   <label
                     htmlFor="confirmPassword"
-                    className="block text-xs font-medium text-[#171717] dark:text-[#f5f5f5]"
+                    className="block text-xs font-medium text-[#171717]"
                   >
                     Confirm Password
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373] dark:text-[#a3a3a3]">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373]">
                       <Lock className="w-3.5 h-3.5" />
                     </div>
                     <input
@@ -360,7 +337,7 @@ export const SignupPage: React.FC = () => {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••••••"
-                      className="w-full pl-9 pr-3 py-2 bg-white dark:bg-[#141414] border border-[#ebebeb] dark:border-[#262626] rounded text-xs sm:text-sm text-[#171717] dark:text-[#f5f5f5] placeholder:text-[#a3a3a3] focus:outline-none focus:ring-1 focus:ring-[#171717] dark:focus:ring-[#f5f5f5] transition-colors"
+                      className="w-full pl-9 pr-3 py-2 bg-white border border-[#ebebeb] rounded text-xs sm:text-sm text-[#171717] placeholder:text-[#a3a3a3] focus:outline-none focus:ring-1 focus:ring-[#171717] transition-colors"
                     />
                   </div>
                 </div>
@@ -368,12 +345,12 @@ export const SignupPage: React.FC = () => {
 
               {/* Policy Checkbox */}
               <div className="pt-1">
-                <label className="flex items-start gap-2.5 cursor-pointer text-xs text-[#525252] dark:text-[#a3a3a3] select-none">
+                <label className="flex items-start gap-2.5 cursor-pointer text-xs text-[#525252] select-none">
                   <input
                     type="checkbox"
                     checked={agreeTerms}
                     onChange={(e) => setAgreeTerms(e.target.checked)}
-                    className="w-3.5 h-3.5 mt-0.5 rounded border-[#d4d4d4] dark:border-[#404040] text-[#171717] dark:text-[#f5f5f5] accent-[#171717] dark:accent-[#f5f5f5]"
+                    className="w-3.5 h-3.5 mt-0.5 rounded border-[#d4d4d4] text-[#171717] accent-[#171717]"
                   />
                   <span className="leading-tight">
                     I acknowledge that StockSense provides deterministic inventory decision support and that
@@ -386,7 +363,7 @@ export const SignupPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full mt-2 flex items-center justify-center gap-2 bg-[#171717] hover:bg-[#2b2b2b] text-white dark:bg-[#f5f5f5] dark:hover:bg-white dark:text-[#0a0a0a] font-medium py-2.5 px-4 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-[#171717] dark:focus:ring-[#f5f5f5] focus:ring-offset-1 disabled:opacity-60 text-xs sm:text-sm"
+                className="w-full mt-2 flex items-center justify-center gap-2 bg-[#171717] hover:bg-[#2b2b2b] text-white font-medium py-2.5 px-4 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-[#171717] focus:ring-offset-1 disabled:opacity-60 text-xs sm:text-sm"
               >
                 {isLoading ? (
                   <span>Creating Account...</span>
@@ -400,8 +377,8 @@ export const SignupPage: React.FC = () => {
             </form>
 
             {/* Footnote */}
-            <div className="pt-2 border-t border-[#ebebeb] dark:border-[#262626] flex items-center justify-center gap-1.5 text-[11px] font-mono text-[#737373] dark:text-[#8e8e8e]">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#171717] dark:text-[#f5f5f5]" />
+            <div className="pt-2 border-t border-[#ebebeb] flex items-center justify-center gap-1.5 text-[11px] font-mono text-[#737373]">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#171717]" />
               <span>Continuous review (s, Q) replenishment policy</span>
             </div>
           </div>
@@ -409,8 +386,8 @@ export const SignupPage: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="py-4 text-center text-[11px] font-mono text-[#737373] dark:text-[#8e8e8e] border-t border-[#ebebeb] dark:border-[#262626]">
-        StockSense · Role-Based Access Control · VORTEXA 3.0 S-02
+      <footer className="py-4 text-center text-[11px] font-mono text-[#737373] border-t border-[#ebebeb]">
+        StockSense · Role-Based Access Control
       </footer>
     </div>
   );
