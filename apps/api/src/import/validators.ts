@@ -38,10 +38,10 @@ export function parseRawCSV(csvText: string): { headers: string[]; rows: Record<
   const result = Papa.parse<Record<string, string>>(csvText, {
     header: true,
     skipEmptyLines: "greedy",
-    transformHeader: (h) => h.trim(),
+    transformHeader: (h: string) => h.trim(),
   });
 
-  const headers = result.meta.fields ? result.meta.fields.map((f) => f.trim()) : [];
+  const headers = result.meta.fields ? result.meta.fields.map((f: string) => f.trim()) : [];
   return { headers, rows: result.data };
 }
 

@@ -1,7 +1,7 @@
 // apps/api/src/auth/routes.ts
 // Express router for authentication and RBAC endpoints (backed by PostgreSQL User & UserSession tables)
 
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "../db.js";
 import {
@@ -129,7 +129,7 @@ authRouter.get("/users", async (_req, res) => {
 });
 
 // GET /api/auth/roles (public directory of available roles, matrix & demo users)
-authRouter.get("/roles", (_req, res) => {
+authRouter.get("/roles", (_req: Request, res: Response) => {
   res.json({
     ok: true,
     roles: ["ADMIN", "STOREKEEPER", "ANALYST", "VIEWER"],

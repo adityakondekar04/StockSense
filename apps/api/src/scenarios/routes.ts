@@ -1,7 +1,7 @@
 // apps/api/src/scenarios/routes.ts
 // Scenario Lab API: parse natural language scenarios, run simulation & Monte Carlo risk comparison
 
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { z } from "zod";
 import {
   recommend,
@@ -43,7 +43,7 @@ const ScenarioRunRequestSchema = z.object({
 });
 
 // POST /scenarios/parse: Natural language scenario parser
-scenarioRouter.post("/parse", async (req, res) => {
+scenarioRouter.post("/parse", async (req: Request, res: Response) => {
   const parsed = ScenarioParseRequestSchema.safeParse(req.body);
   if (!parsed.success) {
     return safeJson(res, 400, {
@@ -58,7 +58,7 @@ scenarioRouter.post("/parse", async (req, res) => {
 });
 
 // POST /scenarios/run: Run scenario simulation with Before/After, analytic risk, and Monte Carlo
-scenarioRouter.post("/run", async (req, res) => {
+scenarioRouter.post("/run", async (req: Request, res: Response) => {
   const parsed = ScenarioRunRequestSchema.safeParse(req.body);
   if (!parsed.success) {
     return safeJson(res, 400, {

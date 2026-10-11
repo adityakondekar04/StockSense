@@ -243,7 +243,7 @@ export function generateDemoData(seed = GENERATOR_SEED): DemoDataset {
   return { products, sales, promos, leadTimes };
 }
 
-export function writeDemoCSVs(outputDir = path.resolve(__dirname, ".")): void {
+export function writeDemoCSVs(outputDir = "./data"): void {
   const data = generateDemoData(GENERATOR_SEED);
   fs.mkdirSync(outputDir, { recursive: true });
 
@@ -276,7 +276,8 @@ export function writeDemoCSVs(outputDir = path.resolve(__dirname, ".")): void {
   fs.writeFileSync(path.join(outputDir, "lead_times.csv"), ltHeader + ltLines + "\n", "utf8");
 }
 
-if (require.main === module) {
+const isMain = typeof require !== "undefined" && typeof module !== "undefined" && (require as any).main === module;
+if (isMain) {
   writeDemoCSVs();
   console.log("Demo CSVs generated successfully with seed", GENERATOR_SEED);
 }

@@ -24,7 +24,7 @@ const corsOrigin = process.env.CORS_ORIGIN;
 app.use(
   cors({
     origin: corsOrigin
-      ? corsOrigin.split(",").map((o) => o.trim())
+      ? corsOrigin.split(",").map((o: string) => o.trim())
       : true, // allow all in dev
     credentials: true,
   })
@@ -33,7 +33,7 @@ app.use(express.json());
 app.use(express.text({ type: ["text/csv", "text/plain"] }));
 
 // Health check
-app.get(["/api/health", "/health"], async (_req, res) => {
+app.get(["/api/health", "/health"], async (_req: express.Request, res: express.Response) => {
   let dbOk = false;
   try {
     await prisma.$queryRaw`SELECT 1`;

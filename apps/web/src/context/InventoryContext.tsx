@@ -288,13 +288,24 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, [products, selectedProductId]);
 
   const getSalesForProduct = (productId: string) => {
-    return salesMap[productId] || [];
+    if (salesMap[productId] && salesMap[productId].length > 0) {
+      return salesMap[productId];
+    }
+    const prod = products.find((p) => p.id === productId || p.sku === productId);
+    if (prod) {
+      const demoMatch = OFFICIAL_DEMO_PRODUCTS.find((d) => d.sku === prod.sku);
+      if (demoMatch && salesMap[demoMatch.id]?.length) {
+        return salesMap[demoMatch.id];
+      }
+      return generateProductSalesHistory(prod);
+    }
+    return [];
   };
 
   const salesHistory = useMemo(() => {
     if (!selectedProduct) return [];
     return getSalesForProduct(selectedProduct.id);
-  }, [selectedProduct, salesMap]);
+  }, [selectedProduct, salesMap, products]);
 
   const addAuditLog = (entry: Omit<AuditRecord, "id" | "at">) => {
     const fullEntry: AuditRecord = {
